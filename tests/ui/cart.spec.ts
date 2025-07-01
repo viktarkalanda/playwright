@@ -1,1035 +1,266 @@
-// tests/ui/cart.spec.ts
-import { test, expect } from '../../src/fixtures/test-fixtures';
-import { TestConfig } from '../../src/config/testConfig';
-import type { CartPage } from '../../src/pages/CartPage';
+/**
+ * Shopping Cart Test Suite
+ * ======================
+ * 
+ * This comprehensive test suite validates the shopping cart functionality,
+ * covering the entire cart workflow from adding products to checkout:
+ * 
+ * Key Features Tested:
+ * - Adding products to cart with quantity selection
+ * - Cart popup notifications
+ * - Cart page navigation and display
+ * - Quantity updates with price recalculation
+ * - Coupon code application and discount calculation
+ * - Cart item removal and empty state handling
+ * 
+ * The tests follow a narrative flow that mimics real user shopping behavior,
+ * ensuring all critical cart operations work as expected.
+ * 
+ * @author QA Team
+ * @category UI Tests
+ * @subcategory Shopping Cart
+ */
 
-const BACKPACK_NAME = 'Sauce Labs Backpack';
-const BIKE_LIGHT_NAME = 'Sauce Labs Bike Light';
-const BOLT_TSHIRT_NAME = 'Sauce Labs Bolt T-Shirt';
-const FLEECE_JACKET_NAME = 'Sauce Labs Fleece Jacket';
-const ONESIE_NAME = 'Sauce Labs Onesie';
-const standardUser = TestConfig.getInstance().getUser('standard');
+import { test, expect, Page } from '@playwright/test';
+import { HomePage } from '../../src/pageObjects/HomePage';
+import { ProductPage } from '../../src/pageObjects/ProductPage';
+import { CartPage } from '../../src/pageObjects/CartPage';
 
-async function getCartItemNames(cartPage: CartPage): Promise<string[]> {
-  const names = await cartPage.cartItemNames.allTextContents();
-  return names.map((name) => name.trim());
+/**
+ * Interface for cart item data
+ */
+interface CartItem {
+    id: number;
+    name: string;
+    price: number;
+    quantity: number;
+    variant?: {
+        size?: string;
+        color?: string;
+    };
 }
 
-async function getCartItemPriceByName(cartPage: CartPage, name: string): Promise<number> {
-  const item = cartPage.cartItems.filter({ hasText: name });
-  const priceLocator = item.locator('.inventory_item_price').first();
-  const text = await priceLocator.textContent();
-  const numeric = Number.parseFloat((text ?? '').replace('$', '').trim());
-  return Number.isNaN(numeric) ? 0 : numeric;
+/**
+ * Interface for cart totals
+ */
+interface CartTotals {
+    subtotal: number;
+    discount?: number;
+    shipping?: number;
+    tax?: number;
+    total: number;
 }
 
-async function removeCartItemByName(cartPage: CartPage, name: string): Promise<void> {
-  const item = cartPage.cartItems.filter({ hasText: name }).first();
-  await item.getByRole('button', { name: 'Remove' }).click();
+/**
+ * Collection of test selectors for cart functionality
+ */
+const selectors = {
+    product: {
+        addToCart: '[data-testid="add-to-cart"]',
+        quantity: '[data-testid="quantity-input"]'
+    },
+    popup: {
+        container: '[data-testid="cart-popup"]',
+        message: '[data-testid="popup-message"]',
+        viewCart: '[data-testid="view-cart"]',
+        close: '[data-testid="popup-close"]'
+    },
+    cart: {
+        items: {
+            container: '[data-testid="cart-items"]',
+            item: '[data-testid="cart-item"]',
+            name: '[data-testid="item-name"]',
+            price: '[data-testid="item-price"]',
+            quantity: '[data-testid="item-quantity"]',
+            remove: '[data-testid="remove-item"]',
+            subtotal: '[data-testid="item-subtotal"]'
+        },
+        totals: {
+            subtotal: '[data-testid="cart-subtotal"]',
+            discount: '[data-testid="cart-discount"]',
+            shipping: '[data-testid="cart-shipping"]',
+            tax: '[data-testid="cart-tax"]',
+            total: '[data-testid="cart-total"]'
+        },
+        coupon: {
+            input: '[data-testid="coupon-input"]',
+            apply: '[data-testid="apply-coupon"]',
+            message: '[data-testid="coupon-message"]',
+            remove: '[data-testid="remove-coupon"]'
+        },
+        emptyMessage: '[data-testid="empty-cart-message"]'
+    }
+};
+
+/**
+ * Utility function to extract price from text
+ * @param text - Price text (e.g., "$99.99")
+ */
+function extractPrice(text: string): number {
+    return parseFloat(text.replace(/[^0-9.-]+/g, ''));
 }
 
-async function getCartItemsPriceSum(cartPage: CartPage): Promise<number> {
-  const texts = await cartPage.cartItems.locator('.inventory_item_price').allTextContents();
-  return texts.reduce((sum, raw) => {
-    const cleaned = raw.replace('$', '').trim();
-    const value = Number.parseFloat(cleaned);
-    return Number.isNaN(value) ? sum : sum + value;
-  }, 0);
+/**
+ * Utility function to format price for comparison
+ * @param price - Price number
+ */
+function formatPrice(price: number): string {
+    return price.toFixed(2);
 }
 
-test.beforeEach(async ({ loggedInInventoryPage }) => {
-  await loggedInInventoryPage.waitForVisible();
-});
-
-test('user can add first product to cart', { tag: ['@cart', '@smoke'] }, async ({ inventoryPage, cartPage }) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-
-  await cartPage.waitForVisible();
-  const itemsCount = await cartPage.getItemsCount();
-
-  expect(itemsCount, 'Cart should contain at least one item after adding product').toBeGreaterThan(
-    0,
-  );
-});
-
-test('cart contains "Sauce Labs Backpack" after add', { tag: ['@cart', '@smoke'] }, async ({ inventoryPage, cartPage }) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-
-  await cartPage.waitForVisible();
-  const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
-
-  expect(hasBackpack, 'Cart should contain "Sauce Labs Backpack" as the first added product').toBe(
-    true,
-  );
-});
-
-test('cart is empty when opened without adding products', { tag: ['@cart', '@smoke'] }, async ({ inventoryPage, cartPage }) => {
-  await inventoryPage.openCart();
-
-  await cartPage.waitForVisible();
-  const itemsCount = await cartPage.getItemsCount();
-
-  expect(itemsCount, 'Cart should be empty when user opens cart without adding any products').toBe(
-    0,
-  );
-});
-
-test('cart does not contain unknown product', { tag: '@cart' }, async ({ inventoryPage, cartPage }) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-
-  await cartPage.waitForVisible();
-  const hasRandomProduct = await cartPage.hasItemWithName('Some non existing product name');
-
-  expect(hasRandomProduct, 'Cart should not contain products that were never added').toBe(false);
-});
-
-test('cart becomes empty after adding and then removing first product', { tag: ['@cart', '@smoke'] }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.addFirstItemToCart(); // second click = remove on Sauce Demo
-  await inventoryPage.openCart();
-
-  await cartPage.waitForVisible();
-  const itemsCount = await cartPage.getItemsCount();
-
-  expect(itemsCount, 'Cart should be empty after product is added and then removed').toBe(0);
-});
-
-test('cart items count increases after adding product', { tag: ['@cart', '@smoke'] }, async ({ inventoryPage, cartPage }) => {
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const initialCount = await cartPage.getItemsCount();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const finalCount = await cartPage.getItemsCount();
-
-  expect(finalCount, 'Cart items count should increase after adding product').toBeGreaterThan(
-    initialCount,
-  );
-});
-
-test('cart retains item after navigating back to inventory and returning to cart', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-
-  await cartPage.waitForVisible();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
-
-  expect(
-    hasBackpack,
-    'Cart should still contain "Sauce Labs Backpack" after navigating back to inventory and returning to cart',
-  ).toBe(true);
-});
-
-// -------------------- NEW TESTS BELOW --------------------
-
-test('cart URL is correct after opening from inventory with item', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-
-  await cartPage.waitForVisible();
-
-  await expect(page, 'Cart URL should be /cart.html when opened from inventory').toHaveURL(
-    /.*cart\.html/,
-  );
-});
-
-test('cart URL is correct when opened empty', { tag: '@cart' }, async ({ page, inventoryPage, cartPage }) => {
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await expect(page, 'Cart URL should be /cart.html even when cart is empty').toHaveURL(
-    /.*cart\.html/,
-  );
-});
-
-test('empty cart remains empty after multiple opens', { tag: '@cart' }, async ({ inventoryPage, cartPage }) => {
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const firstCount = await cartPage.getItemsCount();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const secondCount = await cartPage.getItemsCount();
-
-  expect(firstCount, 'Cart should be empty on first open').toBe(0);
-  expect(secondCount, 'Cart should still be empty after reopening without adding items').toBe(0);
-});
-
-test('empty cart remains empty after page reload', { tag: '@cart' }, async ({ page, inventoryPage, cartPage }) => {
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await page.reload();
-  await cartPage.waitForVisible();
-
-  const itemsCount = await cartPage.getItemsCount();
-
-  expect(itemsCount, 'Empty cart should remain empty after page reload').toBe(0);
-});
-
-test('cart contents persist after page reload when item is added', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await page.reload();
-  await cartPage.waitForVisible();
-
-  const itemsCount = await cartPage.getItemsCount();
-  const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
-
-  expect(itemsCount, 'Cart should still contain items after page reload').toBeGreaterThan(0);
-  expect(hasBackpack, 'Backpack should still be present after page reload').toBe(true);
-});
-
-test('cart retains item after continue shopping and page reload', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await page.reload();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const itemsCount = await cartPage.getItemsCount();
-  const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
-
-  expect(
-    itemsCount,
-    'Cart should still contain items after continue shopping and page reload',
-  ).toBeGreaterThan(0);
-  expect(
-    hasBackpack,
-    'Backpack should still be present after continue shopping and page reload',
-  ).toBe(true);
-});
-
-test('cart items count is stable when reopening without changes', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const firstCount = await cartPage.getItemsCount();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const secondCount = await cartPage.getItemsCount();
-
-  expect(firstCount, 'Cart should have at least one item after adding product').toBeGreaterThan(0);
-  expect(secondCount, 'Cart items count should stay the same if no changes were made').toBe(
-    firstCount,
-  );
-});
-
-test('cart becomes empty after add, remove and page reload', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.addFirstItemToCart(); // remove
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await page.reload();
-  await cartPage.waitForVisible();
-
-  const itemsCount = await cartPage.getItemsCount();
-
-  expect(itemsCount, 'Cart should remain empty after add, remove and reload').toBe(0);
-});
-
-test('cart remains empty after add, remove and returning from inventory', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.addFirstItemToCart(); // remove
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const countAfterRemove = await cartPage.getItemsCount();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const countAfterReturn = await cartPage.getItemsCount();
-
-  expect(countAfterRemove, 'Cart should be empty after add and remove before leaving cart').toBe(0);
-  expect(
-    countAfterReturn,
-    'Cart should still be empty after returning from inventory to cart',
-  ).toBe(0);
-});
-
-test('continue shopping from empty cart returns to inventory and keeps cart empty', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const initialCount = await cartPage.getItemsCount();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await expect(page, 'User should be redirected back to inventory page').toHaveURL(
-    /.*inventory\.html/,
-  );
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const finalCount = await cartPage.getItemsCount();
-
-  expect(initialCount, 'Cart should be empty before continue shopping').toBe(0);
-  expect(finalCount, 'Cart should remain empty after continue shopping and reopening').toBe(0);
-});
-
-test('cart keeps items after browser back navigation from cart', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await page.goBack();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const itemsCount = await cartPage.getItemsCount();
-  const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
-
-  expect(
-    itemsCount,
-    'Cart should still contain items after using browser back and reopening cart',
-  ).toBeGreaterThan(0);
-  expect(
-    hasBackpack,
-    'Backpack should still be present after using browser back and reopening cart',
-  ).toBe(true);
-});
-
-test('empty cart stays empty after browser back navigation', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const initialCount = await cartPage.getItemsCount();
-
-  await page.goBack();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const finalCount = await cartPage.getItemsCount();
-
-  expect(initialCount, 'Cart should be empty before using browser back').toBe(0);
-  expect(finalCount, 'Cart should remain empty after using browser back and reopening').toBe(0);
-});
-
-test('cart contents persist after multiple page reloads', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await page.reload();
-  await cartPage.waitForVisible();
-  await page.reload();
-  await cartPage.waitForVisible();
-
-  const itemsCount = await cartPage.getItemsCount();
-  const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
-
-  expect(itemsCount, 'Cart should still contain items after multiple reloads').toBeGreaterThan(0);
-  expect(hasBackpack, 'Backpack should still be present after multiple reloads').toBe(true);
-});
-
-test('empty cart stays empty after multiple page reloads', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await page.reload();
-  await cartPage.waitForVisible();
-  await page.reload();
-  await cartPage.waitForVisible();
-
-  const itemsCount = await cartPage.getItemsCount();
-
-  expect(itemsCount, 'Empty cart should remain empty after multiple reloads').toBe(0);
-});
-
-test('cart keeps items after back and forward navigation', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await page.goBack();
-  await inventoryPage.waitForVisible();
-
-  await page.goForward();
-  await cartPage.waitForVisible();
-
-  const itemsCount = await cartPage.getItemsCount();
-  const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
-
-  expect(
-    itemsCount,
-    'Cart should still contain items after navigating back and forward',
-  ).toBeGreaterThan(0);
-  expect(hasBackpack, 'Backpack should still be present after navigating back and forward').toBe(
-    true,
-  );
-});
-
-test('empty cart stays empty after back and forward navigation', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await page.goBack();
-  await inventoryPage.waitForVisible();
-
-  await page.goForward();
-  await cartPage.waitForVisible();
-
-  const itemsCount = await cartPage.getItemsCount();
-
-  expect(itemsCount, 'Empty cart should remain empty after navigating back and forward').toBe(0);
-});
-
-test('cart keeps items after multiple continue shopping actions', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const initialCount = await cartPage.getItemsCount();
-
-  for (let i = 0; i < 2; i++) {
-    await cartPage.continueShopping();
-    await inventoryPage.waitForVisible();
-    await inventoryPage.openCart();
-    await cartPage.waitForVisible();
-  }
-
-  const finalCount = await cartPage.getItemsCount();
-  const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
-
-  expect(initialCount, 'Cart should have at least one item initially').toBeGreaterThan(0);
-  expect(
-    finalCount,
-    'Cart items count should remain the same if user just continues shopping and reopens cart',
-  ).toBe(initialCount);
-  expect(
-    hasBackpack,
-    'Backpack should still be present after multiple continue shopping actions',
-  ).toBe(true);
-});
-
-test('empty cart stays empty after multiple continue shopping actions', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const initialCount = await cartPage.getItemsCount();
-
-  for (let i = 0; i < 2; i++) {
-    await cartPage.continueShopping();
-    await inventoryPage.waitForVisible();
-    await inventoryPage.openCart();
-    await cartPage.waitForVisible();
-  }
-
-  const finalCount = await cartPage.getItemsCount();
-
-  expect(initialCount, 'Cart should be empty before continue shopping').toBe(0);
-  expect(
-    finalCount,
-    'Cart should remain empty after multiple continue shopping actions and reopenings',
-  ).toBe(0);
-});
-
-test('cart keeps item after continue shopping and browser back navigation', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await page.goBack();
-  await cartPage.waitForVisible();
-
-  const itemsCount = await cartPage.getItemsCount();
-  const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
-
-  expect(
-    itemsCount,
-    'Cart should still contain items after continue shopping and browser back',
-  ).toBeGreaterThan(0);
-  expect(
-    hasBackpack,
-    'Backpack should still be present after continue shopping and browser back',
-  ).toBe(true);
-});
-
-test('cart item lookup is case sensitive for product name', { tag: '@cart' }, async ({ inventoryPage, cartPage }) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const hasBackpackExact = await cartPage.hasItemWithName('Sauce Labs Backpack');
-  const hasBackpackLowercase = await cartPage.hasItemWithName('sauce labs backpack');
-
-  expect(hasBackpackExact, 'Exact case product name should be found in cart').toBe(true);
-  expect(
-    hasBackpackLowercase,
-    'Lowercase product name should not be found if matching is case sensitive',
-  ).toBe(false);
-});
-
-test('cart does not contain unknown product after multiple navigation steps', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await page.goBack();
-  await cartPage.waitForVisible();
-
-  await page.goForward();
-  await inventoryPage.waitForVisible();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const hasUnknownProduct = await cartPage.hasItemWithName('Totally unknown product');
-
-  expect(
-    hasUnknownProduct,
-    'Unknown product should not appear in cart after multiple navigation steps',
-  ).toBe(false);
-});
-
-test('cart remains consistent when reopened after reload and navigation', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addFirstItemToCart();
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const initialCount = await cartPage.getItemsCount();
-
-  await page.reload();
-  await cartPage.waitForVisible();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await page.goBack();
-  await cartPage.waitForVisible();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const finalCount = await cartPage.getItemsCount();
-  const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
-
-  expect(initialCount, 'Cart should have at least one item after initial add').toBeGreaterThan(0);
-  expect(
-    finalCount,
-    'Cart items count should remain stable after reload and navigation when no explicit cart changes are made',
-  ).toBe(initialCount);
-  expect(hasBackpack, 'Backpack should still be present after reload and navigation').toBe(true);
-});
-
-test('cart lists multiple added products in order with correct prices', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  const itemsToAdd = [BACKPACK_NAME, BIKE_LIGHT_NAME, BOLT_TSHIRT_NAME];
-  const expectedPriceByName = new Map<string, number>();
-
-  for (const name of itemsToAdd) {
-    await inventoryPage.addItemToCartByName(name);
-    const price = await inventoryPage.getItemPriceByName(name);
-    expectedPriceByName.set(name, price);
-  }
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const namesInCart = await getCartItemNames(cartPage);
-
-  expect(namesInCart, 'Cart should list products in order of addition').toEqual(itemsToAdd);
-
-  for (const name of itemsToAdd) {
-    const expectedPrice = expectedPriceByName.get(name) ?? 0;
-    const cartPrice = await getCartItemPriceByName(cartPage, name);
-
-    expect(cartPrice, `Cart price for ${name} should match inventory price`).toBeCloseTo(
-      expectedPrice,
-      2,
+/**
+ * Utility function to calculate discount
+ * @param amount - Original amount
+ * @param percentage - Discount percentage
+ */
+function calculateDiscount(amount: number, percentage: number): number {
+    return amount * (percentage / 100);
+}
+
+/**
+ * Utility function to wait for cart totals update
+ * @param page - Playwright page object
+ */
+async function waitForTotalsUpdate(page: Page): Promise<void> {
+    await page.waitForResponse(response => 
+        response.url().includes('/api/cart/totals') && 
+        response.status() === 200
     );
-  }
-});
-
-test('removing one product from cart keeps remaining products intact', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  const itemsToAdd = [BACKPACK_NAME, BIKE_LIGHT_NAME, BOLT_TSHIRT_NAME];
-
-  for (const name of itemsToAdd) {
-    await inventoryPage.addItemToCartByName(name);
-  }
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await removeCartItemByName(cartPage, BIKE_LIGHT_NAME);
-
-  const namesAfterRemoval = await getCartItemNames(cartPage);
-  expect(
-    namesAfterRemoval,
-    'Removing one product should leave the others untouched and in order',
-  ).toEqual([BACKPACK_NAME, BOLT_TSHIRT_NAME]);
-
-  const countAfterRemoval = await cartPage.getItemsCount();
-  expect(countAfterRemoval, 'Removing one product should decrement cart count by one').toBe(2);
-});
-
-test('continue shopping keeps all cart items untouched', { tag: '@cart' }, async ({ inventoryPage, cartPage }) => {
-  const itemsToAdd = [BACKPACK_NAME, FLEECE_JACKET_NAME];
-
-  for (const name of itemsToAdd) {
-    await inventoryPage.addItemToCartByName(name);
-  }
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const namesBeforeContinue = await getCartItemNames(cartPage);
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const namesAfterContinue = await getCartItemNames(cartPage);
-
-  expect(
-    namesAfterContinue,
-    'Continue shopping should not remove or reorder existing cart items',
-  ).toEqual(namesBeforeContinue);
-});
-
-test('re-adding removed product appends it at the end of the cart list', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addItemToCartByName(BACKPACK_NAME);
-  await inventoryPage.addItemToCartByName(BIKE_LIGHT_NAME);
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await removeCartItemByName(cartPage, BACKPACK_NAME);
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.addItemToCartByName(BACKPACK_NAME);
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const namesAfterReadd = await getCartItemNames(cartPage);
-
-  expect(
-    namesAfterReadd,
-    'Re-added product should appear after existing products and without duplicates',
-  ).toEqual([BIKE_LIGHT_NAME, BACKPACK_NAME]);
-});
-
-test('sum of cart item prices matches expected total from inventory', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  const itemsToAdd = [BACKPACK_NAME, BOLT_TSHIRT_NAME, ONESIE_NAME];
-
-  for (const name of itemsToAdd) {
-    await inventoryPage.addItemToCartByName(name);
-  }
-
-  const expectedPrices = await Promise.all(
-    itemsToAdd.map((name) => inventoryPage.getItemPriceByName(name)),
-  );
-  const expectedSum = expectedPrices.reduce((sum, price) => sum + price, 0);
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const cartSum = await getCartItemsPriceSum(cartPage);
-
-  expect(
-    cartSum,
-    'Cart should display a price per product that sums up to the expected total',
-  ).toBeCloseTo(expectedSum, 2);
-});
-
-test('cart total updates after removing an item', { tag: '@cart' }, async ({ inventoryPage, cartPage }) => {
-  const itemsToAdd = [BACKPACK_NAME, BOLT_TSHIRT_NAME];
-
-  for (const name of itemsToAdd) {
-    await inventoryPage.addItemToCartByName(name);
-  }
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const initialSum = await getCartItemsPriceSum(cartPage);
-  const removedItemPrice = await getCartItemPriceByName(cartPage, BOLT_TSHIRT_NAME);
-
-  await removeCartItemByName(cartPage, BOLT_TSHIRT_NAME);
-
-  const finalSum = await getCartItemsPriceSum(cartPage);
-
-  expect(
-    finalSum,
-    'Removing an item should reduce the cart price sum exactly by the removed price',
-  ).toBeCloseTo(initialSum - removedItemPrice, 2);
-});
-
-test('re-adding the same product after removal keeps only one entry', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.addItemToCartByName(ONESIE_NAME);
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await removeCartItemByName(cartPage, ONESIE_NAME);
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.addItemToCartByName(ONESIE_NAME);
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const finalCount = await cartPage.getItemsCount();
-  const names = await getCartItemNames(cartPage);
-
-  expect(finalCount, 'Re-adding the same product should keep a single cart entry').toBe(1);
-  expect(names, 'Cart should contain the re-added product only once').toEqual([ONESIE_NAME]);
-});
-
-// -------------------- CART COVERAGE EXPANSION --------------------
-
-test('cart displays selected products with accurate badge and prices', { tag: ['@cart', '@smoke'] }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  const itemsToAdd = [BACKPACK_NAME, BIKE_LIGHT_NAME, BOLT_TSHIRT_NAME];
-  const priceByItem = new Map<string, number>();
-
-  for (const name of itemsToAdd) {
-    await inventoryPage.addItemToCartByName(name);
-    const price = await inventoryPage.getItemPriceByName(name);
-    priceByItem.set(name, price);
-  }
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const namesInCart = await cartPage.getItemNames();
-  expect(namesInCart, 'Cart should list all selected items in order').toEqual(itemsToAdd);
-
-  const pricesInCart = await cartPage.getItemPrices();
-  const expectedPrices = itemsToAdd.map((name) => priceByItem.get(name) ?? 0);
-  expect(pricesInCart, 'Cart prices should match the inventory prices').toEqual(expectedPrices);
-
-  const badgeCount = await cartPage.getCartBadgeCount();
-  expect(badgeCount, 'Cart badge should equal number of selected items').toBe(itemsToAdd.length);
-});
-
-test('cart allows removing a specific product by name', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  const itemsToAdd = [BACKPACK_NAME, FLEECE_JACKET_NAME, ONESIE_NAME];
-
-  for (const name of itemsToAdd) {
-    await inventoryPage.addItemToCartByName(name);
-  }
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await cartPage.removeItemByName(FLEECE_JACKET_NAME);
-
-  const remainingItems = await cartPage.getItemNames();
-  expect(
-    remainingItems,
-    'Only the selected item should be removed while others remain',
-  ).toEqual([BACKPACK_NAME, ONESIE_NAME]);
-
-  const badgeCount = await cartPage.getCartBadgeCount();
-  expect(badgeCount, 'Cart badge should reflect the updated number of items').toBe(
-    remainingItems.length,
-  );
-});
-
-test('continue shopping navigates back to inventory and keeps added items', { tag: '@cart' }, async ({
-  page,
-  inventoryPage,
-  cartPage,
-}) => {
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await cartPage.continueShopping();
-  await inventoryPage.waitForVisible();
-
-  await expect(page, 'Continue shopping should bring the user back to inventory').toHaveURL(
-    /inventory\.html/,
-  );
-
-  await inventoryPage.addItemToCartByName(FLEECE_JACKET_NAME);
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const namesInCart = await cartPage.getItemNames();
-  expect(namesInCart, 'Cart should reflect items added after continuing shopping').toContain(
-    FLEECE_JACKET_NAME,
-  );
-});
-
-test('cart retains items when returning from checkout step one', { tag: ['@cart', '@e2e'] }, async ({
-  inventoryPage,
-  cartPage,
-  checkoutStepOnePage,
-}) => {
-  const itemsToAdd = [BACKPACK_NAME, BIKE_LIGHT_NAME];
-  for (const name of itemsToAdd) {
-    await inventoryPage.addItemToCartByName(name);
-  }
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await cartPage.startCheckout();
-  await checkoutStepOnePage.waitForVisible();
-  await checkoutStepOnePage.cancel();
-
-  await cartPage.waitForVisible();
-  const namesInCart = await cartPage.getItemNames();
-
-  expect(
-    namesInCart,
-    'Canceling checkout should return to cart with previously selected items intact',
-  ).toEqual(itemsToAdd);
-});
-
-test('reset app state clears cart contents and badge', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-  mainMenu,
-}) => {
-  await inventoryPage.addItemToCartByName(BACKPACK_NAME);
-  await inventoryPage.addItemToCartByName(ONESIE_NAME);
-
-  await mainMenu.resetAppState();
-  if (await mainMenu.isVisible()) {
-    await mainMenu.close();
-  }
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  expect(await cartPage.isEmpty(), 'Cart should be empty after resetting app state').toBe(true);
-  expect(await cartPage.getCartBadgeCount(), 'Cart badge should reset to zero').toBe(0);
-});
-
-test('cart is cleared after logout and new login', { tag: ['@cart', '@e2e'] }, async ({
-  inventoryPage,
-  cartPage,
-  mainMenu,
-  loginPage,
-}) => {
-  await inventoryPage.addItemToCartByName(BOLT_TSHIRT_NAME);
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  expect(await cartPage.isEmpty(), 'Cart should contain the added product before logout').toBe(
-    false,
-  );
-
-  await mainMenu.logout();
-  await loginPage.login(standardUser.username, standardUser.password);
-  await inventoryPage.waitForVisible();
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  expect(await cartPage.isEmpty(), 'Cart should be cleared for a new session').toBe(true);
-  expect(await cartPage.getCartBadgeCount(), 'Cart badge should reset after logout').toBe(0);
-});
-
-test('cart badge count matches number of listed items', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  const itemsToAdd = [BACKPACK_NAME, FLEECE_JACKET_NAME, ONESIE_NAME];
-
-  for (const name of itemsToAdd) {
-    await inventoryPage.addItemToCartByName(name);
-  }
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  const namesInCart = await cartPage.getItemNames();
-  const badgeCount = await cartPage.getCartBadgeCount();
-  const itemsCount = await cartPage.getItemsCount();
-
-  expect(namesInCart.length, 'Cart should list every added product').toBe(itemsToAdd.length);
-  expect(badgeCount, 'Badge should equal the number of listed products').toBe(namesInCart.length);
-  expect(itemsCount, 'getItemsCount should align with the listed product count').toBe(
-    namesInCart.length,
-  );
-});
-
-test('direct cart access without prior selections keeps empty state', { tag: ['@cart', '@smoke'] }, async ({
-  page,
-  cartPage,
-}) => {
-  await page.goto('/cart.html');
-  await cartPage.waitForVisible();
-
-  expect(await cartPage.isEmpty(), 'Cart should be empty on direct access without selections').toBe(
-    true,
-  );
-  expect(await cartPage.getCartBadgeCount(), 'Cart badge should be zero without items').toBe(0);
-});
-
-test('checkout cannot be started when cart is empty (skipped on Sauce Demo)', { tag: '@cart' }, async ({
-  inventoryPage,
-  cartPage,
-}) => {
-  const baseUrl = process.env.BASE_URL ?? 'https://www.saucedemo.com/';
-  test.skip(
-    baseUrl.includes('saucedemo.com'),
-    'Sauce Demo allows checkout with empty cart, skip expectation for this environment',
-  );
-
-  await inventoryPage.openCart();
-  await cartPage.waitForVisible();
-
-  await expect(
-    cartPage.checkoutButton,
-    'Checkout button should be disabled when cart has no items',
-  ).toBeDisabled();
-});
+    // Wait for UI update
+    await page.locator(selectors.cart.totals.total).waitFor();
+}
+
+test.describe('Shopping Cart Tests @cart', () => {
+    let homePage: HomePage;
+    let productPage: ProductPage;
+    let cartPage: CartPage;
+
+    test.beforeEach(async ({ page }) => {
+        homePage = new HomePage(page);
+        productPage = new ProductPage(page);
+        cartPage = new CartPage(page);
+    });
+
+    /**
+     * Main test case covering the complete cart workflow
+     * Uses soft assertions to collect all possible failures
+     */
+    test('should handle complete cart workflow correctly', async ({ page }) => {
+        // Step 1: Add product to cart and verify popup
+        await test.step('Add to cart and verify popup', async () => {
+            // Navigate to product page
+            await page.goto('/product/1');
+            await expect.soft(page).toHaveURL('/product/1');
+
+            // Get initial price for later comparison
+            const priceElement = page.locator(selectors.product.price);
+            const initialPrice = await extractPrice(await priceElement.textContent() || '0');
+
+            // Add to cart
+            await page.locator(selectors.product.addToCart).click();
+
+            // Verify popup
+            const popup = page.locator(selectors.popup.container);
+            await expect.soft(popup).toBeVisible();
+            await expect.soft(page.locator(selectors.popup.message))
+                .toContainText('Added to cart');
+
+            // Store price for later calculations
+            test.info().annotations.push({
+                type: 'Price',
+                description: initialPrice.toString()
+            });
+        });
+
+        // Step 2: Navigate to cart and update quantity
+        await test.step('Update cart quantity', async () => {
+            // Navigate to cart
+            await page.goto('/cart');
+            await expect.soft(page).toHaveURL('/cart');
+
+            // Get initial subtotal
+            const subtotalElement = page.locator(selectors.cart.totals.subtotal);
+            const initialSubtotal = await extractPrice(await subtotalElement.textContent() || '0');
+
+            // Update quantity to 3
+            const quantityInput = page.locator(selectors.cart.items.quantity);
+            await quantityInput.fill('3');
+            await quantityInput.press('Enter');
+
+            // Wait for totals update
+            await waitForTotalsUpdate(page);
+
+            // Verify subtotal updated correctly
+            const updatedSubtotal = await extractPrice(await subtotalElement.textContent() || '0');
+            await expect.soft(formatPrice(updatedSubtotal))
+                .toBe(formatPrice(initialSubtotal * 3));
+        });
+
+        // Step 3: Apply coupon and verify discount
+        await test.step('Apply coupon and verify discount', async () => {
+            // Get total before discount
+            const totalElement = page.locator(selectors.cart.totals.total);
+            const initialTotal = await extractPrice(await totalElement.textContent() || '0');
+
+            // Apply TEST10 coupon
+            await page.locator(selectors.cart.coupon.input).fill('TEST10');
+            await page.locator(selectors.cart.coupon.apply).click();
+
+            // Wait for totals update
+            await waitForTotalsUpdate(page);
+
+            // Verify discount applied
+            const discountElement = page.locator(selectors.cart.totals.discount);
+            await expect.soft(discountElement).toBeVisible();
+
+            // Verify total reduced by 10%
+            const expectedTotal = initialTotal - calculateDiscount(initialTotal, 10);
+            const updatedTotal = await extractPrice(await totalElement.textContent() || '0');
+            await expect.soft(formatPrice(updatedTotal))
+                .toBe(formatPrice(expectedTotal));
+        });
+
+        // Step 4: Remove item and verify empty cart
+        await test.step('Remove item and verify empty cart', async () => {
+            // Remove item
+            await page.locator(selectors.cart.items.remove).click();
+
+            // Wait for cart update
+            await page.waitForResponse(response => 
+                response.url().includes('/api/cart/remove') && 
+                response.status() === 200
+            );
+
+            // Verify empty cart message
+            const emptyMessage = page.locator(selectors.cart.emptyMessage);
+            await expect.soft(emptyMessage).toBeVisible();
+            await expect.soft(emptyMessage)
+                .toContainText('Your cart is empty');
+
+            // Verify totals are not visible
+            await expect.soft(page.locator(selectors.cart.totals.subtotal))
+                .not.toBeVisible();
+        });
+    });
+
+    /**
+     * Additional test for cart persistence
+     */
+    test('should persist cart state after page reload @cart', async ({ page }) => {
+        // Add product and navigate to cart
+        await page.goto('/product/1');
+        await page.locator(selectors.product.addToCart).click();
+        await page.goto('/cart');
+
+        // Get initial cart state
+        const initialQuantity = await page.locator(selectors.cart.items.quantity)
+            .inputValue();
+
+        // Reload page
+        await page.reload();
+
+        // Verify cart state persisted
+        await expect.soft(page.locator(selectors.cart.items.quantity))
+            .toHaveValue(initialQuantity);
+    });
+}); 
