@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Performance Metrics Interface
@@ -57,6 +57,10 @@ interface PerformanceMetrics {
      */
     marks: Record<string, number>;
     measures: Record<string, number>;
+}
+
+interface ResourceEntry extends PerformanceResourceTiming {
+    initiatorType: string;
 }
 
 /**
@@ -116,24 +120,53 @@ export async function attachPerfMetrics(
 
     // Collect resource timing data
     const resourceTiming = await page.evaluate(() => {
-        return performance.getEntriesByType('resource').map(entry => ({
-            name: entry.name,
-            initiatorType: entry.initiatorType,
-            startTime: entry.startTime,
-            duration: entry.duration,
-            transferSize: (entry as any).transferSize,
-            encodedBodySize: (entry as any).encodedBodySize,
-            decodedBodySize: (entry as any).decodedBodySize
-        }));
+        return performance.getEntriesByType('resource').map((entry) => {
+            const resourceEntry = entry as PerformanceResourceTiming;
+            return {
+                name: resourceEntry.name,
+                initiatorType: resourceEntry.initiatorType,
+                startTime: resourceEntry.startTime,
+                duration: resourceEntry.duration,
+                transferSize: resourceEntry.transferSize,
+                encodedBodySize: resourceEntry.encodedBodySize,
+                decodedBodySize: resourceEntry.decodedBodySize
+            };
+        });
     });
 
     // Collect Core Web Vitals
     const webVitals = await page.evaluate(() => {
+        const getLCP = () => {
+            const entries = performance.getEntriesByType('largest-contentful-paint');
+            if (entries.length === 0) return 0;
+            const lastEntry = entries[entries.length - 1] as any;
+            return lastEntry?.startTime || 0;
+        };
+
+        const getFID = () => {
+            const entries = performance.getEntriesByType('first-input');
+            if (entries.length === 0) return 0;
+            const firstEntry = entries[0] as any;
+            return firstEntry?.processingStart - firstEntry?.startTime || 0;
+        };
+
+        const getCLS = () => {
+            let clsValue = 0;
+            const entries = performance.getEntriesByType('layout-shift');
+            for (const entry of entries) {
+                const layoutShift = entry as any;
+                if (!layoutShift.hadRecentInput) {
+                    clsValue += layoutShift.value || 0;
+                }
+            }
+            return clsValue;
+        };
+
         return {
             FCP: performance.getEntriesByName('first-contentful-paint')[0]?.startTime || 0,
-            LCP: performance.getEntriesByName('largest-contentful-paint')[0]?.startTime || 0,
-            FID: performance.getEntriesByName('first-input-delay')[0]?.duration || 0,
-            CLS: performance.getEntriesByName('cumulative-layout-shift')[0]?.value || 0,
+            LCP: getLCP(),
+            FID: getFID(),
+            CLS: getCLS(),
             TTFB: performance.getEntriesByName('time-to-first-byte')[0]?.duration || 0
         };
     });
