@@ -304,3 +304,193 @@ test.describe('Checkout Flow Tests @checkout', () => {
         expect.soft(parseFloat(total || '0').toFixed(2)).toBe(expectedTotal);
     });
 });
+
+test.describe('@checkout negative', () => {
+    /**
+     * Negative Test Scenarios for Checkout Process
+     * 
+     * This test suite covers error handling and validation in the checkout flow:
+     * 1. Form validation for required shipping fields
+     * 2. Payment decline handling with test cards
+     * 3. Security measures (CSRF protection)
+     * 
+     * Key aspects tested:
+     * - Required field validation
+     * - Payment error handling
+     * - Security token validation
+     * - User feedback for errors
+     * 
+     * Test coverage:
+     * - Empty required fields
+     * - Invalid payment methods
+     * - Session security
+     * 
+     * Error handling:
+     * - Form validation messages
+     * - Payment decline scenarios
+     * - Security violation responses
+     * 
+     * Integration points:
+     * - Payment gateway
+     * - Form validation
+     * - Security middleware
+     */
+
+    test('validates required shipping address fields', async ({ page }) => {
+        await test.step('Navigate to checkout', async () => {
+            // Add item to cart and proceed to checkout
+            await page.goto('/products/sample-product');
+            await page.getByRole('button', { name: 'Add to Cart' }).click();
+            await page.getByRole('link', { name: 'Checkout' }).click();
+            
+            await expect(page.getByText('Shipping Address')).toBeVisible();
+        });
+
+        await test.step('Submit empty form', async () => {
+            // Clear any pre-filled fields
+            const requiredFields = [
+                'First Name',
+                'Last Name',
+                'Address Line 1',
+                'City',
+                'Postal Code',
+                'Phone'
+            ];
+
+            for (const field of requiredFields) {
+                await page.getByLabel(field).clear();
+            }
+
+            // Try to proceed
+            await page.getByRole('button', { name: 'Continue to Payment' }).click();
+
+            // Verify validation messages
+            for (const field of requiredFields) {
+                await expect(page.getByText(`${field} is required`))
+                    .toBeVisible();
+            }
+        });
+
+        await test.step('Verify payment button state', async () => {
+            // Payment button should be disabled
+            await expect(page.getByRole('button', { name: 'Pay' }))
+                .toBeDisabled();
+        });
+    });
+
+    test('handles declined payment card', async ({ page }) => {
+        await test.step('Setup test order', async () => {
+            // Add item and fill shipping info
+            await page.goto('/products/sample-product');
+            await page.getByRole('button', { name: 'Add to Cart' }).click();
+            await page.getByRole('link', { name: 'Checkout' }).click();
+
+            // Fill required shipping fields
+            await page.getByLabel('First Name').fill('Test');
+            await page.getByLabel('Last Name').fill('User');
+            await page.getByLabel('Address Line 1').fill('123 Test St');
+            await page.getByLabel('City').fill('Test City');
+            await page.getByLabel('Postal Code').fill('12345');
+            await page.getByLabel('Phone').fill('1234567890');
+
+            await page.getByRole('button', { name: 'Continue to Payment' }).click();
+        });
+
+        await test.step('Attempt payment with declined card', async () => {
+            // Use Stripe test card for decline
+            await page.getByLabel('Card number').fill('4000000000000002');
+            await page.getByLabel('Expiry date').fill('1230');
+            await page.getByLabel('CVC').fill('123');
+
+            await page.getByRole('button', { name: 'Pay' }).click();
+
+            // Verify decline message
+            await expect(page.getByText('Your payment was declined'))
+                .toBeVisible();
+            await expect(page.getByText('Please try a different payment method'))
+                .toBeVisible();
+        });
+    });
+
+    test('handles expired CSRF token', async ({ page }) => {
+        await test.step('Setup checkout with expired token', async () => {
+            // Start checkout process
+            await page.goto('/products/sample-product');
+            await page.getByRole('button', { name: 'Add to Cart' }).click();
+            await page.getByRole('link', { name: 'Checkout' }).click();
+
+            // Manipulate CSRF token cookie
+            await page.evaluate(() => {
+                document.cookie = 'XSRF-TOKEN=expired; path=/';
+            });
+        });
+
+        await test.step('Attempt form submission', async () => {
+            // Try to submit shipping form
+            await page.getByLabel('First Name').fill('Test');
+            await page.getByRole('button', { name: 'Continue to Payment' }).click();
+
+            // Verify security error
+            const response = await page.waitForResponse(resp => 
+                resp.status() === 403
+            );
+            
+            expect(response.status()).toBe(403);
+            await expect(page.getByText('Session expired')).toBeVisible();
+        });
+
+        await test.step('Verify redirect to login', async () => {
+            // Should be redirected to login page
+            await expect(page).toHaveURL(/.*login/);
+            await expect(page.getByText('Please log in to continue'))
+                .toBeVisible();
+        });
+    });
+
+    test('validates payment form fields', async ({ page }) => {
+        await test.step('Setup checkout process', async () => {
+            // Add item and proceed to payment
+            await page.goto('/products/sample-product');
+            await page.getByRole('button', { name: 'Add to Cart' }).click();
+            await page.getByRole('link', { name: 'Checkout' }).click();
+
+            // Fill shipping info
+            await page.getByLabel('First Name').fill('Test');
+            await page.getByLabel('Last Name').fill('User');
+            await page.getByLabel('Address Line 1').fill('123 Test St');
+            await page.getByLabel('City').fill('Test City');
+            await page.getByLabel('Postal Code').fill('12345');
+            await page.getByLabel('Phone').fill('1234567890');
+
+            await page.getByRole('button', { name: 'Continue to Payment' }).click();
+        });
+
+        await test.step('Verify card number validation', async () => {
+            // Try invalid card number
+            await page.getByLabel('Card number').fill('4242');
+            await page.getByRole('button', { name: 'Pay' }).click();
+
+            await expect(page.getByText('Invalid card number'))
+                .toBeVisible();
+        });
+
+        await test.step('Verify expiry date validation', async () => {
+            // Try expired date
+            await page.getByLabel('Card number').fill('4242424242424242');
+            await page.getByLabel('Expiry date').fill('0122'); // Past date
+            await page.getByRole('button', { name: 'Pay' }).click();
+
+            await expect(page.getByText('Card has expired'))
+                .toBeVisible();
+        });
+
+        await test.step('Verify CVC validation', async () => {
+            // Try invalid CVC
+            await page.getByLabel('CVC').fill('1');
+            await page.getByRole('button', { name: 'Pay' }).click();
+
+            await expect(page.getByText('Invalid CVC code'))
+                .toBeVisible();
+        });
+    });
+});
