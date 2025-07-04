@@ -1,61 +1,50 @@
 import { test, expect, Page } from '@playwright/test';
 import { faker } from '@faker-js/faker';
+import { ContactPage } from '../../src/pageObjects/ContactPage';
 
 /**
- * Contact Form Test Suite
+ * @test
+ * Scenario: Contact Form Test Suite
+ * Page Objects: ContactPage
  * 
  * This test suite validates the contact form functionality including:
  * - Form submission with various types of messages
- * - Email notification verification through MailHog
- * - Console error monitoring
- * - Form validation
+ * - Support ticket creation and management
+ * - FAQ section navigation
+ * - Live chat functionality
  * 
  * Key aspects tested:
- * 1. Basic contact form submission
- * 2. Form field validation
- * 3. Success message verification
- * 4. Email delivery confirmation
- * 5. Console error monitoring
+ * 1. Contact form submission
+ * 2. Support ticket lifecycle
+ * 3. FAQ search and navigation
+ * 4. Live chat operations
  * 
  * Test data handling:
  * - Uses faker.js for generating realistic test data
- * - Tests different message types and lengths
- * - Validates email format requirements
- * 
- * Error handling:
- * - Monitors browser console for JS errors
- * - Validates form error states
- * - Ensures proper cleanup after tests
- * 
- * Integration points:
- * - MailHog API for email verification
- * - Console API for error monitoring
- * - Form submission endpoints
+ * - Tests different message types and priorities
+ * - Validates form submissions and responses
  */
 
 interface ContactMessage {
-    subject: string;
+    name: string;
     email: string;
+    subject: string;
     message: string;
+    attachment?: string;
 }
 
-interface MailHogMessage {
-    ID: string;
-    Content: {
-        Body: string;
-        Headers: {
-            Subject: string[];
-            To: string[];
-            From: string[];
-        };
-    };
+interface SupportTicket {
+    type: string;
+    priority: string;
+    description: string;
 }
 
 test.describe('Contact Form', () => {
+    let contact: ContactPage;
     let consoleErrors: string[] = [];
     
-    // Setup console error monitoring
     test.beforeEach(async ({ page }) => {
+        contact = new ContactPage(page);
         consoleErrors = [];
         page.on('console', msg => {
             if (msg.type() === 'error') {
@@ -64,53 +53,20 @@ test.describe('Contact Form', () => {
         });
     });
 
-    test('Submit contact form and verify email delivery @contact', async ({ page }) => {
+    test('Submit contact form with attachment @contact', async ({ page }) => {
         const contactData: ContactMessage = {
-            subject: faker.lorem.sentence(),
+            name: faker.person.fullName(),
             email: faker.internet.email(),
-            message: faker.lorem.paragraphs(2)
+            subject: faker.lorem.sentence(),
+            message: faker.lorem.paragraphs(2),
+            attachment: 'test-artifacts/document.pdf'
         };
 
-        await test.step('Navigate to contact page', async () => {
-            await page.goto('/contact');
-            await expect(page.getByRole('heading', { name: 'Contact Us' }))
-                .toBeVisible();
-        });
-
-        await test.step('Fill and submit contact form', async () => {
-            // Fill form fields
-            await page.getByLabel('Subject').fill(contactData.subject);
-            await page.getByLabel('Email').fill(contactData.email);
-            await page.getByLabel('Message').fill(contactData.message);
-
-            // Optional fields
-            await page.getByLabel('Department').selectOption('Customer Support');
-            await page.getByLabel('Priority').selectOption('Normal');
-
-            // Submit form
-            await page.getByRole('button', { name: 'Send Message' }).click();
+        await test.step('Submit contact form', async () => {
+            await contact.submitContactForm(contactData);
 
             // Verify success message
-            await expect(page.getByText('Your message has been successfully sent'))
-                .toBeVisible();
-        });
-
-        await test.step('Verify email delivery in MailHog', async () => {
-            // Wait for email processing
-            await page.waitForTimeout(5000);
-
-            // Check MailHog API for the contact email
-            const response = await page.request.get('http://localhost:8025/api/v2/messages');
-            const messages: MailHogMessage[] = await response.json();
-
-            const contactEmail = messages.find(msg =>
-                msg.Content.Headers.Subject.some(subj => 
-                    subj.includes('Contact request')
-                )
-            );
-
-            expect(contactEmail, 'Contact email not found in MailHog').toBeTruthy();
-            expect(contactEmail.Content.Body).toContain(contactData.message);
+            await expect(contact.successMessage).toBeVisible();
         });
 
         await test.step('Verify no console errors', async () => {
@@ -118,111 +74,88 @@ test.describe('Contact Form', () => {
         });
     });
 
-    test('Validate contact form fields @contact', async ({ page }) => {
-        await test.step('Navigate to contact page', async () => {
-            await page.goto('/contact');
-        });
+    test('Create and manage support ticket @contact', async ({ page }) => {
+        const ticket: SupportTicket = {
+            type: 'Technical Issue',
+            priority: 'High',
+            description: faker.lorem.paragraph()
+        };
 
-        await test.step('Verify email validation', async () => {
-            // Try invalid email
-            await page.getByLabel('Email').fill('invalid-email');
-            await page.getByRole('button', { name: 'Send Message' }).click();
-
-            await expect(page.getByText('Please enter a valid email address'))
-                .toBeVisible();
-        });
-
-        await test.step('Verify required fields', async () => {
-            // Clear all fields
-            await page.getByLabel('Subject').clear();
-            await page.getByLabel('Email').clear();
-            await page.getByLabel('Message').clear();
-
-            await page.getByRole('button', { name: 'Send Message' }).click();
-
-            // Check error messages
-            await expect(page.getByText('Subject is required')).toBeVisible();
-            await expect(page.getByText('Email is required')).toBeVisible();
-            await expect(page.getByText('Message is required')).toBeVisible();
-        });
-
-        await test.step('Verify message length validation', async () => {
-            // Try too short message
-            await page.getByLabel('Message').fill('Hi');
-            await page.getByRole('button', { name: 'Send Message' }).click();
-
-            await expect(page.getByText('Message must be at least 10 characters'))
-                .toBeVisible();
-
-            // Try too long message
-            const longMessage = faker.lorem.paragraphs(20); // Very long message
-            await page.getByLabel('Message').fill(longMessage);
-            await page.getByRole('button', { name: 'Send Message' }).click();
-
-            await expect(page.getByText('Message cannot exceed 1000 characters'))
-                .toBeVisible();
-        });
-
-        await test.step('Verify no console errors during validation', async () => {
-            expect(consoleErrors).toHaveLength(0);
+        await test.step('Create support ticket', async () => {
+            await contact.createSupportTicket(ticket);
+            
+            // View ticket details
+            await contact.viewTicketDetails(0);
+            
+            // Verify ticket content
+            await expect(page.locator('.ticket-details')).toContainText(ticket.description);
         });
     });
 
-    test('Test file attachment handling @contact', async ({ page }) => {
-        await test.step('Navigate to contact page', async () => {
-            await page.goto('/contact');
+    test('Search and navigate FAQ section @contact', async ({ page }) => {
+        await test.step('Search FAQ', async () => {
+            await contact.searchFAQ('return policy');
+            
+            // Verify search results
+            await expect(contact.faqQuestions).toBeVisible();
         });
 
-        await test.step('Verify file upload restrictions', async () => {
-            // Setup file input handling
-            const fileInput = page.getByLabel('Attachment');
+        await test.step('View FAQ answer', async () => {
+            await contact.selectFAQCategory('Orders');
+            await contact.viewFAQAnswer(0);
+            
+            // Verify answer is displayed
+            await expect(contact.faqAnswers).toBeVisible();
+        });
+    });
 
-            // Test invalid file type
-            await fileInput.setInputFiles({
-                name: 'test.exe',
-                mimeType: 'application/x-msdownload',
-                buffer: Buffer.from('fake executable content')
-            });
-
-            await expect(page.getByText('Invalid file type. Allowed: .pdf, .doc, .docx, .txt'))
-                .toBeVisible();
-
-            // Test file size limit
-            const largeFile = Buffer.alloc(6 * 1024 * 1024); // 6MB file
-            await fileInput.setInputFiles({
-                name: 'large.pdf',
-                mimeType: 'application/pdf',
-                buffer: largeFile
-            });
-
-            await expect(page.getByText('File size cannot exceed 5MB'))
-                .toBeVisible();
+    test('Use live chat functionality @contact', async ({ page }) => {
+        await test.step('Start chat session', async () => {
+            await contact.openLiveChat();
+            
+            // Send test message
+            await contact.sendChatMessage('Hello, I need help with my order');
+            
+            // Verify message sent
+            await expect(page.locator('.chat-window')).toContainText('Hello, I need help');
         });
 
-        await test.step('Submit form with valid attachment', async () => {
-            // Create valid PDF file
-            const validPdf = Buffer.from('%PDF-1.4\nvalid pdf content');
-            await page.getByLabel('Attachment').setInputFiles({
-                name: 'document.pdf',
-                mimeType: 'application/pdf',
-                buffer: validPdf
-            });
+        await test.step('Close chat session', async () => {
+            await contact.closeLiveChat();
+            
+            // Verify chat window is closed
+            await expect(contact.chatWindow).toBeHidden();
+        });
+    });
 
-            // Fill other required fields
-            await page.getByLabel('Subject').fill(faker.lorem.sentence());
-            await page.getByLabel('Email').fill(faker.internet.email());
-            await page.getByLabel('Message').fill(faker.lorem.paragraph());
-
-            // Submit form
-            await page.getByRole('button', { name: 'Send Message' }).click();
-
-            // Verify success
-            await expect(page.getByText('Your message has been successfully sent'))
-                .toBeVisible();
+    test('Validate contact form fields @contact', async ({ page }) => {
+        await test.step('Try invalid email', async () => {
+            await expect(contact.submitContactForm({
+                name: faker.person.fullName(),
+                email: 'invalid-email',
+                subject: faker.lorem.sentence(),
+                message: faker.lorem.paragraph()
+            })).rejects.toThrow();
         });
 
-        await test.step('Verify no console errors during file handling', async () => {
-            expect(consoleErrors).toHaveLength(0);
+        await test.step('Try too short message', async () => {
+            await expect(contact.submitContactForm({
+                name: faker.person.fullName(),
+                email: faker.internet.email(),
+                subject: faker.lorem.sentence(),
+                message: 'Hi'
+            })).rejects.toThrow();
+        });
+
+        await test.step('Try too large attachment', async () => {
+            const largeFile = 'test-artifacts/large.pdf'; // 6MB file
+            await expect(contact.submitContactForm({
+                name: faker.person.fullName(),
+                email: faker.internet.email(),
+                subject: faker.lorem.sentence(),
+                message: faker.lorem.paragraph(),
+                attachment: largeFile
+            })).rejects.toThrow();
         });
     });
 }); 

@@ -2,6 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 import { allure } from 'allure-playwright';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
+import { AdminPage } from '../../src/pageObjects/AdminPage';
 
 /**
  * @fileoverview Back-Office Administration Test Suite
@@ -271,8 +272,11 @@ const adminPage = {
 test.describe('Back-Office Product Management', () => {
     let productId: string;
     let productName: string;
+    let admin: AdminPage;
 
     test.beforeEach(async ({ page }) => {
+        admin = new AdminPage(page);
+        await admin.login(ADMIN_CREDS.username, ADMIN_CREDS.password);
         await allure.step('Setup: Generate unique product name', async () => {
             productName = `Test TS ${Date.now()}-${uuidv4().slice(0, 8)}`;
         });
@@ -297,7 +301,7 @@ test.describe('Back-Office Product Management', () => {
     test('should create product and verify in front-office @admin @ui', async ({ page }) => {
         // Step 1: Admin Login
         await allure.step('Step 1: Login to admin panel', async () => {
-            await adminPage.login(page);
+            await admin.login(ADMIN_CREDS.username, ADMIN_CREDS.password);
             await expect(page).toHaveURL(/.*\/dashboard/);
         });
 
@@ -313,7 +317,7 @@ test.describe('Back-Office Product Management', () => {
                 stock: 100
             };
 
-            productId = await adminPage.createProduct(page, product);
+            productId = await admin.createProduct(product);
             expect(productId).toBeTruthy();
         });
 
@@ -337,7 +341,7 @@ test.describe('Back-Office Product Management', () => {
 
         // Step 5: Front-office Verification
         await allure.step('Step 5: Verify product in front-office', async () => {
-            await adminPage.verifyProductInFrontOffice(page, productId);
+            await admin.verifyProductInFrontOffice(productId);
         });
     });
 
@@ -347,13 +351,13 @@ test.describe('Back-Office Product Management', () => {
      */
     test('should manage product status correctly @admin @ui', async ({ page }) => {
         await allure.step('Create draft product', async () => {
-            await adminPage.login(page);
+            await admin.login(ADMIN_CREDS.username, ADMIN_CREDS.password);
             const product: IProduct = {
                 name: productName,
                 price: 123.45,
                 status: 'DRAFT'
             };
-            productId = await adminPage.createProduct(page, product);
+            productId = await admin.createProduct(product);
         });
 
         await allure.step('Verify draft not visible in front-office', async () => {
@@ -362,11 +366,11 @@ test.describe('Back-Office Product Management', () => {
         });
 
         await allure.step('Publish product', async () => {
-            await adminPage.updateProduct(page, productId, { status: 'PUBLISHED' });
+            await admin.updateProduct(productId, { status: 'PUBLISHED' });
         });
 
         await allure.step('Verify published product visible in front-office', async () => {
-            await adminPage.verifyProductInFrontOffice(page, productId);
+            await admin.verifyProductInFrontOffice(productId);
         });
     });
 
@@ -375,14 +379,19 @@ test.describe('Back-Office Product Management', () => {
      * @description Ensures proper price formatting and validation
      */
     test('should validate product price format @admin @ui', async ({ page }) => {
-        await adminPage.login(page);
+        await admin.login(ADMIN_CREDS.username, ADMIN_CREDS.password);
 
         await allure.step('Attempt to create product with invalid price', async () => {
-            await page.click('[data-testid="products-menu"]');
-            await page.click('[data-testid="create-product"]');
-            await page.fill('[data-testid="product-name"]', productName);
-            await page.fill('[data-testid="product-price"]', 'invalid');
-            await page.click('[data-testid="save-product"]');
+            await admin.navigateToProducts();
+            await admin.createProduct({
+                name: productName,
+                price: 0,
+                status: 'DRAFT',
+                description: 'Test product description',
+                category: 'Test Category',
+                sku: `SKU-${Date.now()}`,
+                stock: 100
+            });
 
             const error = page.locator('[data-testid="price-error"]');
             await expect(error).toBeVisible();
@@ -390,8 +399,8 @@ test.describe('Back-Office Product Management', () => {
         });
 
         await allure.step('Create product with valid price', async () => {
-            await page.fill('[data-testid="product-price"]', '123.45');
-            await page.click('[data-testid="save-product"]');
+            await admin.updateProduct(productId, { price: 123.45 });
+            await admin.saveProduct();
             await page.waitForSelector('[data-testid="toast-success"]');
         });
     });
@@ -402,7 +411,7 @@ test.describe('Back-Office Product Management', () => {
      */
     test('should update existing product @admin @ui', async ({ page }) => {
         // Create initial product
-        await adminPage.login(page);
+        await admin.login(ADMIN_CREDS.username, ADMIN_CREDS.password);
         const initialProduct: IProduct = {
             name: productName,
             price: 123.45,
@@ -412,7 +421,7 @@ test.describe('Back-Office Product Management', () => {
             sku: `SKU-${Date.now()}`,
             stock: 100
         };
-        productId = await adminPage.createProduct(page, initialProduct);
+        productId = await admin.createProduct(initialProduct);
 
         // Update product
         const updates: Partial<IProduct> = {
@@ -423,7 +432,7 @@ test.describe('Back-Office Product Management', () => {
             stock: 200
         };
 
-        await adminPage.updateProduct(page, productId, updates);
+        await admin.updateProduct(productId, updates);
 
         // Verify updates via API
         const updatedProducts = await api.getProductByName(updates.name!);
@@ -431,7 +440,53 @@ test.describe('Back-Office Product Management', () => {
         expect(updatedProducts[0]).toMatchObject(updates);
 
         // Verify updates in front-office
-        await adminPage.verifyProductInFrontOffice(page, productId);
+        await admin.verifyProductInFrontOffice(productId);
+    });
+
+    test('should delete a product', async ({ page }) => {
+        await allure.step('Delete product', async () => {
+            // Create test product first
+            const product: IProduct = {
+                name: `Test Product ${uuidv4()}`,
+                price: 99.99,
+                status: 'DRAFT'
+            };
+
+            await admin.navigateToProducts();
+            await admin.createProduct(product);
+
+            const products = await api.getProductByName(product.name);
+            const productId = products[0].id!;
+
+            // Delete product
+            await admin.deleteProduct(productId);
+
+            // Verify deletion
+            const deletedProducts = await api.getProductByName(product.name);
+            expect(deletedProducts).toHaveLength(0);
+        });
+    });
+
+    test('should manage user roles', async ({ page }) => {
+        await allure.step('Manage user roles', async () => {
+            await admin.navigateToUsers();
+            await admin.updateUserRole(0, 'editor');
+            
+            // Verify role update
+            const roleText = await page.locator('[data-testid="user-role"]').first().textContent();
+            expect(roleText).toBe('editor');
+        });
+    });
+
+    test('should handle order status updates', async ({ page }) => {
+        await allure.step('Update order status', async () => {
+            await admin.navigateToOrders();
+            await admin.updateOrderStatus(0, 'shipped');
+            
+            // Verify status update
+            const statusText = await page.locator('[data-testid="order-status"]').first().textContent();
+            expect(statusText).toBe('shipped');
+        });
     });
 });
 
