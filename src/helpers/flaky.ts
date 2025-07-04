@@ -98,13 +98,7 @@ function calculateDelay(attempt: number, options: Required<RetryOptions>): numbe
 
 /**
  * Sleep for specified duration
- * @param ms - Duration in milliseconds
- */
-async function sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
+// Duplicate sleep function removed
  * Format error message for logging
  * @param error - Original error
  * @param attempt - Attempt number
@@ -126,6 +120,7 @@ function logRetryAttempt(
     maxRetries: number,
     delay: number,
     error: Error
+)
 ): void {
     console.log('\n=== Flaky Test Retry Information ===');
     console.log(`Attempt: ${attempt}/${maxRetries}`);
@@ -133,7 +128,6 @@ function logRetryAttempt(
     console.log('Failure reason:', error.message);
     console.log('Stack trace:', error.stack || 'No stack trace available');
     console.log('=====================================\n');
-}
 
 /**
  * Sleep for specified duration
@@ -261,7 +255,7 @@ export function withRetry(
                 
                 // Log success if it was a retry
                 if (attempt > 0) {
-                    console.log(`\n✓ Test passed on attempt ${attempt + 1}\n`);
+                    console.log(`\nPASSED: Test passed on attempt ${attempt + 1}\n`);
                 }
                 
                 return;

@@ -140,7 +140,7 @@ axiosClient.interceptors.request.use(
     const requestLog = formatRequestLog(config);
 
     // Console logging
-    console.log('🌐 API Request:', JSON.stringify(requestLog, null, 2));
+    console.log('[API] Request:', JSON.stringify(requestLog, null, 2));
 
     // Allure reporting
     await allure.attachment(
@@ -156,7 +156,7 @@ axiosClient.interceptors.request.use(
   },
   async (error) => {
     // Log request errors
-    console.error('❌ Request Error:', error.message);
+    console.error('ERROR: Request Error:', error.message);
     
     await allure.attachment(
       'Request Error',
@@ -178,7 +178,7 @@ axiosClient.interceptors.response.use(
     const responseLog = formatResponseLog(response, duration);
 
     // Console logging
-    console.log('✅ API Response:', JSON.stringify(responseLog, null, 2));
+    console.log('[API] Response:', JSON.stringify(responseLog, null, 2));
 
     // Allure reporting
     await allure.attachment(
@@ -206,7 +206,7 @@ axiosClient.interceptors.response.use(
     };
 
     // Console logging
-    console.error('❌ API Error:', JSON.stringify(errorLog, null, 2));
+    console.error('ERROR: API Error:', JSON.stringify(errorLog, null, 2));
 
     // Allure reporting
     await allure.attachment(

@@ -326,7 +326,7 @@ export async function attachJSON(
     const formattedData = JSON.stringify(data, null, indent);
     
     // Log to console for debugging
-    console.log(`📎 Attaching JSON: ${name}`);
+    console.log(`[ATTACH] Attaching JSON: ${name}`);
     console.log(formattedData);
 
     // Attach to Allure report
@@ -407,7 +407,7 @@ export async function attachScreenshot(
     }
 
     // Capture screenshot
-    console.log(`📸 Capturing screenshot: ${name}`);
+    console.log(`[SCREEN] Capturing screenshot: ${name}`);
     const buffer = await page.screenshot(screenshotOptions);
 
     // Restore fixed elements
