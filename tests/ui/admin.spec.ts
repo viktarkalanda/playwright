@@ -3,6 +3,8 @@ import { allure } from 'allure-playwright';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { AdminPage } from '../../src/pageObjects/AdminPage';
+import { ProductPage } from '../../src/pageObjects/ProductPage';
+import { axiosClient } from '../../src/helpers/axiosClient';
 
 /**
  * @fileoverview Back-Office Administration Test Suite
@@ -273,9 +275,11 @@ test.describe('Back-Office Product Management', () => {
     let productId: string;
     let productName: string;
     let admin: AdminPage;
+    let productPage: ProductPage;
 
     test.beforeEach(async ({ page }) => {
         admin = new AdminPage(page);
+        productPage = new ProductPage(page);
         await admin.login(ADMIN_CREDS.username, ADMIN_CREDS.password);
         await allure.step('Setup: Generate unique product name', async () => {
             productName = `Test TS ${Date.now()}-${uuidv4().slice(0, 8)}`;

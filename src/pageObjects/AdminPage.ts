@@ -1,6 +1,16 @@
 import { Page, Locator } from '@playwright/test';
 
 /**
+ * Product interface for admin operations
+ */
+interface AdminProduct {
+    name: string;
+    price: number;
+    status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+    description?: string;
+}
+
+/**
  * AdminPage represents the back-office administration interface.
  * Provides access to product management, order processing, and system configuration.
  * 
@@ -39,8 +49,10 @@ export class AdminPage {
     readonly productNameInput: Locator;
     readonly productPriceInput: Locator;
     readonly productDescriptionInput: Locator;
+    readonly productStatusSelect: Locator;
     readonly saveProductButton: Locator;
     readonly deleteProductButton: Locator;
+    readonly priceError: Locator;
 
     // Order Management
     readonly orderList: Locator;
@@ -73,8 +85,10 @@ export class AdminPage {
         this.productNameInput = page.locator('#product-name');
         this.productPriceInput = page.locator('#product-price');
         this.productDescriptionInput = page.locator('#product-description');
+        this.productStatusSelect = page.locator('#product-status');
         this.saveProductButton = page.locator('[data-testid="save-product"]');
         this.deleteProductButton = page.locator('[data-testid="delete-product"]');
+        this.priceError = page.locator('.price-error');
 
         // Order Management
         this.orderList = page.locator('.order-list');
@@ -110,16 +124,44 @@ export class AdminPage {
      * Creates a new product
      * @param product - Product details
      */
-    async createProduct(product: {
-        name: string;
-        price: number;
-        description: string;
-    }) {
+    async createProduct(product: AdminProduct) {
         await this.addProductButton.click();
         await this.productNameInput.fill(product.name);
         await this.productPriceInput.fill(product.price.toString());
-        await this.productDescriptionInput.fill(product.description);
+        if (product.description) {
+            await this.productDescriptionInput.fill(product.description);
+        }
+        if (product.status) {
+            await this.productStatusSelect.selectOption(product.status);
+        }
         await this.saveProductButton.click();
+    }
+
+    /**
+     * Gets product ID by name
+     */
+    async getProductIdByName(name: string): Promise<string> {
+        const product = await this.page.locator(`[data-testid="product-row"]:has-text("${name}")`);
+        const id = await product.getAttribute('data-product-id');
+        if (!id) throw new Error(`Product with name ${name} not found`);
+        return id;
+    }
+
+    /**
+     * Updates product status
+     */
+    async updateProductStatus(name: string, status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED') {
+        const product = await this.page.locator(`[data-testid="product-row"]:has-text("${name}")`).click();
+        await this.productStatusSelect.selectOption(status);
+        await this.saveProductButton.click();
+    }
+
+    /**
+     * Gets current product status
+     */
+    async getProductStatus(name: string): Promise<string> {
+        const product = await this.page.locator(`[data-testid="product-row"]:has-text("${name}")`).click();
+        return this.productStatusSelect.inputValue();
     }
 
     /**
@@ -127,11 +169,7 @@ export class AdminPage {
      * @param index - Product index in the list
      * @param product - Updated product details
      */
-    async updateProduct(index: number, product: {
-        name?: string;
-        price?: number;
-        description?: string;
-    }) {
+    async updateProduct(index: number, product: Partial<AdminProduct>) {
         await this.productList.nth(index).click();
         if (product.name) {
             await this.productNameInput.fill(product.name);
@@ -141,6 +179,9 @@ export class AdminPage {
         }
         if (product.description) {
             await this.productDescriptionInput.fill(product.description);
+        }
+        if (product.status) {
+            await this.productStatusSelect.selectOption(product.status);
         }
         await this.saveProductButton.click();
     }
