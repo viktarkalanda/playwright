@@ -218,4 +218,27 @@ export class HomePage {
     async changeCurrency(currency: string) {
         await this.currencySelect.selectOption(currency);
     }
+
+    /**
+     * Navigate to the home page
+     */
+    async goto(): Promise<void> {
+        await this.page.goto('/');
+    }
+
+    /**
+     * Wait for the home page to be fully loaded
+     */
+    async waitForLoad(): Promise<void> {
+        // Wait for key elements that indicate the page is loaded
+        await this.page.waitForSelector('.hero-section');
+        await this.page.waitForSelector('.products-grid');
+        await this.page.waitForSelector('footer');
+        
+        // Wait for all images to load
+        await this.page.waitForFunction(() => {
+            const images = document.querySelectorAll('img');
+            return Array.from(images).every(img => img.complete);
+        });
+    }
 } 

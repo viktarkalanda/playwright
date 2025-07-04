@@ -225,4 +225,50 @@ export class ProductPage {
     async openSizeGuide() {
         await this.sizeGuide.click();
     }
+
+    /**
+     * Navigate to a specific product page
+     * @param productId - The ID of the product to navigate to
+     */
+    async navigateToProduct(productId: string): Promise<void> {
+        await this.page.goto(`/product/${productId}`);
+    }
+
+    /**
+     * Wait for the product page to be fully loaded
+     */
+    async waitForLoad(): Promise<void> {
+        // Wait for key elements that indicate the page is loaded
+        await this.page.waitForSelector('.product-gallery');
+        await this.page.waitForSelector('.product-details');
+        await this.page.waitForSelector('.price-availability');
+        await this.page.waitForSelector('.related-products');
+        
+        // Wait for all images to load
+        await this.page.waitForFunction(() => {
+            const images = document.querySelectorAll('img');
+            return Array.from(images).every(img => img.complete);
+        });
+    }
+
+    /**
+     * Get the current theme of the page
+     * @returns Promise<'light' | 'dark'> The current theme
+     */
+    async getCurrentTheme(): Promise<'light' | 'dark'> {
+        const theme = await this.page.evaluate(() => {
+            return document.documentElement.getAttribute('data-theme');
+        });
+        return (theme as 'light' | 'dark') || 'light';
+    }
+
+    /**
+     * Set the theme of the page
+     * @param theme - The theme to set ('light' or 'dark')
+     */
+    async setTheme(theme: 'light' | 'dark'): Promise<void> {
+        await this.page.evaluate((t) => {
+            document.documentElement.setAttribute('data-theme', t);
+        }, theme);
+    }
 } 
