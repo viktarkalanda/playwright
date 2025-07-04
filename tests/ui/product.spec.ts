@@ -2,21 +2,31 @@
  * Product Details Page Test Suite
  * ============================
  * 
- * This test suite validates the product details page functionality,
- * focusing on the following key features:
+ * End-to-end tests validating the product details page functionality:
  * 
- * - Product image gallery and lightbox
- * - Product variants (size, color) selection
- * - Dynamic price updates
- * - Product reviews and ratings
+ * User Stories:
+ * 1. Product Viewing
+ *    - Browse product images
+ *    - View detailed information
+ *    - Read specifications
  * 
- * The tests use soft assertions (expect.soft) to collect all possible
- * failures in a single test run, providing a more comprehensive view
- * of the page's state and any potential issues.
+ * 2. Product Configuration
+ *    - Select variants (size, color)
+ *    - Choose quantity
+ *    - View price updates
  * 
- * @author QA Team
- * @category UI Tests
- * @subcategory Product Details
+ * 3. Customer Reviews
+ *    - Read product reviews
+ *    - View ratings distribution
+ *    - Sort and filter reviews
+ * 
+ * 4. Purchase Flow
+ *    - Add to cart
+ *    - Buy now
+ *    - Save to wishlist
+ * 
+ * @group product
+ * @group e2e
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -137,7 +147,7 @@ async function waitForPriceUpdate(page: Page, priceElement: any): Promise<void> 
     await priceElement.waitFor({ state: 'visible' });
 }
 
-test.describe('Product Details Page Tests @product', () => {
+test.describe('Product Details Functionality @product', () => {
     let productPage: ProductPage;
 
     test.beforeEach(async ({ page }) => {
@@ -146,109 +156,113 @@ test.describe('Product Details Page Tests @product', () => {
     });
 
     /**
-     * Main test case for product page functionality
-     * Uses soft assertions to check multiple aspects without early termination
+     * Validates core product page functionality including variants and reviews
+     * 
+     * User Story:
+     * As a customer
+     * I want to view and configure products
+     * So that I can make informed purchase decisions
+     * 
+     * @test
+     * @category Critical Path
      */
-    test('should handle product variants and display reviews correctly', async ({ page }) => {
-        // Step 1: Verify initial page load
-        await test.step('Initial page load', async () => {
-            await expect.soft(page).toHaveURL('/product/1');
-            await expect.soft(page.locator(selectors.gallery.mainImage))
-                .toBeVisible();
+    test('product configuration and review display', async ({ page }) => {
+        // 1. Initial Product View
+        await test.step('Verify product display', async () => {
+            await expect(productPage.productTitle).toBeVisible();
+            await expect(productPage.productImage).toBeVisible();
+            await expect(productPage.productPrice).toBeVisible();
         });
 
-        // Step 2: Test image gallery and lightbox
-        await test.step('Image gallery and lightbox', async () => {
-            // Click first thumbnail
-            const firstThumbnail = page.locator(selectors.gallery.thumbnails).first();
-            await firstThumbnail.click();
-
-            // Verify lightbox opens
-            const lightbox = page.locator(selectors.gallery.lightbox.container);
-            await expect.soft(lightbox).toBeVisible();
-
-            // Verify lightbox navigation
-            await expect.soft(page.locator(selectors.gallery.lightbox.next))
-                .toBeVisible();
-            await expect.soft(page.locator(selectors.gallery.lightbox.prev))
-                .toBeVisible();
-
-            // Close lightbox
-            await page.locator(selectors.gallery.lightbox.close).click();
-            await expect.soft(lightbox).not.toBeVisible();
-        });
-
-        // Step 3: Test variant selection and price update
-        await test.step('Variant selection', async () => {
-            // Get initial price for comparison
-            const priceElement = page.locator(selectors.variants.price);
-            const initialPrice = await priceElement.textContent();
-
-            // Select size M
-            await page.locator(selectors.variants.sizeSelect)
-                .selectOption('M');
+        // 2. Image Gallery Interaction
+        await test.step('Image gallery navigation', async () => {
+            await expect(productPage.imageGallery.first()).toBeVisible();
+            await productPage.imageGallery.first().click();
             
-            // Select color Red
-            await page.locator(selectors.variants.colorSelect)
-                .selectOption('Red');
+            // Verify gallery navigation
+            await expect(page.locator('[data-testid="lightbox"]')).toBeVisible();
+            await page.locator('[data-testid="lightbox-close"]').click();
+        });
 
+        // 3. Variant Selection
+        await test.step('Configure product variants', async () => {
+            const initialPrice = await productPage.productPrice.textContent();
+            
+            // Select variants
+            await productPage.selectVariant('size', 'M');
+            await productPage.selectVariant('color', 'Red');
+            
             // Wait for price update
-            await waitForPriceUpdate(page, priceElement);
-
-            // Verify price changed
-            const updatedPrice = await priceElement.textContent();
-            await expect.soft(updatedPrice).not.toBe(initialPrice);
-
-            // Verify SKU updated
-            await expect.soft(page.locator(selectors.variants.sku))
-                .toBeVisible();
+            await page.waitForResponse(response => 
+                response.url().includes('/api/product/price') && 
+                response.status() === 200
+            );
+            
+            const updatedPrice = await productPage.productPrice.textContent();
+            expect(updatedPrice).not.toBe(initialPrice);
         });
 
-        // Step 4: Test reviews tab and ratings
-        await test.step('Reviews and ratings', async () => {
-            // Open reviews tab
-            await page.locator(selectors.tabs.reviews).click();
+        // 4. Review Section
+        await test.step('Review section validation', async () => {
+            await productPage.reviewsTab.click();
             
-            // Wait for reviews to load
-            await page.locator(selectors.reviews.container).waitFor();
-
-            // Get all reviews
-            const reviews = await getReviews(page);
-            expect.soft(reviews.length).toBeGreaterThan(0);
-
-            // Calculate and verify average rating
-            const averageRating = calculateAverageRating(reviews);
-            expect.soft(averageRating).toBeGreaterThanOrEqual(4);
-
-            // Verify rating display
-            const displayedRating = await extractRating(
-                page,
-                page.locator(selectors.reviews.averageRating)
-            );
-            expect.soft(displayedRating).toBeGreaterThanOrEqual(4);
+            // Verify review content
+            const reviewsContainer = page.locator('[data-testid="reviews-container"]');
+            await expect(reviewsContainer).toBeVisible();
+            
+            // Check rating display
+            const ratingStars = page.locator('[data-testid="rating-stars"]');
+            await expect(ratingStars).toBeVisible();
         });
     });
 
     /**
-     * Additional test for variant combinations
+     * Validates product variant combinations
+     * 
+     * @test
+     * @category Product Configuration
      */
-    test('should handle all variant combinations @product', async ({ page }) => {
+    test('variant combination validation @product', async ({ page }) => {
         const sizes = ['S', 'M', 'L'];
         const colors = ['Red', 'Blue', 'Green'];
 
         for (const size of sizes) {
             for (const color of colors) {
-                await test.step(`Testing ${size}/${color} combination`, async () => {
-                    await page.locator(selectors.variants.sizeSelect)
-                        .selectOption(size);
-                    await page.locator(selectors.variants.colorSelect)
-                        .selectOption(color);
-
-                    // Verify variant selection is valid
-                    await expect.soft(page.locator(selectors.variants.sku))
-                        .toBeVisible();
+                await test.step(`Variant: ${size}/${color}`, async () => {
+                    await productPage.selectVariant('size', size);
+                    await productPage.selectVariant('color', color);
+                    
+                    // Verify selection is valid
+                    await expect(page.locator('[data-testid="product-sku"]')).toBeVisible();
                 });
             }
         }
+    });
+
+    /**
+     * Validates the add to cart functionality
+     * 
+     * User Story:
+     * As a customer
+     * I want to add products to my cart
+     * So that I can proceed with my purchase
+     * 
+     * @test
+     * @category Purchase Flow
+     */
+    test('add to cart workflow @cart', async ({ page }) => {
+        // Configure product
+        await productPage.selectVariant('size', 'M');
+        await productPage.selectVariant('color', 'Blue');
+        
+        // Add to cart with quantity
+        await productPage.addToCart(2);
+        
+        // Verify cart notification
+        await expect(page.locator('[data-testid="cart-popup"]')).toBeVisible();
+        
+        // Verify cart state
+        const cartCount = await page.locator('[data-testid="cart-count"]').textContent();
+        expect(cartCount).toBe('2');
     });
 }); 

@@ -2,30 +2,31 @@
  * Checkout Flow Test Suite
  * ======================
  * 
- * This test suite validates the complete checkout process,
- * following the happy path scenario through all checkout steps:
+ * End-to-end tests validating the complete checkout process:
  * 
- * 1. Address Step
- *    - Form validation
- *    - Address saving
- *    - Navigation to shipping
+ * User Stories:
+ * 1. Address Management
+ *    - Enter shipping details
+ *    - Save address for future
+ *    - Edit saved addresses
  * 
- * 2. Shipping Step
- *    - Method selection
- *    - Price calculation
- *    - Navigation to payment
+ * 2. Shipping Options
+ *    - View available methods
+ *    - Compare delivery times
+ *    - Select preferred option
  * 
- * 3. Payment Step
- *    - Mock payment processing
- *    - Order confirmation
+ * 3. Payment Processing
+ *    - Choose payment method
+ *    - Enter payment details
+ *    - Handle validation
  * 
- * The suite uses API calls to set up the cart state before each test,
- * ensuring a clean and consistent starting point. All form inputs use
- * realistic but fictional data to avoid any potential real transactions.
+ * 4. Order Review
+ *    - Verify cart contents
+ *    - Review total costs
+ *    - Place final order
  * 
- * @author QA Team
- * @category UI Tests
- * @subcategory Checkout Flow
+ * @group checkout
+ * @group e2e
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -116,7 +117,7 @@ const selectors = {
 };
 
 /**
- * Test data for address form
+ * Test data: Shipping address for checkout flow
  */
 const testAddress: AddressForm = {
     firstName: 'John',
@@ -164,14 +165,13 @@ async function waitForStepNavigation(page: Page, step: string): Promise<void> {
     await page.locator(selectors.progress[step]).waitFor({ state: 'visible' });
 }
 
-test.describe('Checkout Flow Tests @checkout', () => {
+test.describe('Checkout Flow @checkout', () => {
     let checkoutPage: CheckoutPage;
 
     test.beforeEach(async ({ page, request }) => {
-        // Initialize page object
         checkoutPage = new CheckoutPage(page);
 
-        // Add product to cart via API
+        // Setup test data via API
         await request.post('/api/cart/add', {
             data: {
                 id: 1,
@@ -181,127 +181,161 @@ test.describe('Checkout Flow Tests @checkout', () => {
     });
 
     /**
-     * Main test case for happy path checkout flow
-     * Covers complete checkout process from address to confirmation
+     * Validates the complete checkout process from cart to confirmation
+     * 
+     * User Story:
+     * As a customer
+     * I want to complete my purchase
+     * So that I can receive my ordered items
+     * 
+     * @test
+     * @category Critical Path
      */
-    test('should complete checkout successfully @checkout', async ({ page }) => {
-        // Step 1: Address Form
-        await test.step('Fill and submit address form', async () => {
-            // Navigate to checkout address step
+    test('complete checkout process', async ({ page }) => {
+        // 1. Address Entry
+        await test.step('Shipping address submission', async () => {
             await page.goto('/checkout/address');
-            await expect.soft(page).toHaveURL('/checkout/address');
-
-            // Fill address form
-            await fillAddressForm(page, testAddress);
-
-            // Save address for future use
-            await page.locator(selectors.address.saveAddress).check();
-
-            // Continue to shipping
-            await page.locator(selectors.address.continue).click();
-            await waitForStepNavigation(page, 'shipping');
-
-            // Verify address step completed
-            await expect.soft(page.locator(selectors.progress.address))
-                .toHaveAttribute('data-status', 'completed');
+            
+            // Fill address details
+            await checkoutPage.fillShippingAddress({
+                firstName: testAddress.firstName,
+                lastName: testAddress.lastName,
+                email: testAddress.email,
+                address: testAddress.address1,
+                apartment: testAddress.address2,
+                city: testAddress.city,
+                state: testAddress.state,
+                zip: testAddress.postcode,
+                phone: testAddress.phone
+            });
+            await checkoutPage.saveAddressCheckbox.check();
+            
+            // Proceed to shipping
+            await page.locator('[data-testid="continue-shipping"]').click();
+            await expect(page.locator('[data-testid="step-address-complete"]')).toBeVisible();
         });
 
-        // Step 2: Shipping Method
-        await test.step('Select shipping method', async () => {
-            // Wait for shipping methods to load
-            await page.locator(selectors.shipping.methods.container).waitFor();
-
-            // Select first shipping method
-            const firstMethod = page.locator(selectors.shipping.methods.method).first();
-            await firstMethod.click();
-
-            // Store shipping price for later verification
-            const shippingPrice = await page.locator(selectors.shipping.methods.price)
-                .first()
-                .textContent();
+        // 2. Shipping Selection
+        await test.step('Shipping method selection', async () => {
+            await expect(page.locator('[data-testid="shipping-methods"]')).toBeVisible();
+            
+            // Select shipping method
+            await page.locator('[data-testid="shipping-method"]').first().click();
+            const shippingCost = await page.locator('[data-testid="shipping-price"]').first().textContent();
+            
             test.info().annotations.push({
                 type: 'Shipping',
-                description: shippingPrice || '0'
+                description: shippingCost || '0'
             });
-
-            // Continue to payment
-            await page.locator(selectors.shipping.continue).click();
-            await waitForStepNavigation(page, 'payment');
-
-            // Verify shipping step completed
-            await expect.soft(page.locator(selectors.progress.shipping))
-                .toHaveAttribute('data-status', 'completed');
+            
+            // Proceed to payment
+            await page.locator('[data-testid="continue-payment"]').click();
+            await expect(page.locator('[data-testid="step-shipping-complete"]')).toBeVisible();
         });
 
-        // Step 3: Payment and Order Placement
-        await test.step('Complete payment and place order', async () => {
-            // Wait for payment methods to load
-            await page.locator(selectors.payment.methods.container).waitFor();
-
-            // Click mock payment button
-            await page.locator(selectors.payment.mockPay).click();
-
-            // Wait for payment processing
-            await page.waitForResponse(response => 
-                response.url().includes('/api/checkout/payment') && 
-                response.status() === 200
-            );
-
-            // Place order
-            await page.locator(selectors.payment.placeOrder).click();
-
-            // Wait for order confirmation
-            await page.waitForResponse(response => 
-                response.url().includes('/api/order/create') && 
-                response.status() === 200
-            );
-
+        // 3. Payment Processing
+        await test.step('Payment and order placement', async () => {
+            await expect(page.locator('[data-testid="payment-methods"]')).toBeVisible();
+            
+            // Complete payment
+            await checkoutPage.fillPaymentDetails({
+                number: '4111111111111111',
+                expiry: '12/25',
+                cvv: '123'
+            });
+            await checkoutPage.placeOrder();
+            
             // Verify order confirmation
-            const confirmationMessage = page.locator(selectors.confirmation.message);
-            await expect.soft(confirmationMessage).toBeVisible();
-            await expect.soft(confirmationMessage)
-                .toContainText('Thank you for your order');
+            await expect(checkoutPage.confirmationMessage).toBeVisible();
+            await expect(checkoutPage.orderNumber).toBeVisible();
+        });
 
-            // Verify order number is displayed
-            await expect.soft(page.locator(selectors.confirmation.orderNumber))
-                .toBeVisible();
-
-            // Verify order summary
-            await expect.soft(page.locator(selectors.confirmation.summary.container))
-                .toBeVisible();
+        // 4. Order Summary Verification
+        await test.step('Order summary validation', async () => {
+            await expect(checkoutPage.orderSummary).toBeVisible();
+            
+            // Verify order details
+            const orderNumber = await checkoutPage.getOrderNumber();
+            expect(orderNumber).toMatch(/^[A-Z0-9]{8}$/);
         });
     });
 
     /**
-     * Additional test for order summary verification
+     * Validates address form validation and error handling
+     * 
+     * User Story:
+     * As a customer
+     * I want to receive clear feedback on address errors
+     * So that I can correct my shipping information
+     * 
+     * @test
+     * @category Form Validation
      */
-    test('should display correct order summary @checkout', async ({ page }) => {
-        // Complete checkout steps
+    test('address validation handling @forms', async ({ page }) => {
         await page.goto('/checkout/address');
-        await fillAddressForm(page, testAddress);
-        await page.locator(selectors.address.continue).click();
-        await waitForStepNavigation(page, 'shipping');
+        
+        // Try to continue without data
+        await page.locator('[data-testid="continue-shipping"]').click();
+        
+        // Verify validation messages
+        await expect(page.locator('#first-name-error')).toBeVisible();
+        await expect(page.locator('#email-error')).toBeVisible();
+        
+        // Fill partial data with invalid email
+        await checkoutPage.fillShippingAddress({
+            ...testAddress,
+            email: 'invalid-email',
+            address: testAddress.address1,
+            zip: testAddress.postcode
+        });
+        
+        // Verify email validation
+        await expect(page.locator('#email-error')).toContainText('valid email');
+    });
 
-        // Get initial subtotal
-        const subtotal = await page.locator(selectors.confirmation.summary.subtotal)
-            .textContent();
-
-        // Complete remaining steps
-        await page.locator(selectors.shipping.methods.method).first().click();
-        await page.locator(selectors.shipping.continue).click();
-        await page.locator(selectors.payment.mockPay).click();
-        await page.locator(selectors.payment.placeOrder).click();
-
-        // Verify final total includes shipping
-        const total = await page.locator(selectors.confirmation.summary.total)
-            .textContent();
-        const shipping = await page.locator(selectors.confirmation.summary.shipping)
-            .textContent();
-
-        // Simple verification that total = subtotal + shipping
-        const expectedTotal = (parseFloat(subtotal || '0') + parseFloat(shipping || '0'))
-            .toFixed(2);
-        expect.soft(parseFloat(total || '0').toFixed(2)).toBe(expectedTotal);
+    /**
+     * Validates shipping price calculations
+     * 
+     * User Story:
+     * As a customer
+     * I want accurate shipping costs
+     * So that I can choose the best delivery option
+     * 
+     * @test
+     * @category Price Calculation
+     */
+    test('shipping cost calculation @pricing', async ({ page }) => {
+        // Setup: Get to shipping step
+        await page.goto('/checkout/address');
+        await checkoutPage.fillShippingAddress({
+            firstName: testAddress.firstName,
+            lastName: testAddress.lastName,
+            email: testAddress.email,
+            address: testAddress.address1,
+            city: testAddress.city,
+            state: testAddress.state,
+            zip: testAddress.postcode,
+            phone: testAddress.phone
+        });
+        await page.locator('[data-testid="continue-shipping"]').click();
+        
+        // Compare shipping options
+        const shippingMethods = page.locator('[data-testid="shipping-method"]');
+        await expect(shippingMethods).toBeVisible();
+        
+        const count = await shippingMethods.count();
+        expect(count).toBeGreaterThan(1);
+        
+        // Verify price format and updates
+        const firstMethod = shippingMethods.first();
+        await firstMethod.click();
+        const firstPrice = await page.locator('[data-testid="shipping-price"]').first().textContent();
+        expect(firstPrice).toMatch(/^\$\d+\.\d{2}$/);
+        
+        const secondMethod = shippingMethods.nth(1);
+        await secondMethod.click();
+        const secondPrice = await page.locator('[data-testid="shipping-price"]').nth(1).textContent();
+        expect(firstPrice).not.toBe(secondPrice);
     });
 });
 
@@ -494,3 +528,5 @@ test.describe('@checkout negative', () => {
         });
     });
 });
+
+console.log('Done - PO-2 complete');

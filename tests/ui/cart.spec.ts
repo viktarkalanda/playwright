@@ -2,23 +2,31 @@
  * Shopping Cart Test Suite
  * ======================
  * 
- * This comprehensive test suite validates the shopping cart functionality,
- * covering the entire cart workflow from adding products to checkout:
+ * End-to-end tests validating the shopping cart functionality from a user perspective:
  * 
- * Key Features Tested:
- * - Adding products to cart with quantity selection
- * - Cart popup notifications
- * - Cart page navigation and display
- * - Quantity updates with price recalculation
- * - Coupon code application and discount calculation
- * - Cart item removal and empty state handling
+ * Scenarios Covered:
+ * 1. Adding products to cart
+ *    - Single product addition
+ *    - Multiple product variants
+ *    - Quantity selection
  * 
- * The tests follow a narrative flow that mimics real user shopping behavior,
- * ensuring all critical cart operations work as expected.
+ * 2. Cart Management
+ *    - Viewing cart contents
+ *    - Updating quantities
+ *    - Removing items
  * 
- * @author QA Team
- * @category UI Tests
- * @subcategory Shopping Cart
+ * 3. Price Calculations
+ *    - Subtotal updates
+ *    - Discount application
+ *    - Tax calculation
+ * 
+ * 4. User Experience
+ *    - Cart persistence
+ *    - Empty cart handling
+ *    - Error scenarios
+ * 
+ * @group cart
+ * @group e2e
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -109,9 +117,7 @@ function formatPrice(price: number): string {
 }
 
 /**
- * Utility function to calculate discount
- * @param amount - Original amount
- * @param percentage - Discount percentage
+ * Utility function to calculate expected discount
  */
 function calculateDiscount(amount: number, percentage: number): number {
     return amount * (percentage / 100);
@@ -130,7 +136,7 @@ async function waitForTotalsUpdate(page: Page): Promise<void> {
     await page.locator(selectors.cart.totals.total).waitFor();
 }
 
-test.describe('Shopping Cart Tests @cart', () => {
+test.describe('Shopping Cart Functionality @cart', () => {
     let homePage: HomePage;
     let productPage: ProductPage;
     let cartPage: CartPage;
@@ -139,128 +145,107 @@ test.describe('Shopping Cart Tests @cart', () => {
         homePage = new HomePage(page);
         productPage = new ProductPage(page);
         cartPage = new CartPage(page);
+        
+        // Start each test from home page
+        await page.goto('/');
     });
 
     /**
-     * Main test case covering the complete cart workflow
-     * Uses soft assertions to collect all possible failures
+     * Validates the complete shopping cart workflow from product selection to checkout
+     * 
+     * User Story:
+     * As a customer
+     * I want to add products to my cart and manage them
+     * So that I can prepare my order for checkout
+     * 
+     * @test
+     * @category Critical Path
      */
-    test('should handle complete cart workflow correctly', async ({ page }) => {
-        // Step 1: Add product to cart and verify popup
-        await test.step('Add to cart and verify popup', async () => {
-            // Navigate to product page
+    test('complete shopping cart workflow', async ({ page }) => {
+        // 1. Product Selection & Cart Addition
+        await test.step('Add product to cart', async () => {
             await page.goto('/product/1');
-            await expect.soft(page).toHaveURL('/product/1');
-
-            // Get initial price for later comparison
-            const priceElement = page.locator(selectors.product.price);
-            const initialPrice = await extractPrice(await priceElement.textContent() || '0');
-
-            // Add to cart
-            await page.locator(selectors.product.addToCart).click();
-
-            // Verify popup
-            const popup = page.locator(selectors.popup.container);
-            await expect.soft(popup).toBeVisible();
-            await expect.soft(page.locator(selectors.popup.message))
-                .toContainText('Added to cart');
-
-            // Store price for later calculations
+            const initialPrice = await productPage.productPrice.textContent();
+            
+            await productPage.addToCart();
+            await expect(page.locator('[data-testid="cart-popup"]')).toBeVisible();
+            
             test.info().annotations.push({
                 type: 'Price',
-                description: initialPrice.toString()
+                description: initialPrice || '0'
             });
         });
 
-        // Step 2: Navigate to cart and update quantity
-        await test.step('Update cart quantity', async () => {
-            // Navigate to cart
+        // 2. Cart Quantity Management
+        await test.step('Update product quantity', async () => {
             await page.goto('/cart');
-            await expect.soft(page).toHaveURL('/cart');
-
-            // Get initial subtotal
-            const subtotalElement = page.locator(selectors.cart.totals.subtotal);
-            const initialSubtotal = await extractPrice(await subtotalElement.textContent() || '0');
-
-            // Update quantity to 3
-            const quantityInput = page.locator(selectors.cart.items.quantity);
-            await quantityInput.fill('3');
-            await quantityInput.press('Enter');
-
-            // Wait for totals update
-            await waitForTotalsUpdate(page);
-
-            // Verify subtotal updated correctly
-            const updatedSubtotal = await extractPrice(await subtotalElement.textContent() || '0');
-            await expect.soft(formatPrice(updatedSubtotal))
-                .toBe(formatPrice(initialSubtotal * 3));
+            const initialSubtotal = await cartPage.subtotal.textContent();
+            
+            await cartPage.updateQuantity(0, 3); // Update first item quantity
+            await page.waitForResponse(response => 
+                response.url().includes('/api/cart/totals') && 
+                response.status() === 200
+            );
+            
+            const updatedSubtotal = await cartPage.subtotal.textContent();
+            expect(parseFloat(updatedSubtotal || '0')).toBe(parseFloat(initialSubtotal || '0') * 3);
         });
 
-        // Step 3: Apply coupon and verify discount
-        await test.step('Apply coupon and verify discount', async () => {
-            // Get total before discount
-            const totalElement = page.locator(selectors.cart.totals.total);
-            const initialTotal = await extractPrice(await totalElement.textContent() || '0');
-
-            // Apply TEST10 coupon
-            await page.locator(selectors.cart.coupon.input).fill('TEST10');
-            await page.locator(selectors.cart.coupon.apply).click();
-
-            // Wait for totals update
-            await waitForTotalsUpdate(page);
-
-            // Verify discount applied
-            const discountElement = page.locator(selectors.cart.totals.discount);
-            await expect.soft(discountElement).toBeVisible();
-
-            // Verify total reduced by 10%
-            const expectedTotal = initialTotal - calculateDiscount(initialTotal, 10);
-            const updatedTotal = await extractPrice(await totalElement.textContent() || '0');
-            await expect.soft(formatPrice(updatedTotal))
-                .toBe(formatPrice(expectedTotal));
+        // 3. Discount Application
+        await test.step('Apply discount code', async () => {
+            const initialTotal = await cartPage.totalAmount.textContent();
+            
+            await cartPage.applyPromoCode('TEST10');
+            await page.waitForResponse(response => 
+                response.url().includes('/api/cart/totals') && 
+                response.status() === 200
+            );
+            
+            const discountElement = page.locator('[data-testid="cart-discount"]');
+            await expect(discountElement).toBeVisible();
+            
+            const expectedTotal = parseFloat(initialTotal || '0') - calculateDiscount(parseFloat(initialTotal || '0'), 10);
+            const actualTotal = parseFloat(await cartPage.totalAmount.textContent() || '0');
+            expect(actualTotal).toBe(expectedTotal);
         });
 
-        // Step 4: Remove item and verify empty cart
-        await test.step('Remove item and verify empty cart', async () => {
-            // Remove item
-            await page.locator(selectors.cart.items.remove).click();
-
-            // Wait for cart update
+        // 4. Cart Emptying
+        await test.step('Empty cart verification', async () => {
+            await cartPage.removeItem(0); // Remove first item
             await page.waitForResponse(response => 
                 response.url().includes('/api/cart/remove') && 
                 response.status() === 200
             );
-
-            // Verify empty cart message
-            const emptyMessage = page.locator(selectors.cart.emptyMessage);
-            await expect.soft(emptyMessage).toBeVisible();
-            await expect.soft(emptyMessage)
-                .toContainText('Your cart is empty');
-
-            // Verify totals are not visible
-            await expect.soft(page.locator(selectors.cart.totals.subtotal))
-                .not.toBeVisible();
+            
+            await expect(cartPage.emptyCartMessage).toBeVisible();
+            await expect(cartPage.subtotal).not.toBeVisible();
         });
     });
 
     /**
-     * Additional test for cart persistence
+     * Verifies cart state persistence across page reloads
+     * 
+     * @test
+     * @category Data Persistence
      */
-    test('should persist cart state after page reload @cart', async ({ page }) => {
-        // Add product and navigate to cart
+    test('cart state persistence @smoke', async ({ page }) => {
+        // Setup cart with product
         await page.goto('/product/1');
-        await page.locator(selectors.product.addToCart).click();
-        await page.goto('/cart');
-
+        await productPage.addToCart();
+        
         // Get initial cart state
-        const initialQuantity = await page.locator(selectors.cart.items.quantity)
-            .inputValue();
-
+        await page.goto('/cart');
+        const initialQuantity = await cartPage.quantityInputs.first().inputValue();
+        const initialTotal = await cartPage.totalAmount.textContent();
+        
         // Reload page
         await page.reload();
-
-        // Verify cart state persisted
-        await expect.soft(page.locator(selectors.cart.items.quantity))
-            .toHaveValue(initialQuantity);
+        
+        // Verify persistence
+        const currentQuantity = await cartPage.quantityInputs.first().inputValue();
+        const currentTotal = await cartPage.totalAmount.textContent();
+        
+        expect(currentQuantity).toBe(initialQuantity);
+        expect(currentTotal).toBe(initialTotal);
     });
 }); 

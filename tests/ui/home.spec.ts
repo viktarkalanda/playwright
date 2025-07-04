@@ -1,10 +1,20 @@
 import { test, expect } from '@playwright/test';
+import { HomePage } from '../../src/pageObjects/HomePage';
 
-test('smoke test - hero banner is visible', async ({ page }) => {
-  // Navigate to the home page
-  await page.goto('/');
+/**
+ * @group home
+ * @group smoke
+ * 
+ * Home page smoke tests verify critical functionality of the landing page
+ */
+
+test('verify hero banner visibility and content @smoke', async ({ page }) => {
+  // Initialize page object
+  const home = new HomePage(page);
   
-  // Check that the hero banner is visible
-  const heroBanner = page.getByTestId('hero-banner');
-  await expect(heroBanner).toBeVisible();
+  // Navigate and verify landing page
+  await home.navigate();
+  await expect(home.heroBanner).toBeVisible();
+  
+  // Additional verifications can be added here using home.* methods
 });
