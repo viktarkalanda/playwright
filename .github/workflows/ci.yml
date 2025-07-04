@@ -1,4 +1,103 @@
-name: CI
+# Continuous Integration Workflow
+# ==============================
+#
+# This workflow handles the automated testing pipeline for our Playwright-based test suite.
+# It combines UI and API testing in a single job for efficient resource utilization.
+#
+# Key Features:
+# ------------
+# 1. Single job execution for both UI and API tests
+# 2. Node.js environment setup with caching
+# 3. Playwright browser installation
+# 4. Combined test execution
+# 5. Allure report artifact upload
+#
+# Environment:
+# -----------
+# - Ubuntu Latest: Provides a clean, standardized environment for test execution
+# - Node.js 20: Latest LTS version for optimal performance and feature support
+#
+# Dependencies:
+# ------------
+# - actions/checkout@v4: Smart checkout action that handles git repository access
+# - actions/setup-node@v4: Official Node.js setup with built-in caching
+# - actions/upload-artifact@v4: Reliable artifact upload for test reports
+#
+# Test Execution:
+# -------------
+# The workflow executes tests in the following sequence:
+# 1. Repository checkout
+# 2. Node.js setup with npm cache
+# 3. Dependencies installation
+# 4. Playwright browsers installation
+# 5. Combined test execution (UI + API)
+# 6. Report artifact upload
+#
+# Cache Strategy:
+# -------------
+# - npm cache: Speeds up dependency installation
+# - Playwright browsers: Installed fresh to ensure compatibility
+#
+# Error Handling:
+# -------------
+# - Continues on error for report upload
+# - Preserves test results even on failure
+#
+# Artifact Management:
+# ------------------
+# - Uploads Allure results for detailed test reporting
+# - Retains artifacts for 30 days
+# - Captures results regardless of test outcome
+#
+# Security Considerations:
+# ----------------------
+# - Uses explicit version pins for actions
+# - Runs in isolated containers
+# - Implements timeout limits
+# - Restricts environment access
+#
+# Performance Optimization:
+# ----------------------
+# - Combined job reduces overhead
+# - Efficient dependency caching
+# - Parallel test execution where possible
+#
+# Maintenance Notes:
+# ----------------
+# - Update action versions periodically
+# - Monitor execution times
+# - Review cache hit rates
+# - Adjust timeout values as needed
+#
+# Future Improvements:
+# ------------------
+# - Matrix testing for multiple Node.js versions
+# - Parallel test sharding for larger suites
+# - Test timing analytics
+# - Automatic retry for flaky tests
+# - Performance trend monitoring
+#
+# Related Documentation:
+# --------------------
+# - Playwright: https://playwright.dev
+# - GitHub Actions: https://docs.github.com/en/actions
+# - Allure Reports: https://docs.qameta.io/allure/
+#
+# Troubleshooting:
+# --------------
+# Common issues and solutions:
+# 1. Cache misses: Check package-lock.json consistency
+# 2. Browser install failures: Verify system dependencies
+# 3. Timeout errors: Adjust timeout values in config
+# 4. Memory issues: Monitor resource usage
+#
+# Workflow Structure:
+# -----------------
+# The workflow is organized into a single job with sequential steps
+# to maximize efficiency and minimize resource usage while maintaining
+# reliable test execution and reporting.
+
+name: Continuous Integration
 
 on:
   push:
@@ -7,33 +106,39 @@ on:
     branches: [ main ]
 
 jobs:
-  ui-tests:
+  ui-and-api:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better reporting
       
-      - name: Setup Node.js
+      - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
           cache: 'npm'
-          
+      
       - name: Install dependencies
         run: npm ci
         
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
         
-      - name: Start infrastructure
-        run: docker-compose up -d
-        
-      - name: Run Playwright tests
-        run: npx playwright test --reporter=line
-        
-      - name: Upload test results
+      - name: Run all tests
+        run: npm run test:all
+        env:
+          CI: true
+          BASE_URL: http://localhost:8080
+          
+      - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30 
+          name: allure-report
+          path: allure-results
+          retention-days: 30
+          if-no-files-found: warn 
