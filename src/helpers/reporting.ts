@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { allure } from 'allure-playwright';
 
 /**
  * Performance Metrics Interface
@@ -202,41 +203,253 @@ export async function attachPerfMetrics(
 }
 
 /**
- * Attaches a JSON object to the test report
+ * Test Reporting Utilities
+ * =======================
  * 
- * This function formats and saves JSON data as part of the test artifacts,
- * making it available in the test report.
+ * This module provides helper functions for test reporting and documentation.
+ * It includes utilities for attaching various types of data to test reports,
+ * particularly focusing on JSON data and screenshots.
  * 
- * @param name - Name of the JSON attachment
+ * Features:
+ * --------
+ * - JSON data attachment with formatting
+ * - Screenshot capture and attachment
+ * - Error evidence collection
+ * - Test step documentation
+ * 
+ * Usage Examples:
+ * -------------
+ * ```typescript
+ * // Attach JSON data
+ * await attachJSON('API Response', {
+ *   status: 200,
+ *   data: { id: 1, name: 'Test' }
+ * });
+ * 
+ * // Capture and attach screenshot
+ * await attachScreenshot(page, 'Login Form');
+ * 
+ * // Document test steps with data
+ * await test.step('Verify user profile', async () => {
+ *   const userData = await getUserProfile();
+ *   await attachJSON('User Profile', userData);
+ * });
+ * ```
+ * 
+ * Best Practices:
+ * -------------
+ * 1. Always provide descriptive names for attachments
+ * 2. Include timestamps when relevant
+ * 3. Format data for readability
+ * 4. Capture context in error scenarios
+ * 5. Use consistent naming conventions
+ * 
+ * @module reporting
+ */
+
+/**
+ * Options for JSON attachment
+ */
+interface JSONAttachmentOptions {
+  /** Custom timestamp format */
+  timestamp?: boolean;
+  /** Pretty print indentation level */
+  indent?: number;
+  /** Additional metadata to include */
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Options for screenshot attachment
+ */
+interface ScreenshotOptions {
+  /** Whether to hide all fixed position elements */
+  hideFixed?: boolean;
+  /** Whether to capture full page */
+  fullPage?: boolean;
+  /** Timeout in milliseconds */
+  timeout?: number;
+  /** Additional screenshot options */
+  customOptions?: {
+    quality?: number;
+    scale?: 'css' | 'device';
+    animations?: 'disabled' | 'allow';
+  };
+}
+
+/**
+ * Attaches formatted JSON data to the test report
+ * 
+ * @param name - Descriptive name for the attachment
  * @param obj - Object to attach
- * @returns void
+ * @param options - Attachment options
  * 
  * @example
  * ```typescript
- * test('api response validation', async ({ request }) => {
- *   const response = await request.get('/api/data');
- *   const data = await response.json();
- *   
- *   attachJSON('API Response', {
- *     status: response.status(),
- *     headers: response.headers(),
- *     body: data
- *   });
+ * // Basic usage
+ * await attachJSON('API Response', {
+ *   id: 123,
+ *   status: 'success'
+ * });
+ * 
+ * // With options
+ * await attachJSON('User Data', userData, {
+ *   timestamp: true,
+ *   indent: 2,
+ *   metadata: {
+ *     environment: 'staging',
+ *     testId: 'USER-001'
+ *   }
  * });
  * ```
  */
-export function attachJSON(name: string, obj: unknown): void {
-    const reportsDir = path.join(process.cwd(), 'test-results', 'json');
-    if (!fs.existsSync(reportsDir)) {
-        fs.mkdirSync(reportsDir, { recursive: true });
+export async function attachJSON(
+  name: string,
+  obj: any,
+  options: JSONAttachmentOptions = {}
+): Promise<void> {
+  const {
+    timestamp = true,
+    indent = 2,
+    metadata = {}
+  } = options;
+
+  // Prepare data with optional metadata
+  const data = {
+    ...(timestamp ? { timestamp: new Date().toISOString() } : {}),
+    ...metadata,
+    data: obj
+  };
+
+  try {
+    // Format and attach the data
+    const formattedData = JSON.stringify(data, null, indent);
+    
+    // Log to console for debugging
+    console.log(`📎 Attaching JSON: ${name}`);
+    console.log(formattedData);
+
+    // Attach to Allure report
+    await allure.attachment(
+      name,
+      formattedData,
+      'application/json'
+    );
+  } catch (error) {
+    console.error(`Failed to attach JSON ${name}:`, error);
+    
+    // Attach error information
+    await allure.attachment(
+      `${name} (Attachment Error)`,
+      JSON.stringify({
+        error: error instanceof Error ? error.message : 'Unknown error',
+        originalData: obj
+      }, null, 2),
+      'application/json'
+    );
+  }
+}
+
+/**
+ * Captures and attaches a screenshot to the test report
+ * 
+ * @param page - Playwright Page object
+ * @param name - Descriptive name for the screenshot
+ * @param options - Screenshot options
+ * 
+ * @example
+ * ```typescript
+ * // Basic screenshot
+ * await attachScreenshot(page, 'Login Form');
+ * 
+ * // Full page screenshot with options
+ * await attachScreenshot(page, 'Product Catalog', {
+ *   fullPage: true,
+ *   hideFixed: true,
+ *   customOptions: {
+ *     quality: 90,
+ *     animations: 'disabled'
+ *   }
+ * });
+ * ```
+ */
+export async function attachScreenshot(
+  page: Page,
+  name: string,
+  options: ScreenshotOptions = {}
+): Promise<void> {
+  const {
+    hideFixed = false,
+    fullPage = false,
+    timeout = 5000,
+    customOptions = {}
+  } = options;
+
+  try {
+    // Prepare screenshot options
+    const screenshotOptions = {
+      fullPage,
+      timeout,
+      ...customOptions
+    };
+
+    // Hide fixed elements if requested
+    if (hideFixed) {
+      await page.evaluate(() => {
+        const elements = document.querySelectorAll('*');
+        for (const element of elements) {
+          const position = window.getComputedStyle(element).position;
+          if (position === 'fixed') {
+            (element as HTMLElement).style.visibility = 'hidden';
+          }
+        }
+      });
     }
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileName = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${timestamp}.json`;
-    const filePath = path.join(reportsDir, fileName);
+    // Capture screenshot
+    console.log(`📸 Capturing screenshot: ${name}`);
+    const buffer = await page.screenshot(screenshotOptions);
 
-    fs.writeFileSync(filePath, JSON.stringify(obj, null, 2));
-    console.log(`Attached JSON: ${filePath}`);
+    // Restore fixed elements
+    if (hideFixed) {
+      await page.evaluate(() => {
+        const elements = document.querySelectorAll('*');
+        for (const element of elements) {
+          const position = window.getComputedStyle(element).position;
+          if (position === 'fixed') {
+            (element as HTMLElement).style.visibility = '';
+          }
+        }
+      });
+    }
+
+    // Attach to Allure report
+    await allure.attachment(name, buffer, 'image/png');
+  } catch (error) {
+    console.error(`Failed to capture screenshot ${name}:`, error);
+    
+    // Attach error information
+    await allure.attachment(
+      `${name} (Screenshot Error)`,
+      JSON.stringify({
+        error: error instanceof Error ? error.message : 'Unknown error',
+        options: options
+      }, null, 2),
+      'application/json'
+    );
+
+    // Try to capture basic screenshot on error
+    try {
+      const buffer = await page.screenshot();
+      await allure.attachment(
+        `${name} (Fallback)`,
+        buffer,
+        'image/png'
+      );
+    } catch {
+      console.error('Failed to capture fallback screenshot');
+    }
+  }
 }
 
 /**
