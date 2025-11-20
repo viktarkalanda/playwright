@@ -1,4 +1,4 @@
-export type UserKey = 'standard';
+export type UserKey = 'standard' | 'locked';
 
 export interface UserCredentials {
   username: string;
@@ -8,6 +8,10 @@ export interface UserCredentials {
 const users: Record<UserKey, UserCredentials> = {
   standard: {
     username: 'standard_user',
+    password: 'secret_sauce',
+  },
+  locked: {
+    username: 'locked_out_user',
     password: 'secret_sauce',
   },
 };
