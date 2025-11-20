@@ -7,7 +7,9 @@ export class InventoryPage extends BaseForm {
   readonly pageTitle: Locator = this.page.locator('.title');
   readonly cartIcon: Locator = this.page.getByTestId('shopping-cart-link');
   readonly firstInventoryItem: Locator = this.inventoryItems.first();
-  readonly firstItemAddToCartButton: Locator = this.firstInventoryItem.getByRole('button', { name: 'Add to cart' });
+  readonly firstItemAddToCartButton: Locator = this.firstInventoryItem.getByRole('button', {
+    name: 'Add to cart',
+  });
 
   constructor(page: Page) {
     super(page, page.locator('.inventory_list'), 'Inventory page');

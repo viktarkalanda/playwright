@@ -1,8 +1,3 @@
 \# playwright
 
-
-
 Playwright project.
-
-
-

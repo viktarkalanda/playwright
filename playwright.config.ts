@@ -3,86 +3,77 @@ import { TestConfig } from './src/config/testConfig';
 
 const config = TestConfig.getInstance();
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
 export default defineConfig({
+  // Root directory for tests
   testDir: './tests',
-  /* Run tests in files in parallel */
+
+  // Run tests in files in parallel
   fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
+
+  // Fail the build on CI if test.only is left in source
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
+
+  // Retry failed tests on CI
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
+
+  // Disable parallel workers on CI (more stable)
   workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+
+  // Reporters: console, HTML report, Allure
   reporter: [
     ['line'],
     ['html', { open: 'never' }],
     ['allure-playwright', { resultsDir: 'allure-results' }],
   ],
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    baseURL: config.baseUrl,
-    // baseURL: 'http://localhost:3000',
 
-    testIdAttribute: 'data-test',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    trace: 'on-first-retry',
+  // Global timeout for a single test (ms)
+  // If a test runs longer than this, it will fail
+  timeout: 30_000,
+
+  // Default timeouts for Playwright expect(...)
+  expect: {
+    // Max time for expect(...) to wait for condition (ms)
+    // Example: await expect(locator).toBeVisible();
+    timeout: 5_000,
   },
 
-  /* Configure projects for major browsers */
+  // Shared settings for all projects
+  use: {
+    // Base URL for page.goto('/') and similar
+    baseURL: config.baseUrl,
+
+    // Attribute used by getByTestId(), here it maps to data-test=""
+    testIdAttribute: 'data-test',
+
+    // Take screenshots only on test failure
+    screenshot: 'only-on-failure',
+
+    // Keep video only for failed tests
+    video: 'retain-on-failure',
+
+    // Record trace on first retry (useful for debugging flaky tests)
+    trace: 'on-first-retry',
+
+    // Max time for a single action (click, fill, etc.)
+    actionTimeout: 10_000,
+
+    // Max time for navigations (page.goto, page.waitForURL, etc.)
+    navigationTimeout: 30_000,
+  },
+
+  // Browser projects configuration
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
     },
-
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
   ],
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
 });

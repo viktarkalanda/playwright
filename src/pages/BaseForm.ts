@@ -4,7 +4,7 @@ export abstract class BaseForm {
   constructor(
     protected readonly page: Page,
     protected readonly formLocator: Locator,
-    protected readonly name: string
+    protected readonly name: string,
   ) {}
 
   async waitForVisible(): Promise<void> {

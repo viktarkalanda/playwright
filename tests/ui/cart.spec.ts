@@ -13,6 +13,5 @@ test('user can add first product to cart', async ({ inventoryPage, page }) => {
   await cartPage.waitForVisible();
 
   const itemsCount = await cartPage.getItemsCount();
-  expect(itemsCount, 'Cart should contain at least one item')
-    .toBeGreaterThan(0);
+  expect(itemsCount, 'Cart should contain at least one item').toBeGreaterThan(0);
 });
