@@ -6,6 +6,7 @@ export class LoginPage extends BaseForm {
   readonly passwordInput: Locator = this.page.getByTestId('password');
   readonly loginButton: Locator = this.page.getByTestId('login-button');
   readonly errorMessage: Locator = this.page.getByTestId('error');
+  readonly errorCloseButton: Locator = this.page.locator('.error-button');
 
   constructor(page: Page) {
     super(page, page.locator('body'), 'Login form');
@@ -25,5 +26,9 @@ export class LoginPage extends BaseForm {
   async getErrorText(): Promise<string> {
     const text = await this.errorMessage.textContent();
     return text ?? '';
+  }
+
+  async closeError(): Promise<void> {
+    await this.errorCloseButton.click();
   }
 }
