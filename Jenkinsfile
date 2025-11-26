@@ -1,16 +1,10 @@
 pipeline {
-  agent {
-    docker {
-      // Node.js 20 LTS in a Linux container
-      image 'node:20-bullseye'
-      // Run as root to avoid permission issues with npm caches, playwright installs, etc.
-      args '-u root:root'
-    }
-  }
+  // Run on the Jenkins controller (our jenkins container)
+  agent any
 
   options {
+    // Add timestamps to console output
     timestamps()
-    ansiColor('xterm')
   }
 
   environment {
@@ -20,16 +14,32 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        // Checkout repository from the SCM configured in the Jenkins job
+        // Checkout repository from SCM configured in the job
         checkout scm
       }
     }
 
     stage('Install dependencies') {
       steps {
-        sh 'npm ci'
-        // Install Playwright browsers and system dependencies inside the container
-        sh 'npx playwright install --with-deps'
+        sh '''
+          node -v || echo "Node is not installed yet"
+          npm -v || echo "npm is not installed yet"
+        '''
+        sh '''
+          if ! command -v node >/dev/null 2>&1; then
+            echo "Installing Node.js 20..."
+            apt-get update
+            apt-get install -y curl
+            curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+            apt-get install -y nodejs
+          fi
+
+          node -v
+          npm -v
+
+          npm ci
+          npx playwright install --with-deps
+        '''
       }
     }
 
@@ -48,9 +58,7 @@ pipeline {
 
   post {
     always {
-      // Archive Playwright HTML report
       archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true, allowEmptyArchive: true
-      // Archive Allure raw results (can be processed later)
       archiveArtifacts artifacts: 'allure-results/**', fingerprint: true, allowEmptyArchive: true
     }
   }
