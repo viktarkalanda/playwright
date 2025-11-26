@@ -1,9 +1,9 @@
 pipeline {
-  // Run on the Jenkins controller (our jenkins container)
+  // Run on the Jenkins controller (jenkins Docker container)
   agent any
 
   options {
-    // Add timestamps to console output
+    // Timestamps in console output
     timestamps()
   }
 
@@ -21,10 +21,13 @@ pipeline {
 
     stage('Install dependencies') {
       steps {
+        // Just to see current state before install
         sh '''
           node -v || echo "Node is not installed yet"
           npm -v || echo "npm is not installed yet"
         '''
+
+        // Install Node.js 20 inside the Jenkins container if it's missing
         sh '''
           if ! command -v node >/dev/null 2>&1; then
             echo "Installing Node.js 20..."
@@ -58,8 +61,14 @@ pipeline {
 
   post {
     always {
+      // Archive Playwright HTML report
       archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true, allowEmptyArchive: true
+
+      // Archive Allure raw results
       archiveArtifacts artifacts: 'allure-results/**', fingerprint: true, allowEmptyArchive: true
+
+      // Publish Allure report (requires Allure Jenkins Plugin + Allure Commandline tool)
+      allure results: [[path: 'allure-results']], reportBuildPolicy: 'ALWAYS'
     }
   }
 }
