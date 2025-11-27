@@ -1,7 +1,7 @@
 // src/pages/LoginPage.ts
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
-import { step } from '../utils/stepDecorator.ts';
+import { step } from '../utils/stepDecorator';
 
 export class LoginPage extends BaseForm {
   readonly usernameInput: Locator = this.page.getByTestId('username');
