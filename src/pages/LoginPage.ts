@@ -19,12 +19,27 @@ export class LoginPage extends BaseForm {
     await this.page.goto('/');
   }
 
+  @step('Fill username')
+  async fillUsername(username: string): Promise<void> {
+    await this.usernameInput.fill(username);
+  }
+
+  @step('Fill password')
+  async fillPassword(password: string): Promise<void> {
+    await this.passwordInput.fill(password);
+  }
+
+  @step('Click login button')
+  async submitLogin(): Promise<void> {
+    await this.loginButton.click();
+  }
+
   @step('Login with username and password')
   async login(username: string, password: string): Promise<void> {
     await this.open();
-    await this.usernameInput.fill(username);
-    await this.passwordInput.fill(password);
-    await this.loginButton.click();
+    await this.fillUsername(username);
+    await this.fillPassword(password);
+    await this.submitLogin();
   }
 
   @step('Get login error text')

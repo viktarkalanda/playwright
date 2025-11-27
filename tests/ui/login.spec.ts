@@ -1,14 +1,12 @@
+// tests/ui/login.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
 import { TestConfig } from '../../src/config/testConfig';
 
 const config = TestConfig.getInstance();
 
-test.beforeEach(async ({ loginPage }) => {
-  await loginPage.open();
-});
-
 test('user can login with valid credentials', async ({ loginPage, page }) => {
   const { username, password } = config.getUser('standard');
+
   await loginPage.login(username, password);
 
   await expect(
@@ -18,9 +16,10 @@ test('user can login with valid credentials', async ({ loginPage, page }) => {
 });
 
 test('user sees error message on invalid password', async ({ loginPage }) => {
-  await loginPage.usernameInput.fill('standard_user');
-  await loginPage.passwordInput.fill('wrong_password');
-  await loginPage.loginButton.click();
+  await loginPage.open();
+  await loginPage.fillUsername('standard_user');
+  await loginPage.fillPassword('wrong_password');
+  await loginPage.submitLogin();
 
   await expect(
     loginPage.errorMessage,
@@ -28,14 +27,16 @@ test('user sees error message on invalid password', async ({ loginPage }) => {
   ).toBeVisible();
 
   const errorText = await loginPage.getErrorText();
-  expect(errorText, 'Error message text should mention invalid username/password').toContain(
-    'Username and password do not match',
-  );
+  expect(
+    errorText,
+    'Error message text should mention invalid username/password',
+  ).toContain('Username and password do not match');
 });
 
 test('user sees error message when username is missing', async ({ loginPage }) => {
-  await loginPage.passwordInput.fill('secret_sauce');
-  await loginPage.loginButton.click();
+  await loginPage.open();
+  await loginPage.fillPassword('secret_sauce');
+  await loginPage.submitLogin();
 
   await expect(
     loginPage.errorMessage,
@@ -43,14 +44,16 @@ test('user sees error message when username is missing', async ({ loginPage }) =
   ).toBeVisible();
 
   const errorText = await loginPage.getErrorText();
-  expect(errorText, 'Error text should mention that username is required').toContain(
-    'Username is required',
-  );
+  expect(
+    errorText,
+    'Error text should mention that username is required',
+  ).toContain('Username is required');
 });
 
 test('user sees error message when password is missing', async ({ loginPage }) => {
-  await loginPage.usernameInput.fill('standard_user');
-  await loginPage.loginButton.click();
+  await loginPage.open();
+  await loginPage.fillUsername('standard_user');
+  await loginPage.submitLogin();
 
   await expect(
     loginPage.errorMessage,
@@ -58,16 +61,19 @@ test('user sees error message when password is missing', async ({ loginPage }) =
   ).toBeVisible();
 
   const errorText = await loginPage.getErrorText();
-  expect(errorText, 'Error text should mention that password is required').toContain(
-    'Password is required',
-  );
+  expect(
+    errorText,
+    'Error text should mention that password is required',
+  ).toContain('Password is required');
 });
 
 test('locked out user sees locked out error message', async ({ loginPage }) => {
   const { username, password } = config.getUser('locked');
-  await loginPage.usernameInput.fill(username);
-  await loginPage.passwordInput.fill(password);
-  await loginPage.loginButton.click();
+
+  await loginPage.open();
+  await loginPage.fillUsername(username);
+  await loginPage.fillPassword(password);
+  await loginPage.submitLogin();
 
   await expect(
     loginPage.errorMessage,
@@ -75,15 +81,17 @@ test('locked out user sees locked out error message', async ({ loginPage }) => {
   ).toBeVisible();
 
   const errorText = await loginPage.getErrorText();
-  expect(errorText, 'Error text should mention that user is locked out').toContain(
-    'Sorry, this user has been locked out',
-  );
+  expect(
+    errorText,
+    'Error text should mention that user is locked out',
+  ).toContain('Sorry, this user has been locked out');
 });
 
 test('user sees error message on invalid username', async ({ loginPage }) => {
-  await loginPage.usernameInput.fill('unknown_user');
-  await loginPage.passwordInput.fill('secret_sauce');
-  await loginPage.loginButton.click();
+  await loginPage.open();
+  await loginPage.fillUsername('unknown_user');
+  await loginPage.fillPassword('secret_sauce');
+  await loginPage.submitLogin();
 
   await expect(
     loginPage.errorMessage,
@@ -91,15 +99,17 @@ test('user sees error message on invalid username', async ({ loginPage }) => {
   ).toBeVisible();
 
   const errorText = await loginPage.getErrorText();
-  expect(errorText, 'Error message text should mention invalid username/password').toContain(
-    'Username and password do not match',
-  );
+  expect(
+    errorText,
+    'Error message text should mention invalid username/password',
+  ).toContain('Username and password do not match');
 });
 
 test('error message can be closed by user', async ({ loginPage }) => {
-  await loginPage.usernameInput.fill('standard_user');
-  await loginPage.passwordInput.fill('wrong_password');
-  await loginPage.loginButton.click();
+  await loginPage.open();
+  await loginPage.fillUsername('standard_user');
+  await loginPage.fillPassword('wrong_password');
+  await loginPage.submitLogin();
 
   await expect(
     loginPage.errorMessage,
