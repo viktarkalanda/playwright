@@ -1,11 +1,12 @@
 // src/utils/stepDecorator.ts
 import { test } from '@playwright/test';
 
-export function step(name?: string) {
-  return function (value: any, context: any) {
-    const stepName = name ?? String(context.name);
+// Loose typing on purpose to avoid TS decorator signature conflicts
+export function step(name?: string): any {
+  return function (value: any, context: { name?: string | symbol }) {
+    const stepName = name ?? String(context.name ?? 'step');
 
-    return async function (this: any, ...args: any[]) {
+    return function (this: any, ...args: any[]) {
       return test.step(stepName, async () => {
         return value.apply(this, args);
       });
