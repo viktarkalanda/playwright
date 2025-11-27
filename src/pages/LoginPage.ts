@@ -1,5 +1,7 @@
+// src/pages/LoginPage.ts
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
+import { step } from '../utils/stepDecorator.ts';
 
 export class LoginPage extends BaseForm {
   readonly usernameInput: Locator = this.page.getByTestId('username');
@@ -12,10 +14,12 @@ export class LoginPage extends BaseForm {
     super(page, page.locator('body'), 'Login form');
   }
 
+  @step('Open login page')
   async open(): Promise<void> {
     await this.page.goto('/');
   }
 
+  @step('Login with username and password')
   async login(username: string, password: string): Promise<void> {
     await this.open();
     await this.usernameInput.fill(username);
@@ -23,11 +27,13 @@ export class LoginPage extends BaseForm {
     await this.loginButton.click();
   }
 
+  @step('Get login error text')
   async getErrorText(): Promise<string> {
     const text = await this.errorMessage.textContent();
     return text ?? '';
   }
 
+  @step('Close login error message')
   async closeError(): Promise<void> {
     await this.errorCloseButton.click();
   }
