@@ -11,10 +11,9 @@ test('user can add first product to cart', async ({ inventoryPage, cartPage }) =
   await cartPage.waitForVisible();
   const itemsCount = await cartPage.getItemsCount();
 
-  expect(
-    itemsCount,
-    'Cart should contain at least one item after adding product',
-  ).toBeGreaterThan(0);
+  expect(itemsCount, 'Cart should contain at least one item after adding product').toBeGreaterThan(
+    0,
+  );
 });
 
 test('cart contains "Sauce Labs Backpack" after add', async ({ inventoryPage, cartPage }) => {
@@ -24,8 +23,7 @@ test('cart contains "Sauce Labs Backpack" after add', async ({ inventoryPage, ca
   await cartPage.waitForVisible();
   const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
 
-  expect(
-    hasBackpack,
-    'Cart should contain "Sauce Labs Backpack" as the first added product',
-  ).toBe(true);
+  expect(hasBackpack, 'Cart should contain "Sauce Labs Backpack" as the first added product').toBe(
+    true,
+  );
 });
