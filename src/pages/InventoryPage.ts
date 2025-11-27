@@ -18,7 +18,7 @@ export class InventoryPage extends BaseForm {
 
   @step('Get inventory items count')
   async getItemsCount(): Promise<number> {
-    return this.inventoryItems.count();
+    return await this.inventoryItems.count();
   }
 
   @step('Get inventory page title')
