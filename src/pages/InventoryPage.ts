@@ -1,5 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
+import { step } from '../utils/stepDecorator';
 
 export class InventoryPage extends BaseForm {
   readonly inventoryContainer: Locator = this.page.locator('.inventory_list');
@@ -15,18 +16,23 @@ export class InventoryPage extends BaseForm {
     super(page, page.locator('.inventory_list'), 'Inventory page');
   }
 
+  @step('Get inventory items count')
   async getItemsCount(): Promise<number> {
-    return await this.inventoryItems.count();
+    return this.inventoryItems.count();
   }
 
+  @step('Get inventory page title')
   async getTitleText(): Promise<string> {
-    return (await this.pageTitle.textContent()) || '';
+    const text = await this.pageTitle.textContent();
+    return text ?? '';
   }
 
+  @step('Add first inventory item to cart')
   async addFirstItemToCart(): Promise<void> {
     await this.firstItemAddToCartButton.click();
   }
 
+  @step('Open cart from inventory page')
   async openCart(): Promise<void> {
     await this.cartIcon.click();
   }

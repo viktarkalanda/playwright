@@ -2,8 +2,8 @@
 
 import { test } from '@playwright/test';
 
-export function step(name?: string) {
-  return function (value: any, context: any) {
+export const step: any = (name?: string) => {
+  return (value: any, context: any) => {
     const stepName = name ?? String(context.name);
 
     return async function (this: any, ...args: any[]) {
@@ -12,4 +12,4 @@ export function step(name?: string) {
       });
     };
   };
-}
+};
