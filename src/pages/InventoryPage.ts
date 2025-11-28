@@ -102,4 +102,20 @@ export class InventoryPage extends BaseForm {
   async openCart(): Promise<void> {
     await this.cartIcon.click();
   }
+
+  @step('Open product details by name')
+  async openItemDetailsByName(name: string): Promise<void> {
+    const link = this.itemNames.filter({ hasText: name }).first();
+    await link.click();
+  }
+
+  @step('Get price of item by name on inventory page')
+  async getItemPriceByName(name: string): Promise<number> {
+    const item = this.inventoryItems.filter({ hasText: name });
+    const priceLocator = item.locator('.inventory_item_price').first();
+    const text = await priceLocator.textContent();
+    const cleaned = (text ?? '').replace('$', '').trim();
+    const value = Number.parseFloat(cleaned);
+    return Number.isNaN(value) ? 0 : value;
+  }
 }
