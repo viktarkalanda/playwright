@@ -3,6 +3,7 @@ import { test as base, expect, TestInfo } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { InventoryPage } from '../pages/InventoryPage';
 import { CartPage } from '../pages/CartPage';
+import { CheckoutStepOnePage } from '../pages/CheckoutStepOnePage';
 import { TestConfig } from '../config/testConfig';
 
 const config = TestConfig.getInstance();
@@ -12,11 +13,10 @@ type Pages = {
   inventoryPage: InventoryPage;
   loggedInInventoryPage: InventoryPage;
   cartPage: CartPage;
+  checkoutStepOnePage: CheckoutStepOnePage;
 };
 
-// Extra fixtures that are not pages
 type ExtraFixtures = {
-  // Collected console logs for current test (attached to report on failure)
   consoleLogs: string[];
 };
 
@@ -51,6 +51,11 @@ export const test = base.extend<Fixtures>({
   cartPage: async ({ page }, use) => {
     const cartPage = new CartPage(page);
     await use(cartPage);
+  },
+
+  checkoutStepOnePage: async ({ page }, use) => {
+    const checkoutPage = new CheckoutStepOnePage(page);
+    await use(checkoutPage);
   },
 
   consoleLogs: async ({ page }, use, testInfo) => {
