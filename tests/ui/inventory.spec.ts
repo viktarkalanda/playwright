@@ -1,4 +1,4 @@
-// tests/ui/cart.spec.ts
+// tests/ui/inventory.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
 
 test.beforeEach(async ({ loggedInInventoryPage }) => {
@@ -121,4 +121,181 @@ test('cart contents persist when navigating back to inventory and opening cart a
     itemsCountAfterBack,
     'Cart items count should remain the same after navigating back and reopening cart',
   ).toBe(itemsCountInitial);
+});
+
+// -------------------- NEW TESTS BELOW --------------------
+
+const expectedProductNames = [
+  'Sauce Labs Backpack',
+  'Sauce Labs Bike Light',
+  'Sauce Labs Bolt T-Shirt',
+  'Sauce Labs Fleece Jacket',
+  'Sauce Labs Onesie',
+  'Test.allTheThings() T-Shirt (Red)',
+];
+
+test('inventory page title is "Products"', async ({ inventoryPage }) => {
+  const title = await inventoryPage.getTitleText();
+
+  expect(title, 'Inventory page title should be "Products"').toBe('Products');
+});
+
+test('inventory page shows all expected products', async ({ inventoryPage }) => {
+  const names = await inventoryPage.getItemNames();
+
+  for (const expectedName of expectedProductNames) {
+    expect(names, `Inventory page should contain product with name "${expectedName}"`).toContain(
+      expectedName,
+    );
+  }
+});
+
+test('inventory items count matches expected products length', async ({ inventoryPage }) => {
+  const itemsCount = await inventoryPage.getItemsCount();
+
+  expect(
+    itemsCount,
+    `Inventory should contain exactly ${expectedProductNames.length} products`,
+  ).toBe(expectedProductNames.length);
+});
+
+test('inventory can sort products by name A to Z', async ({ inventoryPage }) => {
+  await inventoryPage.sortBy('az');
+
+  const names = await inventoryPage.getItemNames();
+  const sorted = [...names].sort((a, b) => a.localeCompare(b));
+
+  expect(
+    names,
+    'Product names should be sorted alphabetically (A to Z) after sorting by name A to Z',
+  ).toEqual(sorted);
+});
+
+test('inventory can sort products by name Z to A', async ({ inventoryPage }) => {
+  await inventoryPage.sortBy('za');
+
+  const names = await inventoryPage.getItemNames();
+  const sorted = [...names].sort((a, b) => b.localeCompare(a));
+
+  expect(
+    names,
+    'Product names should be sorted in reverse alphabetical order (Z to A) after sorting',
+  ).toEqual(sorted);
+});
+
+test('inventory can sort products by price low to high', async ({ inventoryPage }) => {
+  await inventoryPage.sortBy('lohi');
+
+  const prices = await inventoryPage.getItemPrices();
+  const sorted = [...prices].sort((a, b) => a - b);
+
+  expect(
+    prices,
+    'Product prices should be sorted from low to high after sorting by price (low to high)',
+  ).toEqual(sorted);
+});
+
+test('inventory can sort products by price high to low', async ({ inventoryPage }) => {
+  await inventoryPage.sortBy('hilo');
+
+  const prices = await inventoryPage.getItemPrices();
+  const sorted = [...prices].sort((a, b) => b - a);
+
+  expect(
+    prices,
+    'Product prices should be sorted from high to low after sorting by price (high to low)',
+  ).toEqual(sorted);
+});
+
+test('add to cart button changes to Remove after adding product by name', async ({
+  inventoryPage,
+}) => {
+  const productName = 'Sauce Labs Backpack';
+
+  const item = inventoryPage.inventoryItems.filter({ hasText: productName });
+  const button = item.getByRole('button');
+
+  const initialLabel = await button.textContent();
+
+  await inventoryPage.addItemToCartByName(productName);
+
+  const labelAfterAdd = await button.textContent();
+
+  expect(initialLabel?.trim(), 'Initial button label should contain "Add to cart"').toContain(
+    'Add to cart',
+  );
+  expect(
+    labelAfterAdd?.trim(),
+    'Button label should change to "Remove" after adding product to cart',
+  ).toBe('Remove');
+});
+
+test('remove button changes back to Add to cart after removing product by name', async ({
+  inventoryPage,
+}) => {
+  const productName = 'Sauce Labs Backpack';
+
+  await inventoryPage.addItemToCartByName(productName);
+
+  const item = inventoryPage.inventoryItems.filter({ hasText: productName });
+  const button = item.getByRole('button');
+
+  const labelAfterAdd = await button.textContent();
+
+  await inventoryPage.removeItemFromCartByName(productName);
+
+  const labelAfterRemove = await button.textContent();
+
+  expect(labelAfterAdd?.trim(), 'Button label should be "Remove" after product is added').toBe(
+    'Remove',
+  );
+  expect(
+    labelAfterRemove?.trim(),
+    'Button label should change back to "Add to cart" after removing product',
+  ).toContain('Add to cart');
+});
+
+test('cart badge count is zero when no products are added', async ({ inventoryPage }) => {
+  const badgeCount = await inventoryPage.getCartBadgeCount();
+
+  expect(
+    badgeCount,
+    'Cart badge count should be zero when no products are added from inventory',
+  ).toBe(0);
+});
+
+test('cart badge count increases when products are added from inventory', async ({
+  inventoryPage,
+}) => {
+  await inventoryPage.addItemToCartByName('Sauce Labs Backpack');
+  let badgeCount = await inventoryPage.getCartBadgeCount();
+
+  expect(badgeCount, 'Cart badge count should be 1 after adding first product').toBe(1);
+
+  await inventoryPage.addItemToCartByName('Sauce Labs Bike Light');
+  badgeCount = await inventoryPage.getCartBadgeCount();
+
+  expect(badgeCount, 'Cart badge count should be 2 after adding second product').toBe(2);
+});
+
+test('cart badge count decreases when product is removed from inventory', async ({
+  inventoryPage,
+}) => {
+  await inventoryPage.addItemToCartByName('Sauce Labs Backpack');
+  await inventoryPage.addItemToCartByName('Sauce Labs Bike Light');
+
+  const badgeBeforeRemove = await inventoryPage.getCartBadgeCount();
+
+  await inventoryPage.removeItemFromCartByName('Sauce Labs Backpack');
+
+  const badgeAfterRemove = await inventoryPage.getCartBadgeCount();
+
+  expect(
+    badgeBeforeRemove,
+    'Cart badge count should be greater than zero before removing product',
+  ).toBeGreaterThan(0);
+  expect(
+    badgeAfterRemove,
+    'Cart badge count should decrease after removing product from inventory',
+  ).toBe(badgeBeforeRemove - 1);
 });

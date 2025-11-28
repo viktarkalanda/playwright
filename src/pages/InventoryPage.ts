@@ -1,3 +1,4 @@
+// src/pages/InventoryPage.ts
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
 import { step } from '../utils/stepDecorator';
@@ -12,24 +13,89 @@ export class InventoryPage extends BaseForm {
     name: 'Add to cart',
   });
 
+  // New locators
+  readonly itemNames: Locator = this.page.locator('.inventory_item_name');
+  readonly itemPrices: Locator = this.page.locator('.inventory_item_price');
+  readonly sortDropdown: Locator = this.page.locator('[data-test="product_sort_container"]');
+  readonly cartBadge: Locator = this.page.locator('.shopping_cart_badge');
+
   constructor(page: Page) {
     super(page, page.locator('.inventory_list'), 'Inventory page');
   }
 
+  @step('Open inventory page')
+  async open(): Promise<void> {
+    await this.page.goto('/inventory.html');
+    await this.waitForVisible();
+  }
+
   @step('Get inventory items count')
   async getItemsCount(): Promise<number> {
-    return await this.inventoryItems.count();
+    return this.inventoryItems.count();
   }
 
   @step('Get inventory page title')
   async getTitleText(): Promise<string> {
     const text = await this.pageTitle.textContent();
-    return text ?? '';
+    return text?.trim() ?? '';
+  }
+
+  @step('Get all inventory item names')
+  async getItemNames(): Promise<string[]> {
+    const texts = await this.itemNames.allTextContents();
+    return texts.map((t) => t.trim());
+  }
+
+  @step('Get all inventory item prices')
+  async getItemPrices(): Promise<number[]> {
+    const texts = await this.itemPrices.allTextContents();
+    return texts
+      .map((t) => t.trim().replace('$', ''))
+      .map((raw) => Number.parseFloat(raw))
+      .filter((value) => !Number.isNaN(value));
   }
 
   @step('Add first inventory item to cart')
   async addFirstItemToCart(): Promise<void> {
     await this.firstItemAddToCartButton.click();
+  }
+
+  @step('Add inventory item to cart by name')
+  async addItemToCartByName(name: string): Promise<void> {
+    const item = this.inventoryItems.filter({ hasText: name });
+    const button = item.getByRole('button', { name: 'Add to cart' });
+    await button.click();
+  }
+
+  @step('Remove inventory item from cart by name')
+  async removeItemFromCartByName(name: string): Promise<void> {
+    const item = this.inventoryItems.filter({ hasText: name });
+    const button = item.getByRole('button', { name: 'Remove' });
+    await button.click();
+  }
+
+  @step('Check if inventory has item with given name')
+  async hasItemWithName(name: string): Promise<boolean> {
+    const item = this.itemNames.filter({ hasText: name });
+    return (await item.count()) > 0;
+  }
+
+  @step('Sort inventory items')
+  async sortBy(option: 'az' | 'za' | 'lohi' | 'hilo'): Promise<void> {
+    await this.sortDropdown.selectOption(option);
+  }
+
+  @step('Get cart badge count from inventory page')
+  async getCartBadgeCount(): Promise<number> {
+    const count = await this.cartBadge.count();
+    if (count === 0) {
+      return 0;
+    }
+
+    const text = await this.cartBadge.textContent();
+    const numeric = Number.parseInt((text ?? '').trim(), 10);
+
+    return Number.isNaN(numeric) ? 0 : numeric;
   }
 
   @step('Open cart from inventory page')
