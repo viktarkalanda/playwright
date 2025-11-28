@@ -82,10 +82,9 @@ test.describe('Checkout complete - order confirmation', () => {
       headerText,
       'Complete header text should not be empty on checkout complete page',
     ).not.toBe('');
-    expect(
-      bodyText,
-      'Complete body text should not be empty on checkout complete page',
-    ).not.toBe('');
+    expect(bodyText, 'Complete body text should not be empty on checkout complete page').not.toBe(
+      '',
+    );
   });
 
   test('cart badge is cleared after completing checkout', async ({
@@ -118,10 +117,7 @@ test.describe('Checkout complete - order confirmation', () => {
 
     const badgeAfter = await inventoryPage.getCartBadgeCount();
 
-    expect(
-      badgeAfter,
-      'Cart badge should be cleared after completing checkout',
-    ).toBe(0);
+    expect(badgeAfter, 'Cart badge should be cleared after completing checkout').toBe(0);
   });
 
   test('cart is empty after completing checkout', async ({
@@ -147,10 +143,9 @@ test.describe('Checkout complete - order confirmation', () => {
 
     const itemsCount = await cartPage.getItemsCount();
 
-    expect(
-      itemsCount,
-      'Cart should be empty after completing checkout and returning to cart',
-    ).toBe(0);
+    expect(itemsCount, 'Cart should be empty after completing checkout and returning to cart').toBe(
+      0,
+    );
   });
 
   test('back to products button navigates user to inventory page', async ({
@@ -171,10 +166,9 @@ test.describe('Checkout complete - order confirmation', () => {
 
     await checkoutCompletePage.backToProducts();
 
-    await expect(
-      page,
-      'Back to products button should navigate user to inventory page',
-    ).toHaveURL(/.*inventory\.html/);
+    await expect(page, 'Back to products button should navigate user to inventory page').toHaveURL(
+      /.*inventory\.html/,
+    );
   });
 
   test('user cannot access checkout complete page without login', async ({ page }) => {
