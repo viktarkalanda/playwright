@@ -28,13 +28,13 @@ export default defineConfig({
 
   // Global timeout for a single test (ms)
   // If a test runs longer than this, it will fail
-  timeout: 30_000,
+  timeout: 10_000,
 
   // Default timeouts for Playwright expect(...)
   expect: {
     // Max time for expect(...) to wait for condition (ms)
     // Example: await expect(locator).toBeVisible();
-    timeout: 5_000,
+    timeout: 3_000,
   },
 
   // Shared settings for all projects
@@ -55,10 +55,10 @@ export default defineConfig({
     trace: 'on-first-retry',
 
     // Max time for a single action (click, fill, etc.)
-    actionTimeout: 10_000,
+    actionTimeout: 3_000,
 
     // Max time for navigations (page.goto, page.waitForURL, etc.)
-    navigationTimeout: 30_000,
+    navigationTimeout: 5_000,
   },
 
   // Browser projects configuration
