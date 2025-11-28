@@ -8,6 +8,7 @@ import { CheckoutStepTwoPage } from '../pages/CheckoutStepTwoPage';
 import { TestConfig } from '../config/testConfig';
 import { CheckoutCompletePage } from '../pages/CheckoutCompletePage';
 import { ProductDetailsPage } from '../pages/ProductDetailsPage';
+import { MainMenu } from '../pages/MainMenu';
 
 const config = TestConfig.getInstance();
 
@@ -20,6 +21,7 @@ type Pages = {
   checkoutStepTwoPage: CheckoutStepTwoPage;
   checkoutCompletePage: CheckoutCompletePage;
   productDetailsPage: ProductDetailsPage;
+  mainMenu: MainMenu;
 };
 
 type ExtraFixtures = {
@@ -57,6 +59,11 @@ export const test = base.extend<Fixtures>({
   cartPage: async ({ page }, use) => {
     const cartPage = new CartPage(page);
     await use(cartPage);
+  },
+
+  mainMenu: async ({ page }, use) => {
+    const mainMenu = new MainMenu(page);
+    await use(mainMenu);
   },
 
   checkoutStepOnePage: async ({ page }, use) => {
