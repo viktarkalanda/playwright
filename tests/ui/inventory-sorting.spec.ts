@@ -10,14 +10,33 @@ const EXPECTED_PRODUCTS = [
   'Test.allTheThings() T-Shirt (Red)',
 ];
 
-async function getProductNames(inventoryPage: any): Promise<string[]> {
-  const names = await inventoryPage.getItemNames();
-  return names.map((n: string) => n.trim());
+type SortOption = 'az' | 'za' | 'lohi' | 'hilo';
+
+interface InventoryPageLike {
+  sortBy(option: SortOption): Promise<void>;
+  getItemNames(): Promise<string[]>;
+  getItemPrices(): Promise<number[]>;
+  getItemsCount(): Promise<number>;
+  openItemDetailsByName(name: string): Promise<void>;
 }
 
-async function getProductPrices(inventoryPage: any): Promise<number[]> {
+interface MainMenuLike {
+  resetAppState(): Promise<void>;
+  logout(): Promise<void>;
+}
+
+interface LoginPageLike {
+  login(username: string, password: string): Promise<void>;
+}
+
+async function getProductNames(inventoryPage: InventoryPageLike): Promise<string[]> {
+  const names = await inventoryPage.getItemNames();
+  return names.map((n) => n.trim());
+}
+
+async function getProductPrices(inventoryPage: InventoryPageLike): Promise<number[]> {
   const prices = await inventoryPage.getItemPrices();
-  return prices.map((p: number) => Number(p));
+  return prices.map((p) => Number(p));
 }
 
 test.describe('Inventory sorting scenarios', () => {
@@ -28,7 +47,7 @@ test.describe('Inventory sorting scenarios', () => {
   test('sorting A to Z arranges products alphabetically', async ({ inventoryPage }) => {
     await inventoryPage.sortBy('az');
 
-    const names = await getProductNames(inventoryPage);
+    const names = await getProductNames(inventoryPage as InventoryPageLike);
     const sorted = [...names].sort((a, b) => a.localeCompare(b));
 
     expect(names, 'Products should be sorted alphabetically A to Z').toEqual(sorted);
@@ -39,7 +58,7 @@ test.describe('Inventory sorting scenarios', () => {
   }) => {
     await inventoryPage.sortBy('za');
 
-    const names = await getProductNames(inventoryPage);
+    const names = await getProductNames(inventoryPage as InventoryPageLike);
     const sorted = [...names].sort((a, b) => b.localeCompare(a));
 
     expect(names, 'Products should be sorted alphabetically Z to A').toEqual(sorted);
@@ -48,7 +67,7 @@ test.describe('Inventory sorting scenarios', () => {
   test('sorting low to high arranges products by price ascending', async ({ inventoryPage }) => {
     await inventoryPage.sortBy('lohi');
 
-    const prices = await getProductPrices(inventoryPage);
+    const prices = await getProductPrices(inventoryPage as InventoryPageLike);
     const sorted = [...prices].sort((a, b) => a - b);
 
     expect(prices, 'Products should be sorted price low to high').toEqual(sorted);
@@ -57,7 +76,7 @@ test.describe('Inventory sorting scenarios', () => {
   test('sorting high to low arranges products by price descending', async ({ inventoryPage }) => {
     await inventoryPage.sortBy('hilo');
 
-    const prices = await getProductPrices(inventoryPage);
+    const prices = await getProductPrices(inventoryPage as InventoryPageLike);
     const sorted = [...prices].sort((a, b) => b - a);
 
     expect(prices, 'Products should be sorted price high to low').toEqual(sorted);
@@ -66,12 +85,12 @@ test.describe('Inventory sorting scenarios', () => {
   test('sorting persists after page reload', async ({ page, inventoryPage }) => {
     await inventoryPage.sortBy('za');
 
-    const namesBefore = await getProductNames(inventoryPage);
+    const namesBefore = await getProductNames(inventoryPage as InventoryPageLike);
 
     await page.reload();
     await inventoryPage.waitForVisible();
 
-    const namesAfter = await getProductNames(inventoryPage);
+    const namesAfter = await getProductNames(inventoryPage as InventoryPageLike);
 
     expect(namesAfter, 'Sorting order should be preserved after reload').toEqual(namesBefore);
   });
@@ -81,7 +100,7 @@ test.describe('Inventory sorting scenarios', () => {
     productDetailsPage,
   }) => {
     await inventoryPage.sortBy('lohi');
-    const namesBefore = await getProductNames(inventoryPage);
+    const namesBefore = await getProductNames(inventoryPage as InventoryPageLike);
 
     await inventoryPage.openItemDetailsByName(EXPECTED_PRODUCTS[0]);
     await productDetailsPage.waitForVisible();
@@ -89,17 +108,18 @@ test.describe('Inventory sorting scenarios', () => {
     await productDetailsPage.backToProducts();
     await inventoryPage.waitForVisible();
 
-    const namesAfter = await getProductNames(inventoryPage);
+    const namesAfter = await getProductNames(inventoryPage as InventoryPageLike);
 
-    expect(namesAfter, 'Sorting order should remain the same after navigating to details and back').toEqual(
-      namesBefore,
-    );
+    expect(
+      namesAfter,
+      'Sorting order should remain the same after navigating to details and back',
+    ).toEqual(namesBefore);
   });
 
   test('sorting does not change product count', async ({ inventoryPage }) => {
     const initialCount = await inventoryPage.getItemsCount();
 
-    const sortOptions = ['az', 'za', 'lohi', 'hilo'] as const;
+    const sortOptions: SortOption[] = ['az', 'za', 'lohi', 'hilo'];
 
     for (const option of sortOptions) {
       await inventoryPage.sortBy(option);
@@ -119,7 +139,7 @@ test.describe('Inventory sorting scenarios', () => {
     await inventoryPage.sortBy('az');
     await inventoryPage.addItemToCartByName('Sauce Labs Backpack');
 
-    const namesAfterAdd = await getProductNames(inventoryPage);
+    const namesAfterAdd = await getProductNames(inventoryPage as InventoryPageLike);
     const sorted = [...namesAfterAdd].sort((a, b) => a.localeCompare(b));
 
     expect(namesAfterAdd, 'Sorting A to Z should persist after adding an item').toEqual(sorted);
@@ -128,18 +148,15 @@ test.describe('Inventory sorting scenarios', () => {
     await cartPage.waitForVisible();
   });
 
-  test('sorting works correctly after Reset App State', async ({
-    inventoryPage,
-    mainMenu,
-  }) => {
+  test('sorting works correctly after Reset App State', async ({ inventoryPage, mainMenu }) => {
     await inventoryPage.sortBy('za');
 
-    const namesBeforeReset = await getProductNames(inventoryPage);
+    const namesBeforeReset = await getProductNames(inventoryPage as InventoryPageLike);
 
-    await mainMenu.resetAppState();
+    await (mainMenu as MainMenuLike).resetAppState();
     await inventoryPage.waitForVisible();
 
-    const namesAfterReset = await getProductNames(inventoryPage);
+    const namesAfterReset = await getProductNames(inventoryPage as InventoryPageLike);
 
     expect(
       namesAfterReset,
@@ -154,21 +171,20 @@ test.describe('Inventory sorting scenarios', () => {
     mainMenu,
   }) => {
     await inventoryPage.sortBy('hilo');
-    const beforeLogout = await getProductNames(inventoryPage);
+    const beforeLogout = await getProductNames(inventoryPage as InventoryPageLike);
 
-    await mainMenu.logout();
+    await (mainMenu as MainMenuLike).logout();
     await expect(page).not.toHaveURL(/.*inventory\.html/);
 
-    const { username, password } = { username: 'standard_user', password: 'secret_sauce' };
-    await loginPage.login(username, password);
+    const username = 'standard_user';
+    const password = 'secret_sauce';
+
+    await (loginPage as LoginPageLike).login(username, password);
     await inventoryPage.waitForVisible();
 
-    const afterLogin = await getProductNames(inventoryPage);
+    const afterLogin = await getProductNames(inventoryPage as InventoryPageLike);
 
-    expect(
-      afterLogin,
-      'Sorting order should persist across logout/login on Swag Labs',
-    ).toEqual(beforeLogout);
+    expect(afterLogin, 'Sorting order should persist across logout/login').toEqual(beforeLogout);
   });
 
   test('sorting remains stable after browser back/forward navigation', async ({
@@ -176,27 +192,24 @@ test.describe('Inventory sorting scenarios', () => {
     inventoryPage,
   }) => {
     await inventoryPage.sortBy('az');
-    const afterSort = await getProductNames(inventoryPage);
+    const afterSort = await getProductNames(inventoryPage as InventoryPageLike);
 
     await page.goBack();
     await page.goForward();
     await inventoryPage.waitForVisible();
 
-    const afterNav = await getProductNames(inventoryPage);
+    const afterNav = await getProductNames(inventoryPage as InventoryPageLike);
 
     expect(afterNav, 'Sorting should remain the same after back/forward').toEqual(afterSort);
   });
 
   test('sorting updates immediately when a new option is selected', async ({ inventoryPage }) => {
     await inventoryPage.sortBy('az');
-    const azOrder = await getProductNames(inventoryPage);
+    const azOrder = await getProductNames(inventoryPage as InventoryPageLike);
 
     await inventoryPage.sortBy('za');
-    const zaOrder = await getProductNames(inventoryPage);
+    const zaOrder = await getProductNames(inventoryPage as InventoryPageLike);
 
-    expect(
-      azOrder,
-      'A to Z order should differ from Z to A order',
-    ).not.toEqual(zaOrder);
+    expect(azOrder, 'A to Z order should differ from Z to A order').not.toEqual(zaOrder);
   });
 });
