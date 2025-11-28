@@ -1,5 +1,5 @@
 // src/fixtures/test-fixtures.ts
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect, TestInfo } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { InventoryPage } from '../pages/InventoryPage';
 import { CartPage } from '../pages/CartPage';
@@ -21,6 +21,14 @@ type ExtraFixtures = {
 };
 
 type Fixtures = Pages & ExtraFixtures;
+
+type AllureAttachmentFn = (name: string, content: string, type: string) => void;
+
+type TestInfoWithAllure = TestInfo & {
+  allure?: {
+    attachment?: AllureAttachmentFn;
+  };
+};
 
 export const test = base.extend<Fixtures>({
   loginPage: async ({ page }, use) => {
@@ -57,11 +65,7 @@ export const test = base.extend<Fixtures>({
     const failed = testInfo.status !== testInfo.expectedStatus;
 
     if (failed && logs.length > 0) {
-      // Allure via allure-playwright
-      const anyInfo = testInfo as any;
-      const allure = anyInfo.allure as
-        | { attachment?: (name: string, content: string, type: string) => void }
-        | undefined;
+      const { allure } = testInfo as TestInfoWithAllure;
 
       if (allure && typeof allure.attachment === 'function') {
         allure.attachment('Browser console logs', logs.join('\n'), 'text/plain');

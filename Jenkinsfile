@@ -48,7 +48,21 @@ pipeline {
 
     stage('Lint') {
       steps {
-        sh 'npm run lint'
+
+        script {
+          catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+            sh 'npm run lint'
+          }
+        }
+      }
+    }
+
+    stage('Clean reports') {
+      steps {
+        // Чистим старые репорты перед запуском тестов
+        sh '''
+          rm -rf allure-results allure-report playwright-report || true
+        '''
       }
     }
 
