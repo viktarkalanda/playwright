@@ -4,6 +4,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { InventoryPage } from '../pages/InventoryPage';
 import { CartPage } from '../pages/CartPage';
 import { CheckoutStepOnePage } from '../pages/CheckoutStepOnePage';
+import { CheckoutStepTwoPage } from '../pages/CheckoutStepTwoPage';
 import { TestConfig } from '../config/testConfig';
 
 const config = TestConfig.getInstance();
@@ -14,6 +15,7 @@ type Pages = {
   loggedInInventoryPage: InventoryPage;
   cartPage: CartPage;
   checkoutStepOnePage: CheckoutStepOnePage;
+  checkoutStepTwoPage: CheckoutStepTwoPage;
 };
 
 type ExtraFixtures = {
@@ -55,6 +57,11 @@ export const test = base.extend<Fixtures>({
 
   checkoutStepOnePage: async ({ page }, use) => {
     const checkoutPage = new CheckoutStepOnePage(page);
+    await use(checkoutPage);
+  },
+
+  checkoutStepTwoPage: async ({ page }, use) => {
+    const checkoutPage = new CheckoutStepTwoPage(page);
     await use(checkoutPage);
   },
 
