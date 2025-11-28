@@ -89,21 +89,18 @@ test.describe('Checkout step two - overview', () => {
 
     const itemsInSummary = await checkoutStepTwoPage.getSummaryItemCount();
 
-    expect(
-      itemsInSummary,
-      'Checkout summary item count should match cart item count',
-    ).toBe(itemsInCart);
+    expect(itemsInSummary, 'Checkout summary item count should match cart item count').toBe(
+      itemsInCart,
+    );
 
     const summaryNames = await checkoutStepTwoPage.getItemNames();
 
-    expect(
-      summaryNames,
-      'Summary should contain "Sauce Labs Backpack"',
-    ).toContain('Sauce Labs Backpack');
-    expect(
-      summaryNames,
-      'Summary should contain "Sauce Labs Bike Light"',
-    ).toContain('Sauce Labs Bike Light');
+    expect(summaryNames, 'Summary should contain "Sauce Labs Backpack"').toContain(
+      'Sauce Labs Backpack',
+    );
+    expect(summaryNames, 'Summary should contain "Sauce Labs Bike Light"').toContain(
+      'Sauce Labs Bike Light',
+    );
   });
 
   test('subtotal equals sum of item prices on checkout step two', async ({
@@ -124,10 +121,7 @@ test.describe('Checkout step two - overview', () => {
 
     const calculated = prices.reduce((acc, price) => acc + price, 0);
 
-    expect(
-      subtotal,
-      'Subtotal value should equal sum of item prices',
-    ).toBeCloseTo(calculated, 2);
+    expect(subtotal, 'Subtotal value should equal sum of item prices').toBeCloseTo(calculated, 2);
   });
 
   test('total equals subtotal plus tax on checkout step two', async ({
@@ -176,9 +170,10 @@ test.describe('Checkout step two - overview', () => {
 
     await checkoutStepTwoPage.cancel();
 
-    await expect(page, 'User should be back on cart page after cancelling checkout step two').toHaveURL(
-      /.*cart\.html/,
-    );
+    await expect(
+      page,
+      'User should be back on cart page after cancelling checkout step two',
+    ).toHaveURL(/.*cart\.html/);
 
     await cartPage.waitForVisible();
     const itemsInCartAfter = await cartPage.getItemsCount();
@@ -286,9 +281,7 @@ test.describe('Checkout step two - overview', () => {
     await cartPage.waitForVisible();
 
     const firstCartItem = cartPage.cartItems.first();
-    await firstCartItem
-      .getByRole('button', { name: 'Remove' })
-      .click();
+    await firstCartItem.getByRole('button', { name: 'Remove' }).click();
 
     const itemsInCart = await cartPage.getItemsCount();
 
@@ -300,9 +293,8 @@ test.describe('Checkout step two - overview', () => {
 
     const itemsInSummary = await checkoutStepTwoPage.getSummaryItemCount();
 
-    expect(
-      itemsInSummary,
-      'Checkout summary should reflect updated cart items after removal',
-    ).toBe(itemsInCart);
+    expect(itemsInSummary, 'Checkout summary should reflect updated cart items after removal').toBe(
+      itemsInCart,
+    );
   });
 });
