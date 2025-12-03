@@ -57,7 +57,13 @@ export class InventoryPage extends BaseForm {
 
   @step('Add first inventory item to cart')
   async addFirstItemToCart(): Promise<void> {
-    await this.firstItemAddToCartButton.click();
+    if ((await this.firstItemAddToCartButton.count()) > 0) {
+      await this.firstItemAddToCartButton.click();
+      return;
+    }
+
+    const removeButton = this.firstInventoryItem.getByRole('button', { name: 'Remove' });
+    await removeButton.click();
   }
 
   @step('Add inventory item to cart by name')

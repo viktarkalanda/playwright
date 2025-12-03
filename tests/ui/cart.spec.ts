@@ -1,5 +1,39 @@
 // tests/ui/cart.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
+import type { CartPage } from '../../src/pages/CartPage';
+
+const BACKPACK_NAME = 'Sauce Labs Backpack';
+const BIKE_LIGHT_NAME = 'Sauce Labs Bike Light';
+const BOLT_TSHIRT_NAME = 'Sauce Labs Bolt T-Shirt';
+const FLEECE_JACKET_NAME = 'Sauce Labs Fleece Jacket';
+const ONESIE_NAME = 'Sauce Labs Onesie';
+
+async function getCartItemNames(cartPage: CartPage): Promise<string[]> {
+  const names = await cartPage.cartItemNames.allTextContents();
+  return names.map((name) => name.trim());
+}
+
+async function getCartItemPriceByName(cartPage: CartPage, name: string): Promise<number> {
+  const item = cartPage.cartItems.filter({ hasText: name });
+  const priceLocator = item.locator('.inventory_item_price').first();
+  const text = await priceLocator.textContent();
+  const numeric = Number.parseFloat((text ?? '').replace('$', '').trim());
+  return Number.isNaN(numeric) ? 0 : numeric;
+}
+
+async function removeCartItemByName(cartPage: CartPage, name: string): Promise<void> {
+  const item = cartPage.cartItems.filter({ hasText: name }).first();
+  await item.getByRole('button', { name: 'Remove' }).click();
+}
+
+async function getCartItemsPriceSum(cartPage: CartPage): Promise<number> {
+  const texts = await cartPage.cartItems.locator('.inventory_item_price').allTextContents();
+  return texts.reduce((sum, raw) => {
+    const cleaned = raw.replace('$', '').trim();
+    const value = Number.parseFloat(cleaned);
+    return Number.isNaN(value) ? sum : sum + value;
+  }, 0);
+}
 
 test.beforeEach(async ({ loggedInInventoryPage }) => {
   await loggedInInventoryPage.waitForVisible();
@@ -605,4 +639,206 @@ test('cart remains consistent when reopened after reload and navigation', async 
     'Cart items count should remain stable after reload and navigation when no explicit cart changes are made',
   ).toBe(initialCount);
   expect(hasBackpack, 'Backpack should still be present after reload and navigation').toBe(true);
+});
+
+test('cart lists multiple added products in order with correct prices', async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  const itemsToAdd = [BACKPACK_NAME, BIKE_LIGHT_NAME, BOLT_TSHIRT_NAME];
+  const expectedPriceByName = new Map<string, number>();
+
+  for (const name of itemsToAdd) {
+    await inventoryPage.addItemToCartByName(name);
+    const price = await inventoryPage.getItemPriceByName(name);
+    expectedPriceByName.set(name, price);
+  }
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const namesInCart = await getCartItemNames(cartPage);
+
+  expect(namesInCart, 'Cart should list products in order of addition').toEqual(itemsToAdd);
+
+  for (const name of itemsToAdd) {
+    const expectedPrice = expectedPriceByName.get(name) ?? 0;
+    const cartPrice = await getCartItemPriceByName(cartPage, name);
+
+    expect(cartPrice, `Cart price for ${name} should match inventory price`).toBeCloseTo(
+      expectedPrice,
+      2,
+    );
+  }
+});
+
+test('removing one product from cart keeps remaining products intact', async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  const itemsToAdd = [BACKPACK_NAME, BIKE_LIGHT_NAME, BOLT_TSHIRT_NAME];
+
+  for (const name of itemsToAdd) {
+    await inventoryPage.addItemToCartByName(name);
+  }
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  await removeCartItemByName(cartPage, BIKE_LIGHT_NAME);
+
+  const namesAfterRemoval = await getCartItemNames(cartPage);
+  expect(
+    namesAfterRemoval,
+    'Removing one product should leave the others untouched and in order',
+  ).toEqual([BACKPACK_NAME, BOLT_TSHIRT_NAME]);
+
+  const countAfterRemoval = await cartPage.getItemsCount();
+  expect(countAfterRemoval, 'Removing one product should decrement cart count by one').toBe(2);
+});
+
+test('continue shopping keeps all cart items untouched', async ({ inventoryPage, cartPage }) => {
+  const itemsToAdd = [BACKPACK_NAME, FLEECE_JACKET_NAME];
+
+  for (const name of itemsToAdd) {
+    await inventoryPage.addItemToCartByName(name);
+  }
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const namesBeforeContinue = await getCartItemNames(cartPage);
+
+  await cartPage.continueShopping();
+  await inventoryPage.waitForVisible();
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const namesAfterContinue = await getCartItemNames(cartPage);
+
+  expect(
+    namesAfterContinue,
+    'Continue shopping should not remove or reorder existing cart items',
+  ).toEqual(namesBeforeContinue);
+});
+
+test('re-adding removed product appends it at the end of the cart list', async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  await inventoryPage.addItemToCartByName(BACKPACK_NAME);
+  await inventoryPage.addItemToCartByName(BIKE_LIGHT_NAME);
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  await removeCartItemByName(cartPage, BACKPACK_NAME);
+
+  await cartPage.continueShopping();
+  await inventoryPage.waitForVisible();
+
+  await inventoryPage.addItemToCartByName(BACKPACK_NAME);
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const namesAfterReadd = await getCartItemNames(cartPage);
+
+  expect(
+    namesAfterReadd,
+    'Re-added product should appear after existing products and without duplicates',
+  ).toEqual([BIKE_LIGHT_NAME, BACKPACK_NAME]);
+});
+
+test('sum of cart item prices matches expected total from inventory', async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  const itemsToAdd = [BACKPACK_NAME, BOLT_TSHIRT_NAME, ONESIE_NAME];
+
+  for (const name of itemsToAdd) {
+    await inventoryPage.addItemToCartByName(name);
+  }
+
+  const expectedPrices = await Promise.all(
+    itemsToAdd.map((name) => inventoryPage.getItemPriceByName(name)),
+  );
+  const expectedSum = expectedPrices.reduce((sum, price) => sum + price, 0);
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const cartSum = await getCartItemsPriceSum(cartPage);
+
+  expect(
+    cartSum,
+    'Cart should display a price per product that sums up to the expected total',
+  ).toBeCloseTo(expectedSum, 2);
+});
+
+test('cart total updates after removing an item', async ({ inventoryPage, cartPage }) => {
+  const itemsToAdd = [BACKPACK_NAME, BOLT_TSHIRT_NAME];
+
+  for (const name of itemsToAdd) {
+    await inventoryPage.addItemToCartByName(name);
+  }
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const initialSum = await getCartItemsPriceSum(cartPage);
+  const removedItemPrice = await getCartItemPriceByName(cartPage, BOLT_TSHIRT_NAME);
+
+  await removeCartItemByName(cartPage, BOLT_TSHIRT_NAME);
+
+  const finalSum = await getCartItemsPriceSum(cartPage);
+
+  expect(
+    finalSum,
+    'Removing an item should reduce the cart price sum exactly by the removed price',
+  ).toBeCloseTo(initialSum - removedItemPrice, 2);
+});
+
+test('re-adding the same product after removal keeps only one entry', async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  await inventoryPage.addItemToCartByName(ONESIE_NAME);
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  await removeCartItemByName(cartPage, ONESIE_NAME);
+
+  await cartPage.continueShopping();
+  await inventoryPage.waitForVisible();
+
+  await inventoryPage.addItemToCartByName(ONESIE_NAME);
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const finalCount = await cartPage.getItemsCount();
+  const names = await getCartItemNames(cartPage);
+
+  expect(finalCount, 'Re-adding the same product should keep a single cart entry').toBe(1);
+  expect(names, 'Cart should contain the re-added product only once').toEqual([ONESIE_NAME]);
+});
+
+test('checkout cannot be started when cart is empty (skipped on Sauce Demo)', async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  const baseUrl = process.env.BASE_URL ?? 'https://www.saucedemo.com/';
+  test.skip(
+    baseUrl.includes('saucedemo.com'),
+    'Sauce Demo allows checkout with empty cart, skip expectation for this environment',
+  );
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  await expect(
+    cartPage.checkoutButton,
+    'Checkout button should be disabled when cart has no items',
+  ).toBeDisabled();
 });

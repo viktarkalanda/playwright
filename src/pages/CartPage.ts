@@ -25,8 +25,8 @@ export class CartPage extends BaseForm {
 
   @step('Check if cart has item with given name')
   async hasItemWithName(name: string): Promise<boolean> {
-    const item = this.cartItemNames.filter({ hasText: name });
-    return (await item.count()) > 0;
+    const names = await this.cartItemNames.allTextContents();
+    return names.map((text) => text.trim()).some((value) => value === name);
   }
 
   @step('Continue shopping from cart')
