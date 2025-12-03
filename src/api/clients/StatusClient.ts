@@ -12,7 +12,8 @@ const CHECKOUT_PATHS: Record<CheckoutStep, string> = {
 
 export class StatusClient extends BaseApiClient {
   constructor(request: APIRequestContext, testInfo?: TestInfo) {
-    super(request, testInfo);
+    super(request);
+    this.registerTestInfo(testInfo);
   }
 
   @step('Fetch root HTML page')

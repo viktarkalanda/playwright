@@ -5,7 +5,8 @@ import { step } from '../../utils/stepDecorator';
 
 export class AssetsClient extends BaseApiClient {
   constructor(request: APIRequestContext, testInfo?: TestInfo) {
-    super(request, testInfo);
+    super(request);
+    this.registerTestInfo(testInfo);
   }
 
   @step('Fetch manifest.json')
