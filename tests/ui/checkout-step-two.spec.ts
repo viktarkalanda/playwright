@@ -297,4 +297,70 @@ test.describe('Checkout step two - overview', () => {
       itemsInCart,
     );
   });
+
+  test('checkout summary keeps the order in which products were added to the cart', async ({
+    inventoryPage,
+    cartPage,
+    checkoutStepOnePage,
+    checkoutStepTwoPage,
+  }) => {
+    const itemsToAdd = [
+      'Sauce Labs Bike Light',
+      'Sauce Labs Bolt T-Shirt',
+      'Sauce Labs Backpack',
+    ];
+
+    for (const name of itemsToAdd) {
+      await inventoryPage.addItemToCartByName(name);
+    }
+
+    await inventoryPage.openCart();
+    await cartPage.waitForVisible();
+    await cartPage.startCheckout();
+
+    await checkoutStepOnePage.waitForVisible();
+    await checkoutStepOnePage.fillForm('Order', 'Check', '32100');
+    await checkoutStepOnePage.submit();
+    await checkoutStepTwoPage.waitForVisible();
+
+    const summaryNames = await checkoutStepTwoPage.getItemNames();
+
+    expect(
+      summaryNames,
+      'Checkout overview should list products in the order they were added to the cart',
+    ).toEqual(itemsToAdd);
+  });
+
+  test('checkout step two shows zero totals when checkout started with empty cart', async ({
+    page,
+    inventoryPage,
+    cartPage,
+    checkoutStepOnePage,
+    checkoutStepTwoPage,
+  }) => {
+    await inventoryPage.openCart();
+    await cartPage.waitForVisible();
+    await cartPage.startCheckout();
+
+    await checkoutStepOnePage.waitForVisible();
+    await checkoutStepOnePage.fillForm('Empty', 'Cart', '00000');
+    await checkoutStepOnePage.submit();
+    await checkoutStepTwoPage.waitForVisible();
+
+    const summaryNames = await checkoutStepTwoPage.getItemNames();
+    const subtotal = await checkoutStepTwoPage.getSubtotal();
+    const tax = await checkoutStepTwoPage.getTax();
+    const total = await checkoutStepTwoPage.getTotal();
+
+    expect(summaryNames, 'No items should be shown in summary for empty cart checkout').toEqual([]);
+    expect(subtotal, 'Subtotal should be zero for empty cart checkout').toBe(0);
+    expect(tax, 'Tax should be zero for empty cart checkout').toBe(0);
+    expect(total, 'Total should be zero for empty cart checkout').toBe(0);
+
+    await checkoutStepTwoPage.finish();
+    await expect(
+      page,
+      'Finishing checkout with empty cart should still navigate to complete page',
+    ).toHaveURL(/.*checkout-complete\.html/);
+  });
 });

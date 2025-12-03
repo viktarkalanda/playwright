@@ -217,4 +217,48 @@ test.describe('Checkout step one - personal information', () => {
       'After fixing invalid data user should be redirected to checkout step two page',
     ).toHaveURL(/.*checkout-step-two\.html/);
   });
+
+  test('user can submit checkout step one form using Enter key', async ({
+    page,
+    inventoryPage,
+    cartPage,
+    checkoutStepOnePage,
+  }) => {
+    await goToCheckoutStepOne(inventoryPage, cartPage);
+    await checkoutStepOnePage.waitForVisible();
+
+    await checkoutStepOnePage.fillForm('Enter', 'User', '55555');
+    await checkoutStepOnePage.postalCodeInput.press('Enter');
+
+    await expect(
+      page,
+      'Pressing Enter on postal code input should continue to checkout step two',
+    ).toHaveURL(/.*checkout-step-two\.html/);
+  });
+
+  test('checkout step one fields reset after cancelling and reopening', async ({
+    inventoryPage,
+    cartPage,
+    checkoutStepOnePage,
+  }) => {
+    await goToCheckoutStepOne(inventoryPage, cartPage);
+    await checkoutStepOnePage.waitForVisible();
+
+    await checkoutStepOnePage.fillForm('Clear', 'Me', '11111');
+    await checkoutStepOnePage.cancel();
+
+    await cartPage.waitForVisible();
+    await cartPage.startCheckout();
+    await checkoutStepOnePage.waitForVisible();
+
+    const firstName = await checkoutStepOnePage.getFirstNameValue();
+    const lastName = await checkoutStepOnePage.getLastNameValue();
+    const postalCode = await checkoutStepOnePage.getPostalCodeValue();
+
+    expect(firstName, 'First name input should reset after cancelling checkout step one').toBe('');
+    expect(lastName, 'Last name input should reset after cancelling checkout step one').toBe('');
+    expect(postalCode, 'Postal code input should reset after cancelling checkout step one').toBe(
+      '',
+    );
+  });
 });

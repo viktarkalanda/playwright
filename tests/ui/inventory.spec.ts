@@ -299,3 +299,54 @@ test('cart badge count decreases when product is removed from inventory', async 
     'Cart badge count should decrease after removing product from inventory',
   ).toBe(badgeBeforeRemove - 1);
 });
+
+test('cart badge matches actual cart items after multiple add/remove actions', async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  const products = ['Sauce Labs Backpack', 'Sauce Labs Bike Light', 'Sauce Labs Bolt T-Shirt'];
+
+  for (const name of products) {
+    await inventoryPage.addItemToCartByName(name);
+  }
+
+  await inventoryPage.removeItemFromCartByName('Sauce Labs Bike Light');
+
+  const badgeCount = await inventoryPage.getCartBadgeCount();
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const itemsInCart = await cartPage.getItemsCount();
+
+  expect(badgeCount, 'Cart badge should match the actual number of items in cart').toBe(
+    itemsInCart,
+  );
+  expect(itemsInCart, 'Cart should contain two items after removing one of the three added').toBe(2);
+});
+
+test('inventory reload does not remove products already added to the cart', async ({
+  page,
+  inventoryPage,
+  cartPage,
+}) => {
+  await inventoryPage.addItemToCartByName('Sauce Labs Backpack');
+
+  await page.reload();
+  await inventoryPage.waitForVisible();
+
+  const badgeCount = await inventoryPage.getCartBadgeCount();
+  expect(
+    badgeCount,
+    'Cart badge should still show added item after reloading inventory page',
+  ).toBe(1);
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const hasBackpack = await cartPage.hasItemWithName('Sauce Labs Backpack');
+  expect(
+    hasBackpack,
+    'Cart should still contain the previously added product after inventory reload',
+  ).toBe(true);
+});

@@ -230,4 +230,58 @@ test.describe('Main menu', () => {
       'Main menu should not be visible after closing it from product details page',
     ).toBe(false);
   });
+
+  test('reset app state restores "Add to cart" button labels on inventory page', async ({
+    inventoryPage,
+    mainMenu,
+  }) => {
+    await addBackpackToCart(inventoryPage);
+
+    const backpackCard = inventoryPage.inventoryItems.filter({ hasText: PRODUCT_NAME });
+    const button = backpackCard.getByRole('button');
+
+    await expect(
+      button,
+      'Button text should change to "Remove" after product was added',
+    ).toHaveText('Remove');
+
+    await mainMenu.resetAppState();
+
+    await expect(
+      button,
+      'After reset app state button should revert to "Add to cart"',
+    ).toHaveText(/Add to cart/);
+  });
+
+  test('all items link from checkout returns user to inventory while keeping cart items', async ({
+    page,
+    inventoryPage,
+    cartPage,
+    checkoutStepOnePage,
+    mainMenu,
+  }) => {
+    await addBackpackToCart(inventoryPage);
+    await inventoryPage.openCart();
+    await cartPage.waitForVisible();
+    await cartPage.startCheckout();
+
+    await checkoutStepOnePage.waitForVisible();
+
+    await mainMenu.goToAllItems();
+    await inventoryPage.waitForVisible();
+
+    await expect(
+      page,
+      'Selecting All Items from checkout should navigate back to inventory page',
+    ).toHaveURL(/.*inventory\.html/);
+
+    await inventoryPage.openCart();
+    await cartPage.waitForVisible();
+
+    const itemsCount = await cartPage.getItemsCount();
+    expect(
+      itemsCount,
+      'Cart should still contain the previously added product after navigating via menu',
+    ).toBe(1);
+  });
 });

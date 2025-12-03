@@ -262,4 +262,52 @@ test.describe('Product details page', () => {
     ).toBe(true);
     expect(itemsCount, 'Cart should not contain duplicate line items for the same product').toBe(1);
   });
+
+  test('reopening product details shows remove button when item is already in cart', async ({
+    inventoryPage,
+    productDetailsPage,
+  }) => {
+    await openDetailsForBackpack(inventoryPage, productDetailsPage);
+    await productDetailsPage.addToCart();
+
+    await productDetailsPage.backToProducts();
+    await inventoryPage.waitForVisible();
+
+    await inventoryPage.openItemDetailsByName(PRODUCT_NAME);
+    await productDetailsPage.waitForVisible();
+
+    const removeVisible = await productDetailsPage.isRemoveButtonVisible();
+    expect(
+      removeVisible,
+      '"Remove" button should be visible when reopening details for an item already in cart',
+    ).toBe(true);
+  });
+
+  test('browser back and forward navigation keeps product details state intact', async ({
+    page,
+    inventoryPage,
+    productDetailsPage,
+  }) => {
+    await openDetailsForBackpack(inventoryPage, productDetailsPage);
+    await productDetailsPage.addToCart();
+
+    const nameBeforeNav = await productDetailsPage.getProductName();
+
+    await page.goBack();
+    await inventoryPage.waitForVisible();
+
+    await page.goForward();
+    await productDetailsPage.waitForVisible();
+
+    const nameAfterNav = await productDetailsPage.getProductName();
+    const removeVisible = await productDetailsPage.isRemoveButtonVisible();
+
+    expect(nameAfterNav, 'Product name should remain the same after back and forward navigation').toBe(
+      nameBeforeNav,
+    );
+    expect(
+      removeVisible,
+      '"Remove" button should remain visible after navigating away and returning with browser controls',
+    ).toBe(true);
+  });
 });

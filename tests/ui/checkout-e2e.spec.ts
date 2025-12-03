@@ -408,4 +408,54 @@ test.describe('End-to-end checkout flows', () => {
       'Cart should remain empty even after navigating back through checkout history',
     ).toBe(0);
   });
+
+  test('reset app state during checkout clears cart before overview step', async ({
+    inventoryPage,
+    cartPage,
+    checkoutStepOnePage,
+    checkoutStepTwoPage,
+    checkoutCompletePage,
+    mainMenu,
+  }) => {
+    await inventoryPage.addItemToCartByName(BACKPACK_NAME);
+    await inventoryPage.addItemToCartByName(BIKE_LIGHT_NAME);
+    await inventoryPage.openCart();
+    await cartPage.waitForVisible();
+    await cartPage.startCheckout();
+
+    await checkoutStepOnePage.waitForVisible();
+
+    await mainMenu.resetAppState();
+
+    const badgeAfterReset = await inventoryPage.getCartBadgeCount();
+    expect(
+      badgeAfterReset,
+      'Cart badge should be cleared immediately after resetting app state mid-checkout',
+    ).toBe(0);
+
+    await checkoutStepOnePage.fillForm('Reset', 'During', '80808');
+    await checkoutStepOnePage.submit();
+    await checkoutStepTwoPage.waitForVisible();
+
+    const summaryCount = await checkoutStepTwoPage.getSummaryItemCount();
+    expect(
+      summaryCount,
+      'Checkout overview should be empty when cart was cleared mid-flow',
+    ).toBe(0);
+
+    await checkoutStepTwoPage.finish();
+    await checkoutCompletePage.waitForVisible();
+
+    await checkoutCompletePage.backToProducts();
+    await inventoryPage.waitForVisible();
+
+    await inventoryPage.openCart();
+    await cartPage.waitForVisible();
+
+    const itemsAfterFlow = await cartPage.getItemsCount();
+    expect(
+      itemsAfterFlow,
+      'Cart should stay empty throughout after resetting app state during checkout',
+    ).toBe(0);
+  });
 });

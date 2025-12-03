@@ -271,4 +271,38 @@ test.describe('Checkout complete - order confirmation', () => {
       'Cart should remain empty even after navigating back from checkout complete and reopening cart',
     ).toBe(0);
   });
+
+  test('back to products works after reloading checkout complete page', async ({
+    page,
+    inventoryPage,
+    cartPage,
+    checkoutStepOnePage,
+    checkoutStepTwoPage,
+    checkoutCompletePage,
+  }) => {
+    await goToCheckoutCompleteWithSingleItem(
+      inventoryPage,
+      cartPage,
+      checkoutStepOnePage,
+      checkoutStepTwoPage,
+      checkoutCompletePage,
+    );
+
+    await page.reload();
+    await checkoutCompletePage.waitForVisible();
+
+    await checkoutCompletePage.backToProducts();
+    await inventoryPage.waitForVisible();
+
+    await expect(
+      page,
+      'After reload, Back to products should still redirect user to inventory',
+    ).toHaveURL(/.*inventory\.html/);
+
+    await inventoryPage.openCart();
+    await cartPage.waitForVisible();
+
+    const itemsCount = await cartPage.getItemsCount();
+    expect(itemsCount, 'Cart should remain empty after returning via Back to products').toBe(0);
+  });
 });

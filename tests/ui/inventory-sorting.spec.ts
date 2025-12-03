@@ -212,4 +212,52 @@ test.describe('Inventory sorting scenarios', () => {
 
     expect(azOrder, 'A to Z order should differ from Z to A order').not.toEqual(zaOrder);
   });
+
+  test('sorting order persists after visiting cart and returning to inventory', async ({
+    inventoryPage,
+    cartPage,
+  }) => {
+    await inventoryPage.sortBy('za');
+    const orderBeforeCart = await getProductNames(inventoryPage as InventoryPageLike);
+
+    await inventoryPage.openCart();
+    await cartPage.waitForVisible();
+    await cartPage.continueShopping();
+    await inventoryPage.waitForVisible();
+
+    const orderAfterCart = await getProductNames(inventoryPage as InventoryPageLike);
+
+    expect(
+      orderAfterCart,
+      'Sorting selection should remain after leaving inventory for the cart and coming back',
+    ).toEqual(orderBeforeCart);
+  });
+
+  test('sorting remains unchanged after cancelling checkout and returning to inventory', async ({
+    inventoryPage,
+    cartPage,
+    checkoutStepOnePage,
+  }) => {
+    await inventoryPage.sortBy('lohi');
+    const pricesBeforeCheckout = await getProductPrices(inventoryPage as InventoryPageLike);
+
+    await inventoryPage.addItemToCartByName(EXPECTED_PRODUCTS[0]);
+    await inventoryPage.openCart();
+    await cartPage.waitForVisible();
+    await cartPage.startCheckout();
+
+    await checkoutStepOnePage.waitForVisible();
+    await checkoutStepOnePage.cancel();
+
+    await cartPage.waitForVisible();
+    await cartPage.continueShopping();
+    await inventoryPage.waitForVisible();
+
+    const pricesAfterCancel = await getProductPrices(inventoryPage as InventoryPageLike);
+
+    expect(
+      pricesAfterCancel,
+      'Sorting should remain low to high after cancelling checkout and returning to inventory',
+    ).toEqual(pricesBeforeCheckout);
+  });
 });
