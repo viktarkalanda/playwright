@@ -67,8 +67,8 @@ export abstract class BaseApiClient {
     const response = await this.request.post(path, {
       ...options,
       headers: {
-        ...(options?.headers ?? {}),
         'content-type': 'application/x-www-form-urlencoded',
+        ...(options?.headers ?? {}),
       },
       data: formData,
     });

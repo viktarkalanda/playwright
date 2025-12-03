@@ -25,12 +25,12 @@ export const apiTest = base.extend<ApiFixtures>({
     await context.dispose();
   },
 
-  statusClient: async ({ apiRequest }, use) => {
-    await use(new StatusClient(apiRequest));
+  statusClient: async ({ apiRequest }, use, testInfo) => {
+    await use(new StatusClient(apiRequest, testInfo));
   },
 
-  assetsClient: async ({ apiRequest }, use) => {
-    await use(new AssetsClient(apiRequest));
+  assetsClient: async ({ apiRequest }, use, testInfo) => {
+    await use(new AssetsClient(apiRequest, testInfo));
   },
 });
 
