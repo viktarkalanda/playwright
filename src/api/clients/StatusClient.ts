@@ -40,4 +40,9 @@ export class StatusClient extends BaseApiClient {
   async submitLoginForm(formBody: string): Promise<ResponseEnvelope<string>> {
     return this.postForm('/', formBody);
   }
+
+  @step('Fetch arbitrary HTML path')
+  async fetchRawPath(path: string): Promise<ResponseEnvelope<string>> {
+    return this.getText(path);
+  }
 }
