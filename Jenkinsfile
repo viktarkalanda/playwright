@@ -9,27 +9,25 @@ pipeline {
 
   environment {
     NODE_ENV = 'test'
-    ALLURE_DOCKER_URL = 'http://allure-docker-service:5050/allure-docker-service'
+    // БЕЗ префикса /allure-docker-service
+    ALLURE_DOCKER_URL = 'http://allure-docker-service:5050'
     ALLURE_PROJECT_ID = 'playwright-regression'
   }
 
   stages {
     stage('Checkout') {
       steps {
-        // Checkout repository from SCM configured in the job
         checkout scm
       }
     }
 
     stage('Install dependencies') {
       steps {
-        // Just to see current state before install
         sh '''
           node -v || echo "Node is not installed yet"
           npm -v || echo "npm is not installed yet"
         '''
 
-        // Install Node.js 20 inside the Jenkins container if it's missing
         sh '''
           if ! command -v node >/dev/null 2>&1; then
             echo "Installing Node.js 20..."
@@ -37,12 +35,6 @@ pipeline {
             apt-get install -y curl
             curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
             apt-get install -y nodejs
-          fi
-
-          if ! command -v curl >/dev/null 2>&1; then
-            echo "Installing curl..."
-            apt-get update
-            apt-get install -y curl
           fi
 
           if ! command -v zip >/dev/null 2>&1; then
@@ -100,16 +92,15 @@ pipeline {
           rm -f allure-results.zip
           zip -r allure-results.zip allure-results
 
-          echo "Sending results to Allure Docker Service..."
-          if ! curl -sS -f --retry 3 --retry-delay 5 -X POST "$ALLURE_DOCKER_URL/send-results?project_id=$ALLURE_PROJECT_ID" \
-            -F "results[]=@allure-results.zip"; then
-            echo "Failed to send Allure results to Allure Docker Service"
-          fi
+          echo ">>> Sending results to Allure Docker Service..."
+          curl -v -X POST "$ALLURE_DOCKER_URL/send-results" \
+            -F "results=@allure-results.zip" \
+            -F "project_id=$ALLURE_PROJECT_ID" \
+            || echo "Failed to send Allure results"
 
-          echo "Generating report on Allure server..."
-          if ! curl -sS -f --retry 3 --retry-delay 5 "$ALLURE_DOCKER_URL/generate-report?project_id=$ALLURE_PROJECT_ID"; then
-            echo "Failed to trigger Allure report generation"
-          fi
+          echo ">>> Generating report..."
+          curl -v "$ALLURE_DOCKER_URL/generate-report?project_id=$ALLURE_PROJECT_ID" \
+            || echo "Failed to generate report"
         '''
       }
     }
@@ -117,13 +108,9 @@ pipeline {
 
   post {
     always {
-      // Archive Playwright HTML report
       archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true, allowEmptyArchive: true
-
-      // Archive Allure raw results
       archiveArtifacts artifacts: 'allure-results/**', fingerprint: true, allowEmptyArchive: true
 
-      // Publish Allure report (requires Allure Jenkins Plugin + Allure Commandline tool)
       allure results: [[path: 'allure-results']], reportBuildPolicy: 'ALWAYS'
     }
   }
