@@ -9,7 +9,6 @@ pipeline {
 
   environment {
     NODE_ENV = 'test'
-    // БЕЗ префикса /allure-docker-service
     ALLURE_DOCKER_URL = 'http://allure-docker-service:5050'
     ALLURE_PROJECT_ID = 'playwright-regression'
   }
@@ -93,9 +92,11 @@ pipeline {
           zip -r allure-results.zip allure-results
 
           echo ">>> Sending results to Allure Docker Service..."
+          # ВАЖНО: поле files[] + project_name, как того просит сервер
           curl -v -X POST "$ALLURE_DOCKER_URL/send-results" \
-            -F "results=@allure-results.zip" \
+            -F "files[]=@allure-results.zip" \
             -F "project_id=$ALLURE_PROJECT_ID" \
+            -F "project_name=$ALLURE_PROJECT_ID" \
             || echo "Failed to send Allure results"
 
           echo ">>> Generating report..."
