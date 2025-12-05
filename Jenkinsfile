@@ -9,6 +9,8 @@ pipeline {
 
   environment {
     NODE_ENV = 'test'
+    ALLURE_DOCKER_URL = 'http://allure-docker-service:5050/allure-docker-service'
+    ALLURE_PROJECT_ID = 'playwright-regression'
   }
 
   stages {
@@ -35,6 +37,12 @@ pipeline {
             apt-get install -y curl
             curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
             apt-get install -y nodejs
+          fi
+
+          if ! command -v zip >/dev/null 2>&1; then
+            echo "Installing zip..."
+            apt-get update
+            apt-get install -y zip
           fi
 
           node -v
@@ -69,6 +77,28 @@ pipeline {
     stage('Test') {
       steps {
         sh 'npx playwright test'
+      }
+    }
+
+    stage('Upload Allure results to Allure Docker Service') {
+      steps {
+        sh '''
+          if [ ! -d "allure-results" ]; then
+            echo "No allure-results directory found, skipping upload."
+            exit 0
+          fi
+
+          rm -f allure-results.zip
+          zip -r allure-results.zip allure-results
+
+          if ! curl -sf -X POST "$ALLURE_DOCKER_URL/send-results" -F "results=@allure-results.zip" -F "project_id=$ALLURE_PROJECT_ID"; then
+            echo "Failed to send Allure results to Allure Docker Service"
+          fi
+
+          if ! curl -sf "$ALLURE_DOCKER_URL/generate-report?project_id=$ALLURE_PROJECT_ID"; then
+            echo "Failed to trigger Allure report generation"
+          fi
+        '''
       }
     }
   }
