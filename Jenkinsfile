@@ -10,7 +10,8 @@ pipeline {
   environment {
     NODE_ENV = 'test'
     ALLURE_DOCKER_URL = 'http://allure-docker-service:5050'
-    ALLURE_PROJECT_ID = 'playwright-regression'
+    // используем тот project_id, который реально есть на сервере
+    ALLURE_PROJECT_ID = 'default'
   }
 
   stages {
@@ -92,7 +93,7 @@ pipeline {
           zip -r allure-results.zip allure-results
 
           echo ">>> Sending results to Allure Docker Service..."
-          # ВАЖНО: поле files[] + project_name, как того просит сервер
+          # сервер хочет files[] и сам кладёт в project_id 'default'
           curl -v -X POST "$ALLURE_DOCKER_URL/send-results" \
             -F "files[]=@allure-results.zip" \
             -F "project_id=$ALLURE_PROJECT_ID" \
