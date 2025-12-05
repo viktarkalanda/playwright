@@ -56,7 +56,6 @@ pipeline {
 
     stage('Lint') {
       steps {
-
         script {
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
             sh 'npm run lint'
@@ -67,7 +66,6 @@ pipeline {
 
     stage('Clean reports') {
       steps {
-        // Чистим старые репорты перед запуском тестов
         sh '''
           rm -rf allure-results allure-report playwright-report || true
         '''
@@ -76,7 +74,11 @@ pipeline {
 
     stage('Test') {
       steps {
-        sh 'npx playwright test'
+        script {
+          catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+            sh 'npx playwright test'
+          }
+        }
       }
     }
 
@@ -88,13 +90,18 @@ pipeline {
             exit 0
           fi
 
+          echo "Packing allure-results into zip..."
           rm -f allure-results.zip
           zip -r allure-results.zip allure-results
 
-          if ! curl -sf -X POST "$ALLURE_DOCKER_URL/send-results" -F "results=@allure-results.zip" -F "project_id=$ALLURE_PROJECT_ID"; then
+          echo "Sending results to Allure Docker Service..."
+          if ! curl -sf -X POST "$ALLURE_DOCKER_URL/send-results" \
+            -F "results=@allure-results.zip" \
+            -F "project_id=$ALLURE_PROJECT_ID"; then
             echo "Failed to send Allure results to Allure Docker Service"
           fi
 
+          echo "Generating report on Allure server..."
           if ! curl -sf "$ALLURE_DOCKER_URL/generate-report?project_id=$ALLURE_PROJECT_ID"; then
             echo "Failed to trigger Allure report generation"
           fi
