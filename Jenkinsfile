@@ -39,6 +39,12 @@ pipeline {
             apt-get install -y nodejs
           fi
 
+          if ! command -v curl >/dev/null 2>&1; then
+            echo "Installing curl..."
+            apt-get update
+            apt-get install -y curl
+          fi
+
           if ! command -v zip >/dev/null 2>&1; then
             echo "Installing zip..."
             apt-get update
@@ -95,14 +101,13 @@ pipeline {
           zip -r allure-results.zip allure-results
 
           echo "Sending results to Allure Docker Service..."
-          if ! curl -sf -X POST "$ALLURE_DOCKER_URL/send-results" \
-            -F "results=@allure-results.zip" \
-            -F "project_id=$ALLURE_PROJECT_ID"; then
+          if ! curl -sS -f --retry 3 --retry-delay 5 -X POST "$ALLURE_DOCKER_URL/send-results?project_id=$ALLURE_PROJECT_ID" \
+            -F "results[]=@allure-results.zip"; then
             echo "Failed to send Allure results to Allure Docker Service"
           fi
 
           echo "Generating report on Allure server..."
-          if ! curl -sf "$ALLURE_DOCKER_URL/generate-report?project_id=$ALLURE_PROJECT_ID"; then
+          if ! curl -sS -f --retry 3 --retry-delay 5 "$ALLURE_DOCKER_URL/generate-report?project_id=$ALLURE_PROJECT_ID"; then
             echo "Failed to trigger Allure report generation"
           fi
         '''
