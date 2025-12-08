@@ -13,7 +13,7 @@ test.describe('Main menu', () => {
     await loggedInInventoryPage.waitForVisible();
   });
 
-  test('user can open and close main menu from inventory page', async ({ mainMenu }) => {
+  test('user can open and close main menu from inventory page', { tag: '@menu' }, async ({ mainMenu }) => {
     await mainMenu.open();
 
     const visibleAfterOpen = await mainMenu.isVisible();
@@ -25,7 +25,7 @@ test.describe('Main menu', () => {
     expect(visibleAfterClose, 'Main menu should not be visible after closing').toBe(false);
   });
 
-  test('all items link keeps user on inventory when already on inventory', async ({
+  test('all items link keeps user on inventory when already on inventory', { tag: '@menu' }, async ({
     page,
     inventoryPage,
     mainMenu,
@@ -38,7 +38,7 @@ test.describe('Main menu', () => {
     );
   });
 
-  test('all items link navigates back to inventory from product details', async ({
+  test('all items link navigates back to inventory from product details', { tag: '@menu' }, async ({
     page,
     inventoryPage,
     productDetailsPage,
@@ -56,7 +56,7 @@ test.describe('Main menu', () => {
     ).toHaveURL(/.*inventory\.html/);
   });
 
-  test('reset app state clears cart and cart badge from inventory page', async ({
+  test('reset app state clears cart and cart badge from inventory page', { tag: '@menu' }, async ({
     inventoryPage,
     cartPage,
     mainMenu,
@@ -81,7 +81,7 @@ test.describe('Main menu', () => {
     expect(itemsCount, 'Cart should be empty after reset app state').toBe(0);
   });
 
-  test('reset app state clears cart even when triggered from cart page', async ({
+  test('reset app state clears cart even when triggered from cart page', { tag: '@menu' }, async ({
     inventoryPage,
     cartPage,
     mainMenu,
@@ -105,7 +105,7 @@ test.describe('Main menu', () => {
     expect(itemsAfterReset, 'Cart should be empty after reset app state from cart page').toBe(0);
   });
 
-  test('reset app state clears cart when triggered from product details page', async ({
+  test('reset app state clears cart when triggered from product details page', { tag: '@menu' }, async ({
     inventoryPage,
     cartPage,
     productDetailsPage,
@@ -133,7 +133,7 @@ test.describe('Main menu', () => {
     );
   });
 
-  test('logout from inventory redirects to login page', async ({ page, mainMenu }) => {
+  test('logout from inventory redirects to login page', { tag: ['@menu', '@smoke'] }, async ({ page, mainMenu }) => {
     await mainMenu.logout();
 
     await expect(page, 'Logout from inventory should redirect user to login page').not.toHaveURL(
@@ -146,7 +146,7 @@ test.describe('Main menu', () => {
     );
   });
 
-  test('after logout user cannot access inventory page directly', async ({ page, mainMenu }) => {
+  test('after logout user cannot access inventory page directly', { tag: '@menu' }, async ({ page, mainMenu }) => {
     await mainMenu.logout();
 
     await page.goto('/inventory.html');
@@ -157,7 +157,7 @@ test.describe('Main menu', () => {
     ).not.toHaveURL(/.*inventory\.html/);
   });
 
-  test('logout from cart redirects to login and clears cart', async ({
+  test('logout from cart redirects to login and clears cart', { tag: '@menu' }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -182,7 +182,7 @@ test.describe('Main menu', () => {
     ).not.toHaveURL(/.*inventory\.html/);
   });
 
-  test('about link navigates to Sauce Labs site', async ({ page, mainMenu }) => {
+  test('about link navigates to Sauce Labs site', { tag: '@menu' }, async ({ page, mainMenu }) => {
     await mainMenu.goToAbout();
 
     const currentUrl = page.url();
@@ -190,7 +190,7 @@ test.describe('Main menu', () => {
     expect(currentUrl, 'About link should navigate to Sauce Labs domain').toContain('saucelabs');
   });
 
-  test('menu stays closed after logout and cannot be opened on login page', async ({
+  test('menu stays closed after logout and cannot be opened on login page', { tag: '@menu' }, async ({
     page,
     mainMenu,
   }) => {
@@ -208,7 +208,7 @@ test.describe('Main menu', () => {
     ).toBe(false);
   });
 
-  test('menu can be opened from product details and closed without navigation', async ({
+  test('menu can be opened from product details and closed without navigation', { tag: '@menu' }, async ({
     inventoryPage,
     productDetailsPage,
     mainMenu,
@@ -231,7 +231,7 @@ test.describe('Main menu', () => {
     ).toBe(false);
   });
 
-  test('reset app state restores "Add to cart" button labels on inventory page', async ({
+  test('reset app state restores "Add to cart" button labels on inventory page', { tag: '@menu' }, async ({
     inventoryPage,
     mainMenu,
   }) => {
@@ -253,7 +253,7 @@ test.describe('Main menu', () => {
     ).toHaveText(/Add to cart/);
   });
 
-  test('all items link from checkout returns user to inventory while keeping cart items', async ({
+  test('all items link from checkout returns user to inventory while keeping cart items', { tag: '@menu' }, async ({
     page,
     inventoryPage,
     cartPage,

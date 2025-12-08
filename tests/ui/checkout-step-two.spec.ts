@@ -43,7 +43,7 @@ test.describe('Checkout step two - overview', () => {
     await loggedInInventoryPage.waitForVisible();
   });
 
-  test('user can reach checkout step two from cart via checkout step one', async ({
+  test('user can reach checkout step two from cart via checkout step one', { tag: ['@checkout', '@smoke'] }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -68,7 +68,7 @@ test.describe('Checkout step two - overview', () => {
     );
   });
 
-  test('checkout step two shows all items that were in cart', async ({
+  test('checkout step two shows all items that were in cart', { tag: '@checkout' }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,
@@ -103,7 +103,7 @@ test.describe('Checkout step two - overview', () => {
     );
   });
 
-  test('subtotal equals sum of item prices on checkout step two', async ({
+  test('subtotal equals sum of item prices on checkout step two', { tag: '@checkout' }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,
@@ -124,7 +124,7 @@ test.describe('Checkout step two - overview', () => {
     expect(subtotal, 'Subtotal value should equal sum of item prices').toBeCloseTo(calculated, 2);
   });
 
-  test('total equals subtotal plus tax on checkout step two', async ({
+  test('total equals subtotal plus tax on checkout step two', { tag: '@checkout' }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,
@@ -148,7 +148,7 @@ test.describe('Checkout step two - overview', () => {
     ).toBeCloseTo(subtotal + tax, 2);
   });
 
-  test('cancel on checkout step two returns user to cart and keeps items', async ({
+  test('cancel on checkout step two returns user to cart and keeps items', { tag: '@checkout' }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -184,7 +184,7 @@ test.describe('Checkout step two - overview', () => {
     ).toBe(itemsInCartBefore);
   });
 
-  test('finish on checkout step two navigates to checkout complete page', async ({
+  test('finish on checkout step two navigates to checkout complete page', { tag: ['@checkout', '@e2e'] }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -206,7 +206,7 @@ test.describe('Checkout step two - overview', () => {
     ).toHaveURL(/.*checkout-complete\.html/);
   });
 
-  test('user cannot access checkout step two without login', async ({ page }) => {
+  test('user cannot access checkout step two without login', { tag: '@checkout' }, async ({ page }) => {
     await page.context().clearCookies();
     await page.goto('/checkout-step-two.html');
 
@@ -216,7 +216,7 @@ test.describe('Checkout step two - overview', () => {
     ).not.toHaveURL(/.*checkout-step-two\.html/);
   });
 
-  test('user cannot access checkout step two directly without completing step one', async ({
+  test('user cannot access checkout step two directly without completing step one', { tag: '@checkout' }, async ({
     page,
     loggedInInventoryPage,
   }) => {
@@ -230,7 +230,7 @@ test.describe('Checkout step two - overview', () => {
     ).not.toHaveURL(/.*checkout-step-two\.html/);
   });
 
-  test('checkout overview remains consistent after page reload', async ({
+  test('checkout overview remains consistent after page reload', { tag: '@checkout' }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -269,7 +269,7 @@ test.describe('Checkout step two - overview', () => {
     expect(totalAfter, 'Total should remain the same after reload').toBeCloseTo(totalBefore, 2);
   });
 
-  test('removing item from cart before checkout is reflected on checkout step two', async ({
+  test('removing item from cart before checkout is reflected on checkout step two', { tag: '@checkout' }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,
@@ -298,7 +298,7 @@ test.describe('Checkout step two - overview', () => {
     );
   });
 
-  test('checkout summary keeps the order in which products were added to the cart', async ({
+  test('checkout summary keeps the order in which products were added to the cart', { tag: '@checkout' }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,
@@ -331,7 +331,7 @@ test.describe('Checkout step two - overview', () => {
     ).toEqual(itemsToAdd);
   });
 
-  test('checkout step two shows zero totals when checkout started with empty cart', async ({
+  test('checkout step two shows zero totals when checkout started with empty cart', { tag: '@checkout' }, async ({
     page,
     inventoryPage,
     cartPage,

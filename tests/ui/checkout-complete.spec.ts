@@ -33,7 +33,7 @@ test.describe('Checkout complete - order confirmation', () => {
     await loggedInInventoryPage.waitForVisible();
   });
 
-  test('user can reach checkout complete page after finishing checkout', async ({
+  test('user can reach checkout complete page after finishing checkout', { tag: ['@checkout', '@smoke'] }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -60,7 +60,7 @@ test.describe('Checkout complete - order confirmation', () => {
     );
   });
 
-  test('checkout complete page shows thank you header and body text', async ({
+  test('checkout complete page shows thank you header and body text', { tag: '@checkout' }, async ({
     checkoutCompletePage,
     inventoryPage,
     cartPage,
@@ -87,7 +87,7 @@ test.describe('Checkout complete - order confirmation', () => {
     );
   });
 
-  test('cart badge is cleared after completing checkout', async ({
+  test('cart badge is cleared after completing checkout', { tag: '@checkout' }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,
@@ -120,7 +120,7 @@ test.describe('Checkout complete - order confirmation', () => {
     expect(badgeAfter, 'Cart badge should be cleared after completing checkout').toBe(0);
   });
 
-  test('cart is empty after completing checkout', async ({
+  test('cart is empty after completing checkout', { tag: '@checkout' }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,
@@ -148,7 +148,7 @@ test.describe('Checkout complete - order confirmation', () => {
     );
   });
 
-  test('back to products button navigates user to inventory page', async ({
+  test('back to products button navigates user to inventory page', { tag: '@checkout' }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -171,7 +171,7 @@ test.describe('Checkout complete - order confirmation', () => {
     );
   });
 
-  test('user cannot access checkout complete page without login', async ({ page }) => {
+  test('user cannot access checkout complete page without login', { tag: '@checkout' }, async ({ page }) => {
     await page.context().clearCookies();
     await page.goto('/checkout-complete.html');
 
@@ -181,7 +181,7 @@ test.describe('Checkout complete - order confirmation', () => {
     ).not.toHaveURL(/.*checkout-complete\.html/);
   });
 
-  test('user cannot access checkout complete page directly without finishing checkout', async ({
+  test('user cannot access checkout complete page directly without finishing checkout', { tag: '@checkout' }, async ({
     page,
     loggedInInventoryPage,
   }) => {
@@ -195,7 +195,7 @@ test.describe('Checkout complete - order confirmation', () => {
     ).not.toHaveURL(/.*checkout-complete\.html/);
   });
 
-  test('checkout complete page remains visible after reload and order stays completed', async ({
+  test('checkout complete page remains visible after reload and order stays completed', { tag: '@checkout' }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -236,7 +236,7 @@ test.describe('Checkout complete - order confirmation', () => {
     ).toBe(0);
   });
 
-  test('cart stays empty after navigating back from checkout complete and reopening cart', async ({
+  test('cart stays empty after navigating back from checkout complete and reopening cart', { tag: '@checkout' }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -272,7 +272,7 @@ test.describe('Checkout complete - order confirmation', () => {
     ).toBe(0);
   });
 
-  test('back to products works after reloading checkout complete page', async ({
+  test('back to products works after reloading checkout complete page', { tag: '@checkout' }, async ({
     page,
     inventoryPage,
     cartPage,

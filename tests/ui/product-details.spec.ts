@@ -18,7 +18,7 @@ test.describe('Product details page', () => {
     await loggedInInventoryPage.waitForVisible();
   });
 
-  test('user can open product details from inventory by clicking product name', async ({
+  test('user can open product details from inventory by clicking product name', { tag: ['@product-details', '@smoke'] }, async ({
     page,
     inventoryPage,
     productDetailsPage,
@@ -36,7 +36,7 @@ test.describe('Product details page', () => {
     );
   });
 
-  test('product price on details page matches price on inventory page', async ({
+  test('product price on details page matches price on inventory page', { tag: '@product-details' }, async ({
     inventoryPage,
     productDetailsPage,
   }) => {
@@ -52,7 +52,7 @@ test.describe('Product details page', () => {
     ).toBeCloseTo(inventoryPrice, 2);
   });
 
-  test('product description on details page is not empty', async ({
+  test('product description on details page is not empty', { tag: '@product-details' }, async ({
     inventoryPage,
     productDetailsPage,
   }) => {
@@ -63,7 +63,7 @@ test.describe('Product details page', () => {
     expect(description, 'Product description on details page should not be empty').not.toBe('');
   });
 
-  test('back to products navigates user back to inventory', async ({
+  test('back to products navigates user back to inventory', { tag: '@product-details' }, async ({
     page,
     inventoryPage,
     productDetailsPage,
@@ -78,7 +78,7 @@ test.describe('Product details page', () => {
     );
   });
 
-  test('"Add to cart" button adds product and changes to "Remove" on details page', async ({
+  test('"Add to cart" button adds product and changes to "Remove" on details page', { tag: '@product-details' }, async ({
     inventoryPage,
     productDetailsPage,
   }) => {
@@ -104,7 +104,7 @@ test.describe('Product details page', () => {
     ).toBe(true);
   });
 
-  test('adding product to cart from details page updates cart badge and cart content', async ({
+  test('adding product to cart from details page updates cart badge and cart content', { tag: ['@product-details', '@smoke'] }, async ({
     inventoryPage,
     cartPage,
     productDetailsPage,
@@ -131,7 +131,7 @@ test.describe('Product details page', () => {
     expect(hasBackpackInCart, 'Product added from details page should appear in cart').toBe(true);
   });
 
-  test('removing product from cart on details page clears it from cart', async ({
+  test('removing product from cart on details page clears it from cart', { tag: '@product-details' }, async ({
     inventoryPage,
     cartPage,
     productDetailsPage,
@@ -168,7 +168,7 @@ test.describe('Product details page', () => {
     ).toBe(false);
   });
 
-  test('product details page state is preserved after reload', async ({
+  test('product details page state is preserved after reload', { tag: '@product-details' }, async ({
     page,
     inventoryPage,
     productDetailsPage,
@@ -200,7 +200,7 @@ test.describe('Product details page', () => {
     ).toBe(removeVisibleBefore);
   });
 
-  test('user cannot access product details page without login', async ({ page }) => {
+  test('user cannot access product details page without login', { tag: '@product-details' }, async ({ page }) => {
     await page.context().clearCookies();
     await page.goto('/inventory-item.html?id=4');
 
@@ -210,7 +210,7 @@ test.describe('Product details page', () => {
     ).not.toHaveURL(/.*inventory-item\.html/);
   });
 
-  test('user can open details for different products from inventory', async ({
+  test('user can open details for different products from inventory', { tag: '@product-details' }, async ({
     inventoryPage,
     productDetailsPage,
   }) => {
@@ -237,7 +237,7 @@ test.describe('Product details page', () => {
     ).toBe(secondProductName);
   });
 
-  test('adding product from details page does not create duplicates in cart', async ({
+  test('adding product from details page does not create duplicates in cart', { tag: '@product-details' }, async ({
     inventoryPage,
     cartPage,
     productDetailsPage,
@@ -263,7 +263,7 @@ test.describe('Product details page', () => {
     expect(itemsCount, 'Cart should not contain duplicate line items for the same product').toBe(1);
   });
 
-  test('reopening product details shows remove button when item is already in cart', async ({
+  test('reopening product details shows remove button when item is already in cart', { tag: '@product-details' }, async ({
     inventoryPage,
     productDetailsPage,
   }) => {
@@ -283,7 +283,7 @@ test.describe('Product details page', () => {
     ).toBe(true);
   });
 
-  test('browser back and forward navigation keeps product details state intact', async ({
+  test('browser back and forward navigation keeps product details state intact', { tag: '@product-details' }, async ({
     page,
     inventoryPage,
     productDetailsPage,

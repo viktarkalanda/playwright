@@ -18,7 +18,7 @@ test.describe('Checkout step one - personal information', () => {
     await loggedInInventoryPage.waitForVisible();
   });
 
-  test('user can navigate to checkout step one from cart with item', async ({
+  test('user can navigate to checkout step one from cart with item', { tag: '@checkout' }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -38,7 +38,7 @@ test.describe('Checkout step one - personal information', () => {
     );
   });
 
-  test('user cannot continue with all fields empty', async ({
+  test('user cannot continue with all fields empty', { tag: '@checkout' }, async ({
     checkoutStepOnePage,
     inventoryPage,
     cartPage,
@@ -55,7 +55,7 @@ test.describe('Checkout step one - personal information', () => {
     ).not.toBe('');
   });
 
-  test('error is shown when only first name is provided', async ({
+  test('error is shown when only first name is provided', { tag: '@checkout' }, async ({
     checkoutStepOnePage,
     inventoryPage,
     cartPage,
@@ -73,7 +73,7 @@ test.describe('Checkout step one - personal information', () => {
     ).not.toBe('');
   });
 
-  test('error is shown when only last name is provided', async ({
+  test('error is shown when only last name is provided', { tag: '@checkout' }, async ({
     checkoutStepOnePage,
     inventoryPage,
     cartPage,
@@ -91,7 +91,7 @@ test.describe('Checkout step one - personal information', () => {
     ).not.toBe('');
   });
 
-  test('error is shown when only postal code is provided', async ({
+  test('error is shown when only postal code is provided', { tag: '@checkout' }, async ({
     checkoutStepOnePage,
     inventoryPage,
     cartPage,
@@ -109,7 +109,7 @@ test.describe('Checkout step one - personal information', () => {
     ).not.toBe('');
   });
 
-  test('fields keep their values after validation error', async ({
+  test('fields keep their values after validation error', { tag: '@checkout' }, async ({
     checkoutStepOnePage,
     inventoryPage,
     cartPage,
@@ -135,7 +135,7 @@ test.describe('Checkout step one - personal information', () => {
     expect(lastNameValue, 'Last name value should be preserved after validation error').toBe('Doe');
   });
 
-  test('user can successfully continue when all fields are valid', async ({
+  test('user can successfully continue when all fields are valid', { tag: ['@checkout', '@smoke'] }, async ({
     page,
     checkoutStepOnePage,
     inventoryPage,
@@ -153,7 +153,7 @@ test.describe('Checkout step one - personal information', () => {
     ).toHaveURL(/.*checkout-step-two\.html/);
   });
 
-  test('cancel on checkout step one returns user back to cart and keeps items', async ({
+  test('cancel on checkout step one returns user back to cart and keeps items', { tag: '@checkout' }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -175,7 +175,7 @@ test.describe('Checkout step one - personal information', () => {
     ).toBeGreaterThan(0);
   });
 
-  test('user cannot access checkout step one without login', async ({ page }) => {
+  test('user cannot access checkout step one without login', { tag: '@checkout' }, async ({ page }) => {
     await page.context().clearCookies();
     await page.goto('/checkout-step-one.html');
 
@@ -185,7 +185,7 @@ test.describe('Checkout step one - personal information', () => {
     ).not.toHaveURL(/.*checkout-step-one\.html/);
   });
 
-  test('user stays on checkout step one after invalid data and can fix it to continue', async ({
+  test('user stays on checkout step one after invalid data and can fix it to continue', { tag: '@checkout' }, async ({
     page,
     checkoutStepOnePage,
     inventoryPage,
@@ -218,7 +218,7 @@ test.describe('Checkout step one - personal information', () => {
     ).toHaveURL(/.*checkout-step-two\.html/);
   });
 
-  test('user can submit checkout step one form using Enter key', async ({
+  test('user can submit checkout step one form using Enter key', { tag: '@checkout' }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -236,7 +236,7 @@ test.describe('Checkout step one - personal information', () => {
     ).toHaveURL(/.*checkout-step-two\.html/);
   });
 
-  test('checkout step one fields reset after cancelling and reopening', async ({
+  test('checkout step one fields reset after cancelling and reopening', { tag: '@checkout' }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,

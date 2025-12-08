@@ -5,7 +5,7 @@ test.beforeEach(async ({ loggedInInventoryPage }) => {
   await loggedInInventoryPage.waitForVisible();
 });
 
-test('cart is empty when user did not add any products', async ({ inventoryPage, cartPage }) => {
+test('cart is empty when user did not add any products', { tag: '@inventory' }, async ({ inventoryPage, cartPage }) => {
   await inventoryPage.openCart();
 
   await cartPage.waitForVisible();
@@ -14,7 +14,7 @@ test('cart is empty when user did not add any products', async ({ inventoryPage,
   expect(itemsCount, 'Cart should be empty when no products were added').toBe(0);
 });
 
-test('user can add first product to cart', async ({ inventoryPage, cartPage }) => {
+test('user can add first product to cart', { tag: '@inventory' }, async ({ inventoryPage, cartPage }) => {
   await inventoryPage.addFirstItemToCart();
   await inventoryPage.openCart();
 
@@ -26,7 +26,7 @@ test('user can add first product to cart', async ({ inventoryPage, cartPage }) =
   );
 });
 
-test('cart contains "Sauce Labs Backpack" after adding first product', async ({
+test('cart contains "Sauce Labs Backpack" after adding first product', { tag: '@inventory' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -41,7 +41,7 @@ test('cart contains "Sauce Labs Backpack" after adding first product', async ({
   );
 });
 
-test('user can add two different products to cart', async ({ inventoryPage, cartPage }) => {
+test('user can add two different products to cart', { tag: '@inventory' }, async ({ inventoryPage, cartPage }) => {
   await inventoryPage.addFirstItemToCart();
 
   const secondItem = inventoryPage.inventoryItems.nth(1);
@@ -73,7 +73,7 @@ test('user can add two different products to cart', async ({ inventoryPage, cart
   ).toBe(true);
 });
 
-test('user can remove product from cart', async ({ inventoryPage, cartPage }) => {
+test('user can remove product from cart', { tag: '@inventory' }, async ({ inventoryPage, cartPage }) => {
   await inventoryPage.addFirstItemToCart();
   await inventoryPage.openCart();
 
@@ -95,7 +95,7 @@ test('user can remove product from cart', async ({ inventoryPage, cartPage }) =>
   expect(itemsAfterRemove, 'Cart should be empty after removing the only item').toBe(0);
 });
 
-test('cart contents persist when navigating back to inventory and opening cart again', async ({
+test('cart contents persist when navigating back to inventory and opening cart again', { tag: '@inventory' }, async ({
   inventoryPage,
   cartPage,
   page,
@@ -134,13 +134,13 @@ const expectedProductNames = [
   'Test.allTheThings() T-Shirt (Red)',
 ];
 
-test('inventory page title is "Products"', async ({ inventoryPage }) => {
+test('inventory page title is "Products"', { tag: ['@inventory', '@smoke'] }, async ({ inventoryPage }) => {
   const title = await inventoryPage.getTitleText();
 
   expect(title, 'Inventory page title should be "Products"').toBe('Products');
 });
 
-test('inventory page shows all expected products', async ({ inventoryPage }) => {
+test('inventory page shows all expected products', { tag: ['@inventory', '@smoke'] }, async ({ inventoryPage }) => {
   const names = await inventoryPage.getItemNames();
 
   for (const expectedName of expectedProductNames) {
@@ -150,7 +150,7 @@ test('inventory page shows all expected products', async ({ inventoryPage }) => 
   }
 });
 
-test('inventory items count matches expected products length', async ({ inventoryPage }) => {
+test('inventory items count matches expected products length', { tag: '@inventory' }, async ({ inventoryPage }) => {
   const itemsCount = await inventoryPage.getItemsCount();
 
   expect(
@@ -159,7 +159,7 @@ test('inventory items count matches expected products length', async ({ inventor
   ).toBe(expectedProductNames.length);
 });
 
-test('inventory can sort products by name A to Z', async ({ inventoryPage }) => {
+test('inventory can sort products by name A to Z', { tag: ['@inventory', '@smoke'] }, async ({ inventoryPage }) => {
   await inventoryPage.sortBy('az');
 
   const names = await inventoryPage.getItemNames();
@@ -171,7 +171,7 @@ test('inventory can sort products by name A to Z', async ({ inventoryPage }) => 
   ).toEqual(sorted);
 });
 
-test('inventory can sort products by name Z to A', async ({ inventoryPage }) => {
+test('inventory can sort products by name Z to A', { tag: '@inventory' }, async ({ inventoryPage }) => {
   await inventoryPage.sortBy('za');
 
   const names = await inventoryPage.getItemNames();
@@ -183,7 +183,7 @@ test('inventory can sort products by name Z to A', async ({ inventoryPage }) => 
   ).toEqual(sorted);
 });
 
-test('inventory can sort products by price low to high', async ({ inventoryPage }) => {
+test('inventory can sort products by price low to high', { tag: '@inventory' }, async ({ inventoryPage }) => {
   await inventoryPage.sortBy('lohi');
 
   const prices = await inventoryPage.getItemPrices();
@@ -195,7 +195,7 @@ test('inventory can sort products by price low to high', async ({ inventoryPage 
   ).toEqual(sorted);
 });
 
-test('inventory can sort products by price high to low', async ({ inventoryPage }) => {
+test('inventory can sort products by price high to low', { tag: '@inventory' }, async ({ inventoryPage }) => {
   await inventoryPage.sortBy('hilo');
 
   const prices = await inventoryPage.getItemPrices();
@@ -207,7 +207,7 @@ test('inventory can sort products by price high to low', async ({ inventoryPage 
   ).toEqual(sorted);
 });
 
-test('add to cart button changes to Remove after adding product by name', async ({
+test('add to cart button changes to Remove after adding product by name', { tag: '@inventory' }, async ({
   inventoryPage,
 }) => {
   const productName = 'Sauce Labs Backpack';
@@ -230,7 +230,7 @@ test('add to cart button changes to Remove after adding product by name', async 
   ).toBe('Remove');
 });
 
-test('remove button changes back to Add to cart after removing product by name', async ({
+test('remove button changes back to Add to cart after removing product by name', { tag: '@inventory' }, async ({
   inventoryPage,
 }) => {
   const productName = 'Sauce Labs Backpack';
@@ -255,7 +255,7 @@ test('remove button changes back to Add to cart after removing product by name',
   ).toContain('Add to cart');
 });
 
-test('cart badge count is zero when no products are added', async ({ inventoryPage }) => {
+test('cart badge count is zero when no products are added', { tag: '@inventory' }, async ({ inventoryPage }) => {
   const badgeCount = await inventoryPage.getCartBadgeCount();
 
   expect(
@@ -264,7 +264,7 @@ test('cart badge count is zero when no products are added', async ({ inventoryPa
   ).toBe(0);
 });
 
-test('cart badge count increases when products are added from inventory', async ({
+test('cart badge count increases when products are added from inventory', { tag: '@inventory' }, async ({
   inventoryPage,
 }) => {
   await inventoryPage.addItemToCartByName('Sauce Labs Backpack');
@@ -278,7 +278,7 @@ test('cart badge count increases when products are added from inventory', async 
   expect(badgeCount, 'Cart badge count should be 2 after adding second product').toBe(2);
 });
 
-test('cart badge count decreases when product is removed from inventory', async ({
+test('cart badge count decreases when product is removed from inventory', { tag: '@inventory' }, async ({
   inventoryPage,
 }) => {
   await inventoryPage.addItemToCartByName('Sauce Labs Backpack');
@@ -300,7 +300,7 @@ test('cart badge count decreases when product is removed from inventory', async 
   ).toBe(badgeBeforeRemove - 1);
 });
 
-test('cart badge matches actual cart items after multiple add/remove actions', async ({
+test('cart badge matches actual cart items after multiple add/remove actions', { tag: '@inventory' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -325,7 +325,7 @@ test('cart badge matches actual cart items after multiple add/remove actions', a
   expect(itemsInCart, 'Cart should contain two items after removing one of the three added').toBe(2);
 });
 
-test('inventory reload does not remove products already added to the cart', async ({
+test('inventory reload does not remove products already added to the cart', { tag: '@inventory' }, async ({
   page,
   inventoryPage,
   cartPage,

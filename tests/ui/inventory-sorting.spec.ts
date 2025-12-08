@@ -44,7 +44,7 @@ test.describe('Inventory sorting scenarios', () => {
     await loggedInInventoryPage.waitForVisible();
   });
 
-  test('sorting A to Z arranges products alphabetically', async ({ inventoryPage }) => {
+  test('sorting A to Z arranges products alphabetically', { tag: ['@sorting', '@smoke'] }, async ({ inventoryPage }) => {
     await inventoryPage.sortBy('az');
 
     const names = await getProductNames(inventoryPage as InventoryPageLike);
@@ -53,7 +53,7 @@ test.describe('Inventory sorting scenarios', () => {
     expect(names, 'Products should be sorted alphabetically A to Z').toEqual(sorted);
   });
 
-  test('sorting Z to A arranges products in reverse alphabetical order', async ({
+  test('sorting Z to A arranges products in reverse alphabetical order', { tag: '@sorting' }, async ({
     inventoryPage,
   }) => {
     await inventoryPage.sortBy('za');
@@ -64,7 +64,7 @@ test.describe('Inventory sorting scenarios', () => {
     expect(names, 'Products should be sorted alphabetically Z to A').toEqual(sorted);
   });
 
-  test('sorting low to high arranges products by price ascending', async ({ inventoryPage }) => {
+  test('sorting low to high arranges products by price ascending', { tag: ['@sorting', '@smoke'] }, async ({ inventoryPage }) => {
     await inventoryPage.sortBy('lohi');
 
     const prices = await getProductPrices(inventoryPage as InventoryPageLike);
@@ -73,7 +73,7 @@ test.describe('Inventory sorting scenarios', () => {
     expect(prices, 'Products should be sorted price low to high').toEqual(sorted);
   });
 
-  test('sorting high to low arranges products by price descending', async ({ inventoryPage }) => {
+  test('sorting high to low arranges products by price descending', { tag: '@sorting' }, async ({ inventoryPage }) => {
     await inventoryPage.sortBy('hilo');
 
     const prices = await getProductPrices(inventoryPage as InventoryPageLike);
@@ -82,7 +82,7 @@ test.describe('Inventory sorting scenarios', () => {
     expect(prices, 'Products should be sorted price high to low').toEqual(sorted);
   });
 
-  test('sorting persists after page reload', async ({ page, inventoryPage }) => {
+  test('sorting persists after page reload', { tag: '@sorting' }, async ({ page, inventoryPage }) => {
     await inventoryPage.sortBy('za');
 
     const namesBefore = await getProductNames(inventoryPage as InventoryPageLike);
@@ -95,7 +95,7 @@ test.describe('Inventory sorting scenarios', () => {
     expect(namesAfter, 'Sorting order should be preserved after reload').toEqual(namesBefore);
   });
 
-  test('sorting persists when navigating to product details and back', async ({
+  test('sorting persists when navigating to product details and back', { tag: '@sorting' }, async ({
     inventoryPage,
     productDetailsPage,
   }) => {
@@ -116,7 +116,7 @@ test.describe('Inventory sorting scenarios', () => {
     ).toEqual(namesBefore);
   });
 
-  test('sorting does not change product count', async ({ inventoryPage }) => {
+  test('sorting does not change product count', { tag: '@sorting' }, async ({ inventoryPage }) => {
     const initialCount = await inventoryPage.getItemsCount();
 
     const sortOptions: SortOption[] = ['az', 'za', 'lohi', 'hilo'];
@@ -132,7 +132,7 @@ test.describe('Inventory sorting scenarios', () => {
     }
   });
 
-  test('sorting works correctly after adding items to cart', async ({
+  test('sorting works correctly after adding items to cart', { tag: '@sorting' }, async ({
     inventoryPage,
     cartPage,
   }) => {
@@ -148,7 +148,7 @@ test.describe('Inventory sorting scenarios', () => {
     await cartPage.waitForVisible();
   });
 
-  test('sorting works correctly after Reset App State', async ({ inventoryPage, mainMenu }) => {
+  test('sorting works correctly after Reset App State', { tag: '@sorting' }, async ({ inventoryPage, mainMenu }) => {
     await inventoryPage.sortBy('za');
 
     const namesBeforeReset = await getProductNames(inventoryPage as InventoryPageLike);
@@ -164,7 +164,7 @@ test.describe('Inventory sorting scenarios', () => {
     ).toEqual(namesBeforeReset);
   });
 
-  test('sorting remains correct after logout and new login session', async ({
+  test('sorting remains correct after logout and new login session', { tag: '@sorting' }, async ({
     page,
     loginPage,
     inventoryPage,
@@ -187,7 +187,7 @@ test.describe('Inventory sorting scenarios', () => {
     expect(afterLogin, 'Sorting order should persist across logout/login').toEqual(beforeLogout);
   });
 
-  test('sorting remains stable after browser back/forward navigation', async ({
+  test('sorting remains stable after browser back/forward navigation', { tag: '@sorting' }, async ({
     page,
     inventoryPage,
   }) => {
@@ -203,7 +203,7 @@ test.describe('Inventory sorting scenarios', () => {
     expect(afterNav, 'Sorting should remain the same after back/forward').toEqual(afterSort);
   });
 
-  test('sorting updates immediately when a new option is selected', async ({ inventoryPage }) => {
+  test('sorting updates immediately when a new option is selected', { tag: '@sorting' }, async ({ inventoryPage }) => {
     await inventoryPage.sortBy('az');
     const azOrder = await getProductNames(inventoryPage as InventoryPageLike);
 
@@ -213,7 +213,7 @@ test.describe('Inventory sorting scenarios', () => {
     expect(azOrder, 'A to Z order should differ from Z to A order').not.toEqual(zaOrder);
   });
 
-  test('sorting order persists after visiting cart and returning to inventory', async ({
+  test('sorting order persists after visiting cart and returning to inventory', { tag: '@sorting' }, async ({
     inventoryPage,
     cartPage,
   }) => {
@@ -233,7 +233,7 @@ test.describe('Inventory sorting scenarios', () => {
     ).toEqual(orderBeforeCart);
   });
 
-  test('sorting remains unchanged after cancelling checkout and returning to inventory', async ({
+  test('sorting remains unchanged after cancelling checkout and returning to inventory', { tag: '@sorting' }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,

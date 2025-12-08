@@ -4,7 +4,7 @@ import { TestConfig } from '../../src/config/testConfig';
 
 const config = TestConfig.getInstance();
 
-test('user can login with valid credentials', async ({ loginPage, page }) => {
+test('user can login with valid credentials', { tag: ['@login', '@smoke'] }, async ({ loginPage, page }) => {
   const { username, password } = config.getUser('standard');
 
   await loginPage.login(username, password);
@@ -15,7 +15,7 @@ test('user can login with valid credentials', async ({ loginPage, page }) => {
   ).toHaveURL(/inventory\.html/);
 });
 
-test('user sees error message on invalid password', async ({ loginPage }) => {
+test('user sees error message on invalid password', { tag: '@login' }, async ({ loginPage }) => {
   await loginPage.open();
   await loginPage.fillUsername('standard_user');
   await loginPage.fillPassword('wrong_password');
@@ -32,7 +32,7 @@ test('user sees error message on invalid password', async ({ loginPage }) => {
   );
 });
 
-test('user sees error message when username is missing', async ({ loginPage }) => {
+test('user sees error message when username is missing', { tag: '@login' }, async ({ loginPage }) => {
   await loginPage.open();
   await loginPage.fillPassword('secret_sauce');
   await loginPage.submitLogin();
@@ -48,7 +48,7 @@ test('user sees error message when username is missing', async ({ loginPage }) =
   );
 });
 
-test('user sees error message when password is missing', async ({ loginPage }) => {
+test('user sees error message when password is missing', { tag: '@login' }, async ({ loginPage }) => {
   await loginPage.open();
   await loginPage.fillUsername('standard_user');
   await loginPage.submitLogin();
@@ -64,7 +64,7 @@ test('user sees error message when password is missing', async ({ loginPage }) =
   );
 });
 
-test('locked out user sees locked out error message', async ({ loginPage }) => {
+test('locked out user sees locked out error message', { tag: '@login' }, async ({ loginPage }) => {
   const { username, password } = config.getUser('locked');
 
   await loginPage.open();
@@ -83,7 +83,7 @@ test('locked out user sees locked out error message', async ({ loginPage }) => {
   );
 });
 
-test('user sees error message on invalid username', async ({ loginPage }) => {
+test('user sees error message on invalid username', { tag: '@login' }, async ({ loginPage }) => {
   await loginPage.open();
   await loginPage.fillUsername('unknown_user');
   await loginPage.fillPassword('secret_sauce');
@@ -100,7 +100,7 @@ test('user sees error message on invalid username', async ({ loginPage }) => {
   );
 });
 
-test('error message can be closed by user', async ({ loginPage }) => {
+test('error message can be closed by user', { tag: '@login' }, async ({ loginPage }) => {
   await loginPage.open();
   await loginPage.fillUsername('standard_user');
   await loginPage.fillPassword('wrong_password');
@@ -119,7 +119,7 @@ test('error message can be closed by user', async ({ loginPage }) => {
   ).not.toBeVisible();
 });
 
-test('login form keeps input values after invalid attempt', async ({ loginPage }) => {
+test('login form keeps input values after invalid attempt', { tag: '@login' }, async ({ loginPage }) => {
   await loginPage.open();
   await loginPage.fillUsername('standard_user');
   await loginPage.fillPassword('wrong_password');
@@ -139,7 +139,7 @@ test('login form keeps input values after invalid attempt', async ({ loginPage }
   ).toHaveValue('wrong_password');
 });
 
-test('error message reappears after closing and submitting invalid login again', async ({
+test('error message reappears after closing and submitting invalid login again', { tag: '@login' }, async ({
   loginPage,
 }) => {
   await loginPage.open();
@@ -169,7 +169,7 @@ test('error message reappears after closing and submitting invalid login again',
   ).toContain('Username and password do not match');
 });
 
-test('user can login by pressing Enter key on password input', async ({ loginPage, page }) => {
+test('user can login by pressing Enter key on password input', { tag: '@login' }, async ({ loginPage, page }) => {
   const { username, password } = config.getUser('standard');
 
   await loginPage.open();

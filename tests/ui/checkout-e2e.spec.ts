@@ -78,7 +78,7 @@ test.describe('End-to-end checkout flows', () => {
     await loggedInInventoryPage.waitForVisible();
   });
 
-  test('user can complete checkout with a single product', async ({
+  test('user can complete checkout with a single product', { tag: ['@checkout', '@e2e'] }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -115,7 +115,7 @@ test.describe('End-to-end checkout flows', () => {
     ).toBe(0);
   });
 
-  test('user can complete checkout with multiple products and summary matches cart', async ({
+  test('user can complete checkout with multiple products and summary matches cart', { tag: ['@checkout', '@e2e'] }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -162,7 +162,7 @@ test.describe('End-to-end checkout flows', () => {
     ).toHaveURL(/.*checkout-complete\.html/);
   });
 
-  test('aborting checkout at step one keeps cart intact and allows later completion', async ({
+  test('aborting checkout at step one keeps cart intact and allows later completion', { tag: ['@checkout', '@e2e'] }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -213,7 +213,7 @@ test.describe('End-to-end checkout flows', () => {
     ).toBe(0);
   });
 
-  test('aborting checkout at step two, modifying cart and restarting reflects changes', async ({
+  test('aborting checkout at step two, modifying cart and restarting reflects changes', { tag: ['@checkout', '@e2e'] }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,
@@ -259,7 +259,7 @@ test.describe('End-to-end checkout flows', () => {
     ).toBe(itemsInCartAfterRemoval);
   });
 
-  test('user can start checkout from product details page and complete flow', async ({
+  test('user can start checkout from product details page and complete flow', { tag: ['@checkout', '@e2e'] }, async ({
     page,
     inventoryPage,
     productDetailsPage,
@@ -302,7 +302,7 @@ test.describe('End-to-end checkout flows', () => {
     ).toHaveURL(/.*checkout-complete\.html/);
   });
 
-  test('checkout with empty cart still leads to overview with zero items', async ({
+  test('checkout with empty cart still leads to overview with zero items', { tag: ['@checkout', '@e2e'] }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -332,7 +332,7 @@ test.describe('End-to-end checkout flows', () => {
     ).toHaveURL(/.*checkout-step-two\.html/);
   });
 
-  test('full checkout flow with reset app state at the end leaves application clean', async ({
+  test('full checkout flow with reset app state at the end leaves application clean', { tag: ['@checkout', '@e2e'] }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -377,7 +377,7 @@ test.describe('End-to-end checkout flows', () => {
     ).toHaveURL(/.*inventory\.html/);
   });
 
-  test('using browser back after checkout complete does not restore previous cart items', async ({
+  test('using browser back after checkout complete does not restore previous cart items', { tag: ['@checkout', '@e2e'] }, async ({
     page,
     inventoryPage,
     cartPage,
@@ -409,7 +409,7 @@ test.describe('End-to-end checkout flows', () => {
     ).toBe(0);
   });
 
-  test('reset app state during checkout clears cart before overview step', async ({
+  test('reset app state during checkout clears cart before overview step', { tag: ['@checkout', '@e2e'] }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,

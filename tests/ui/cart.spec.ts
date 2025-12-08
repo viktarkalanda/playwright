@@ -39,7 +39,7 @@ test.beforeEach(async ({ loggedInInventoryPage }) => {
   await loggedInInventoryPage.waitForVisible();
 });
 
-test('user can add first product to cart', async ({ inventoryPage, cartPage }) => {
+test('user can add first product to cart', { tag: ['@cart', '@smoke'] }, async ({ inventoryPage, cartPage }) => {
   await inventoryPage.addFirstItemToCart();
   await inventoryPage.openCart();
 
@@ -51,7 +51,7 @@ test('user can add first product to cart', async ({ inventoryPage, cartPage }) =
   );
 });
 
-test('cart contains "Sauce Labs Backpack" after add', async ({ inventoryPage, cartPage }) => {
+test('cart contains "Sauce Labs Backpack" after add', { tag: ['@cart', '@smoke'] }, async ({ inventoryPage, cartPage }) => {
   await inventoryPage.addFirstItemToCart();
   await inventoryPage.openCart();
 
@@ -63,7 +63,7 @@ test('cart contains "Sauce Labs Backpack" after add', async ({ inventoryPage, ca
   );
 });
 
-test('cart is empty when opened without adding products', async ({ inventoryPage, cartPage }) => {
+test('cart is empty when opened without adding products', { tag: ['@cart', '@smoke'] }, async ({ inventoryPage, cartPage }) => {
   await inventoryPage.openCart();
 
   await cartPage.waitForVisible();
@@ -74,7 +74,7 @@ test('cart is empty when opened without adding products', async ({ inventoryPage
   );
 });
 
-test('cart does not contain unknown product', async ({ inventoryPage, cartPage }) => {
+test('cart does not contain unknown product', { tag: '@cart' }, async ({ inventoryPage, cartPage }) => {
   await inventoryPage.addFirstItemToCart();
   await inventoryPage.openCart();
 
@@ -84,7 +84,7 @@ test('cart does not contain unknown product', async ({ inventoryPage, cartPage }
   expect(hasRandomProduct, 'Cart should not contain products that were never added').toBe(false);
 });
 
-test('cart becomes empty after adding and then removing first product', async ({
+test('cart becomes empty after adding and then removing first product', { tag: ['@cart', '@smoke'] }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -98,7 +98,7 @@ test('cart becomes empty after adding and then removing first product', async ({
   expect(itemsCount, 'Cart should be empty after product is added and then removed').toBe(0);
 });
 
-test('cart items count increases after adding product', async ({ inventoryPage, cartPage }) => {
+test('cart items count increases after adding product', { tag: ['@cart', '@smoke'] }, async ({ inventoryPage, cartPage }) => {
   await inventoryPage.openCart();
   await cartPage.waitForVisible();
 
@@ -118,7 +118,7 @@ test('cart items count increases after adding product', async ({ inventoryPage, 
   );
 });
 
-test('cart retains item after navigating back to inventory and returning to cart', async ({
+test('cart retains item after navigating back to inventory and returning to cart', { tag: '@cart' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -143,7 +143,7 @@ test('cart retains item after navigating back to inventory and returning to cart
 
 // -------------------- NEW TESTS BELOW --------------------
 
-test('cart URL is correct after opening from inventory with item', async ({
+test('cart URL is correct after opening from inventory with item', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -158,7 +158,7 @@ test('cart URL is correct after opening from inventory with item', async ({
   );
 });
 
-test('cart URL is correct when opened empty', async ({ page, inventoryPage, cartPage }) => {
+test('cart URL is correct when opened empty', { tag: '@cart' }, async ({ page, inventoryPage, cartPage }) => {
   await inventoryPage.openCart();
   await cartPage.waitForVisible();
 
@@ -167,7 +167,7 @@ test('cart URL is correct when opened empty', async ({ page, inventoryPage, cart
   );
 });
 
-test('empty cart remains empty after multiple opens', async ({ inventoryPage, cartPage }) => {
+test('empty cart remains empty after multiple opens', { tag: '@cart' }, async ({ inventoryPage, cartPage }) => {
   await inventoryPage.openCart();
   await cartPage.waitForVisible();
 
@@ -185,7 +185,7 @@ test('empty cart remains empty after multiple opens', async ({ inventoryPage, ca
   expect(secondCount, 'Cart should still be empty after reopening without adding items').toBe(0);
 });
 
-test('empty cart remains empty after page reload', async ({ page, inventoryPage, cartPage }) => {
+test('empty cart remains empty after page reload', { tag: '@cart' }, async ({ page, inventoryPage, cartPage }) => {
   await inventoryPage.openCart();
   await cartPage.waitForVisible();
 
@@ -197,7 +197,7 @@ test('empty cart remains empty after page reload', async ({ page, inventoryPage,
   expect(itemsCount, 'Empty cart should remain empty after page reload').toBe(0);
 });
 
-test('cart contents persist after page reload when item is added', async ({
+test('cart contents persist after page reload when item is added', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -216,7 +216,7 @@ test('cart contents persist after page reload when item is added', async ({
   expect(hasBackpack, 'Backpack should still be present after page reload').toBe(true);
 });
 
-test('cart retains item after continue shopping and page reload', async ({
+test('cart retains item after continue shopping and page reload', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -247,7 +247,7 @@ test('cart retains item after continue shopping and page reload', async ({
   ).toBe(true);
 });
 
-test('cart items count is stable when reopening without changes', async ({
+test('cart items count is stable when reopening without changes', { tag: '@cart' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -271,7 +271,7 @@ test('cart items count is stable when reopening without changes', async ({
   );
 });
 
-test('cart becomes empty after add, remove and page reload', async ({
+test('cart becomes empty after add, remove and page reload', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -289,7 +289,7 @@ test('cart becomes empty after add, remove and page reload', async ({
   expect(itemsCount, 'Cart should remain empty after add, remove and reload').toBe(0);
 });
 
-test('cart remains empty after add, remove and returning from inventory', async ({
+test('cart remains empty after add, remove and returning from inventory', { tag: '@cart' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -316,7 +316,7 @@ test('cart remains empty after add, remove and returning from inventory', async 
   ).toBe(0);
 });
 
-test('continue shopping from empty cart returns to inventory and keeps cart empty', async ({
+test('continue shopping from empty cart returns to inventory and keeps cart empty', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -342,7 +342,7 @@ test('continue shopping from empty cart returns to inventory and keeps cart empt
   expect(finalCount, 'Cart should remain empty after continue shopping and reopening').toBe(0);
 });
 
-test('cart keeps items after browser back navigation from cart', async ({
+test('cart keeps items after browser back navigation from cart', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -370,7 +370,7 @@ test('cart keeps items after browser back navigation from cart', async ({
   ).toBe(true);
 });
 
-test('empty cart stays empty after browser back navigation', async ({
+test('empty cart stays empty after browser back navigation', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -392,7 +392,7 @@ test('empty cart stays empty after browser back navigation', async ({
   expect(finalCount, 'Cart should remain empty after using browser back and reopening').toBe(0);
 });
 
-test('cart contents persist after multiple page reloads', async ({
+test('cart contents persist after multiple page reloads', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -413,7 +413,7 @@ test('cart contents persist after multiple page reloads', async ({
   expect(hasBackpack, 'Backpack should still be present after multiple reloads').toBe(true);
 });
 
-test('empty cart stays empty after multiple page reloads', async ({
+test('empty cart stays empty after multiple page reloads', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -431,7 +431,7 @@ test('empty cart stays empty after multiple page reloads', async ({
   expect(itemsCount, 'Empty cart should remain empty after multiple reloads').toBe(0);
 });
 
-test('cart keeps items after back and forward navigation', async ({
+test('cart keeps items after back and forward navigation', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -458,7 +458,7 @@ test('cart keeps items after back and forward navigation', async ({
   );
 });
 
-test('empty cart stays empty after back and forward navigation', async ({
+test('empty cart stays empty after back and forward navigation', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -477,7 +477,7 @@ test('empty cart stays empty after back and forward navigation', async ({
   expect(itemsCount, 'Empty cart should remain empty after navigating back and forward').toBe(0);
 });
 
-test('cart keeps items after multiple continue shopping actions', async ({
+test('cart keeps items after multiple continue shopping actions', { tag: '@cart' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -508,7 +508,7 @@ test('cart keeps items after multiple continue shopping actions', async ({
   ).toBe(true);
 });
 
-test('empty cart stays empty after multiple continue shopping actions', async ({
+test('empty cart stays empty after multiple continue shopping actions', { tag: '@cart' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -533,7 +533,7 @@ test('empty cart stays empty after multiple continue shopping actions', async ({
   ).toBe(0);
 });
 
-test('cart keeps item after continue shopping and browser back navigation', async ({
+test('cart keeps item after continue shopping and browser back navigation', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -561,7 +561,7 @@ test('cart keeps item after continue shopping and browser back navigation', asyn
   ).toBe(true);
 });
 
-test('cart item lookup is case sensitive for product name', async ({ inventoryPage, cartPage }) => {
+test('cart item lookup is case sensitive for product name', { tag: '@cart' }, async ({ inventoryPage, cartPage }) => {
   await inventoryPage.addFirstItemToCart();
   await inventoryPage.openCart();
   await cartPage.waitForVisible();
@@ -576,7 +576,7 @@ test('cart item lookup is case sensitive for product name', async ({ inventoryPa
   ).toBe(false);
 });
 
-test('cart does not contain unknown product after multiple navigation steps', async ({
+test('cart does not contain unknown product after multiple navigation steps', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -604,7 +604,7 @@ test('cart does not contain unknown product after multiple navigation steps', as
   ).toBe(false);
 });
 
-test('cart remains consistent when reopened after reload and navigation', async ({
+test('cart remains consistent when reopened after reload and navigation', { tag: '@cart' }, async ({
   page,
   inventoryPage,
   cartPage,
@@ -641,7 +641,7 @@ test('cart remains consistent when reopened after reload and navigation', async 
   expect(hasBackpack, 'Backpack should still be present after reload and navigation').toBe(true);
 });
 
-test('cart lists multiple added products in order with correct prices', async ({
+test('cart lists multiple added products in order with correct prices', { tag: '@cart' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -672,7 +672,7 @@ test('cart lists multiple added products in order with correct prices', async ({
   }
 });
 
-test('removing one product from cart keeps remaining products intact', async ({
+test('removing one product from cart keeps remaining products intact', { tag: '@cart' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -697,7 +697,7 @@ test('removing one product from cart keeps remaining products intact', async ({
   expect(countAfterRemoval, 'Removing one product should decrement cart count by one').toBe(2);
 });
 
-test('continue shopping keeps all cart items untouched', async ({ inventoryPage, cartPage }) => {
+test('continue shopping keeps all cart items untouched', { tag: '@cart' }, async ({ inventoryPage, cartPage }) => {
   const itemsToAdd = [BACKPACK_NAME, FLEECE_JACKET_NAME];
 
   for (const name of itemsToAdd) {
@@ -723,7 +723,7 @@ test('continue shopping keeps all cart items untouched', async ({ inventoryPage,
   ).toEqual(namesBeforeContinue);
 });
 
-test('re-adding removed product appends it at the end of the cart list', async ({
+test('re-adding removed product appends it at the end of the cart list', { tag: '@cart' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -750,7 +750,7 @@ test('re-adding removed product appends it at the end of the cart list', async (
   ).toEqual([BIKE_LIGHT_NAME, BACKPACK_NAME]);
 });
 
-test('sum of cart item prices matches expected total from inventory', async ({
+test('sum of cart item prices matches expected total from inventory', { tag: '@cart' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -776,7 +776,7 @@ test('sum of cart item prices matches expected total from inventory', async ({
   ).toBeCloseTo(expectedSum, 2);
 });
 
-test('cart total updates after removing an item', async ({ inventoryPage, cartPage }) => {
+test('cart total updates after removing an item', { tag: '@cart' }, async ({ inventoryPage, cartPage }) => {
   const itemsToAdd = [BACKPACK_NAME, BOLT_TSHIRT_NAME];
 
   for (const name of itemsToAdd) {
@@ -799,7 +799,7 @@ test('cart total updates after removing an item', async ({ inventoryPage, cartPa
   ).toBeCloseTo(initialSum - removedItemPrice, 2);
 });
 
-test('re-adding the same product after removal keeps only one entry', async ({
+test('re-adding the same product after removal keeps only one entry', { tag: '@cart' }, async ({
   inventoryPage,
   cartPage,
 }) => {
@@ -824,7 +824,7 @@ test('re-adding the same product after removal keeps only one entry', async ({
   expect(names, 'Cart should contain the re-added product only once').toEqual([ONESIE_NAME]);
 });
 
-test('checkout cannot be started when cart is empty (skipped on Sauce Demo)', async ({
+test('checkout cannot be started when cart is empty (skipped on Sauce Demo)', { tag: '@cart' }, async ({
   inventoryPage,
   cartPage,
 }) => {
