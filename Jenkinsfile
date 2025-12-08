@@ -9,8 +9,9 @@ pipeline {
 
   environment {
     NODE_ENV = 'test'
+    // URL Allure Docker Service внутри docker-сети
     ALLURE_DOCKER_URL = 'http://allure-docker-service:5050'
-    // используем тот project_id, который реально есть на сервере
+    // проект в Allure Docker Service (используем default)
     ALLURE_PROJECT_ID = 'default'
   }
 
@@ -55,6 +56,7 @@ pipeline {
     stage('Lint') {
       steps {
         script {
+          // Линт может падать, но пайплайн не останавливаем
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
             sh 'npm run lint'
           }
@@ -73,6 +75,7 @@ pipeline {
     stage('Test') {
       steps {
         script {
+          // Тесты могут падать, но последующие стадии всё равно выполняем
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
             sh 'npx playwright test'
           }
@@ -93,16 +96,18 @@ pipeline {
           zip -r allure-results.zip allure-results
 
           echo ">>> Sending results to Allure Docker Service..."
-          # сервер хочет files[] и сам кладёт в project_id 'default'
-          curl -v -X POST "$ALLURE_DOCKER_URL/send-results" \
+          curl -s -X POST "$ALLURE_DOCKER_URL/send-results" \
             -F "files[]=@allure-results.zip" \
             -F "project_id=$ALLURE_PROJECT_ID" \
             -F "project_name=$ALLURE_PROJECT_ID" \
             || echo "Failed to send Allure results"
 
-          echo ">>> Generating report..."
-          curl -v "$ALLURE_DOCKER_URL/generate-report?project_id=$ALLURE_PROJECT_ID" \
+          echo ">>> Generating report (may respond 'Processing files, try later')..."
+          curl -s "$ALLURE_DOCKER_URL/generate-report?project_id=$ALLURE_PROJECT_ID" \
             || echo "Failed to generate report"
+
+          echo ">>> Open latest Allure Docker Service report at:"
+          echo "http://localhost:5050/allure-docker-service/projects/$ALLURE_PROJECT_ID/reports/latest/index.html"
         '''
       }
     }
@@ -110,9 +115,13 @@ pipeline {
 
   post {
     always {
+      // Playwright HTML report
       archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true, allowEmptyArchive: true
+
+      // Allure raw results
       archiveArtifacts artifacts: 'allure-results/**', fingerprint: true, allowEmptyArchive: true
 
+      // Allure report через Jenkins-плагин
       allure results: [[path: 'allure-results']], reportBuildPolicy: 'ALWAYS'
     }
   }
