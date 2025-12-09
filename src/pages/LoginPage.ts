@@ -2,6 +2,9 @@
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
 import { step } from '../utils/stepDecorator';
+import { TestConfig, UserKey } from '../config/testConfig';
+
+const config = TestConfig.getInstance();
 
 export class LoginPage extends BaseForm {
   readonly usernameInput: Locator = this.page.getByTestId('username');
@@ -42,10 +45,21 @@ export class LoginPage extends BaseForm {
     await this.submitLogin();
   }
 
+  @step('Login as predefined user')
+  async loginAs(userKey: UserKey): Promise<void> {
+    const { username, password } = config.getUser(userKey);
+    await this.login(username, password);
+  }
+
   @step('Get login error text')
   async getErrorText(): Promise<string> {
     const text = await this.errorMessage.textContent();
     return text ?? '';
+  }
+
+  @step('Check if login error is visible')
+  async isErrorVisible(): Promise<boolean> {
+    return this.errorMessage.isVisible();
   }
 
   @step('Close login error message')
