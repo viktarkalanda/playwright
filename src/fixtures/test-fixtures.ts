@@ -9,6 +9,7 @@ import { TestConfig } from '../config/testConfig';
 import { CheckoutCompletePage } from '../pages/CheckoutCompletePage';
 import { ProductDetailsPage } from '../pages/ProductDetailsPage';
 import { MainMenu } from '../pages/MainMenu';
+import { HeaderMenu } from '../pages/HeaderMenu';
 
 const config = TestConfig.getInstance();
 
@@ -22,6 +23,7 @@ type Pages = {
   checkoutCompletePage: CheckoutCompletePage;
   productDetailsPage: ProductDetailsPage;
   mainMenu: MainMenu;
+  headerMenu: HeaderMenu;
 };
 
 type ExtraFixtures = {
@@ -64,6 +66,11 @@ export const test = base.extend<Fixtures>({
   mainMenu: async ({ page }, use) => {
     const mainMenu = new MainMenu(page);
     await use(mainMenu);
+  },
+
+  headerMenu: async ({ page }, use) => {
+    const headerMenu = new HeaderMenu(page);
+    await use(headerMenu);
   },
 
   checkoutStepOnePage: async ({ page }, use) => {
