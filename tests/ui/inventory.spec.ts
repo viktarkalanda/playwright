@@ -160,9 +160,9 @@ test('inventory items count matches expected products length', { tag: '@inventor
 });
 
 test('inventory can sort products by name A to Z', { tag: ['@inventory', '@smoke'] }, async ({ inventoryPage }) => {
-  await inventoryPage.sortBy('az');
+  await inventoryPage.sortByNameAsc();
 
-  const names = await inventoryPage.getItemNames();
+  const names = await inventoryPage.getAllItemNames();
   const sorted = [...names].sort((a, b) => a.localeCompare(b));
 
   expect(
@@ -172,9 +172,9 @@ test('inventory can sort products by name A to Z', { tag: ['@inventory', '@smoke
 });
 
 test('inventory can sort products by name Z to A', { tag: '@inventory' }, async ({ inventoryPage }) => {
-  await inventoryPage.sortBy('za');
+  await inventoryPage.sortByNameDesc();
 
-  const names = await inventoryPage.getItemNames();
+  const names = await inventoryPage.getAllItemNames();
   const sorted = [...names].sort((a, b) => b.localeCompare(a));
 
   expect(
@@ -184,9 +184,9 @@ test('inventory can sort products by name Z to A', { tag: '@inventory' }, async 
 });
 
 test('inventory can sort products by price low to high', { tag: '@inventory' }, async ({ inventoryPage }) => {
-  await inventoryPage.sortBy('lohi');
+  await inventoryPage.sortByPriceLowToHigh();
 
-  const prices = await inventoryPage.getItemPrices();
+  const prices = await inventoryPage.getAllItemPrices();
   const sorted = [...prices].sort((a, b) => a - b);
 
   expect(
@@ -196,9 +196,9 @@ test('inventory can sort products by price low to high', { tag: '@inventory' }, 
 });
 
 test('inventory can sort products by price high to low', { tag: '@inventory' }, async ({ inventoryPage }) => {
-  await inventoryPage.sortBy('hilo');
+  await inventoryPage.sortByPriceHighToLow();
 
-  const prices = await inventoryPage.getItemPrices();
+  const prices = await inventoryPage.getAllItemPrices();
   const sorted = [...prices].sort((a, b) => b - a);
 
   expect(
@@ -349,4 +349,169 @@ test('inventory reload does not remove products already added to the cart', { ta
     hasBackpack,
     'Cart should still contain the previously added product after inventory reload',
   ).toBe(true);
+});
+
+// -------------------- INVENTORY COVERAGE EXPANSION --------------------
+
+test('inventory displays products in the default order', { tag: ['@inventory', '@smoke'] }, async ({ inventoryPage }) => {
+  const names = await inventoryPage.getAllItemNames();
+
+  expect(
+    names,
+    'Inventory should list products in the expected default order when page loads',
+  ).toEqual(expectedProductNames);
+});
+
+test('inventory exposes numeric prices for every product', { tag: '@inventory' }, async ({ inventoryPage }) => {
+  const prices = await inventoryPage.getAllItemPrices();
+
+  expect(prices.length, 'Each listed product should have a price').toBe(expectedProductNames.length);
+  for (const price of prices) {
+    expect(price, 'Product prices should be positive numbers').toBeGreaterThan(0);
+  }
+});
+
+test('sorting by name ascending survives navigating to cart and back', { tag: '@inventory' }, async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  await inventoryPage.sortByNameAsc();
+  const namesBeforeCart = await inventoryPage.getAllItemNames();
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+  await cartPage.continueShopping();
+  await inventoryPage.waitForVisible();
+
+  const namesAfterCart = await inventoryPage.getAllItemNames();
+  expect(
+    namesAfterCart,
+    'Alphabetical sorting should remain intact after visiting and leaving the cart',
+  ).toEqual(namesBeforeCart);
+});
+
+test('sorting by price high to low remains after viewing product details', { tag: ['@inventory', '@e2e'] }, async ({
+  inventoryPage,
+  productDetailsPage,
+}) => {
+  await inventoryPage.sortByPriceHighToLow();
+  const pricesBeforeDetails = await inventoryPage.getAllItemPrices();
+  const namesBeforeDetails = await inventoryPage.getAllItemNames();
+  const firstProductName = namesBeforeDetails[0];
+  const listPrice = await inventoryPage.getItemPriceByName(firstProductName);
+
+  await inventoryPage.openItemDetailsByName(firstProductName);
+  await productDetailsPage.waitForVisible();
+
+  const detailsPrice = await productDetailsPage.getProductPrice();
+  expect(detailsPrice, 'Product price on details page should match inventory list price').toBeCloseTo(
+    listPrice,
+    2,
+  );
+
+  await productDetailsPage.backToProducts();
+  await inventoryPage.waitForVisible();
+
+  const pricesAfterDetails = await inventoryPage.getAllItemPrices();
+  expect(
+    pricesAfterDetails,
+    'Price sorting should persist after opening and closing product details',
+  ).toEqual(pricesBeforeDetails);
+});
+
+test('opening product details shows matching name and price', { tag: ['@inventory', '@e2e'] }, async ({
+  inventoryPage,
+  productDetailsPage,
+}) => {
+  const targetProduct = 'Sauce Labs Bolt T-Shirt';
+  const expectedPrice = await inventoryPage.getItemPriceByName(targetProduct);
+
+  await inventoryPage.openItemDetailsByName(targetProduct);
+  await productDetailsPage.waitForVisible();
+
+  const detailsName = await productDetailsPage.getProductName();
+  const detailsPrice = await productDetailsPage.getProductPrice();
+
+  expect(detailsName, 'Details page should show the selected product name').toBe(targetProduct);
+  expect(detailsPrice, 'Details page should show the same price as inventory list').toBeCloseTo(
+    expectedPrice,
+    2,
+  );
+
+  await productDetailsPage.backToProducts();
+  await inventoryPage.waitForVisible();
+});
+
+test('each inventory card shows name, price and action button', { tag: ['@inventory', '@smoke'] }, async ({
+  inventoryPage,
+}) => {
+  const itemCount = await inventoryPage.inventoryItems.count();
+  expect(itemCount, 'Inventory should render at least one product card').toBeGreaterThan(0);
+
+  for (let index = 0; index < itemCount; index += 1) {
+    const item = inventoryPage.inventoryItems.nth(index);
+    await expect(item.locator('.inventory_item_name'), 'Product name should be visible on card').toBeVisible();
+    await expect(item.locator('.inventory_item_price'), 'Product price should be visible on card').toBeVisible();
+    await expect(item.getByRole('button'), 'Action button should be visible on card').toBeVisible();
+  }
+});
+
+test('cart badge increments sequentially when adding multiple products', { tag: ['@inventory', '@smoke'] }, async ({
+  inventoryPage,
+}) => {
+  const productsToAdd = [
+    'Sauce Labs Backpack',
+    'Sauce Labs Bike Light',
+    'Sauce Labs Bolt T-Shirt',
+  ];
+
+  let expectedCount = 0;
+  for (const name of productsToAdd) {
+    await inventoryPage.addItemToCartByName(name);
+    expectedCount += 1;
+    const badgeCount = await inventoryPage.getCartBadgeCount();
+    expect(
+      badgeCount,
+      'Cart badge should increase by one after each additional product is added',
+    ).toBe(expectedCount);
+  }
+});
+
+test('cart badge resets to zero after removing all items from inventory', { tag: '@inventory' }, async ({
+  inventoryPage,
+}) => {
+  const products = ['Sauce Labs Backpack', 'Sauce Labs Bike Light'];
+  for (const name of products) {
+    await inventoryPage.addItemToCartByName(name);
+  }
+
+  for (const name of products) {
+    await inventoryPage.removeItemFromCartByName(name);
+  }
+
+  const badgeCount = await inventoryPage.getCartBadgeCount();
+  expect(badgeCount, 'Cart badge should return to zero after removing all items').toBe(0);
+});
+
+test('cart badge matches cart page count after adding products on inventory', { tag: ['@inventory', '@e2e'] }, async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  const products = ['Sauce Labs Backpack', 'Sauce Labs Fleece Jacket', 'Sauce Labs Onesie'];
+  for (const name of products) {
+    await inventoryPage.addItemToCartByName(name);
+  }
+
+  const badgeCount = await inventoryPage.getCartBadgeCount();
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const cartItemsCount = await cartPage.getItemsCount();
+
+  expect(
+    badgeCount,
+    'Cart badge on inventory should equal the number of items shown after opening cart',
+  ).toBe(products.length);
+  expect(cartItemsCount, 'Cart should list all products added from inventory').toBe(products.length);
 });

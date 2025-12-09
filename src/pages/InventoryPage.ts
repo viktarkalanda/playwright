@@ -40,19 +40,37 @@ export class InventoryPage extends BaseForm {
     return text?.trim() ?? '';
   }
 
-  @step('Get all inventory item names')
-  async getItemNames(): Promise<string[]> {
+  private async collectItemNames(): Promise<string[]> {
     const texts = await this.itemNames.allTextContents();
     return texts.map((t) => t.trim());
   }
 
-  @step('Get all inventory item prices')
-  async getItemPrices(): Promise<number[]> {
+  private async collectItemPrices(): Promise<number[]> {
     const texts = await this.itemPrices.allTextContents();
     return texts
       .map((t) => t.trim().replace('$', ''))
       .map((raw) => Number.parseFloat(raw))
       .filter((value) => !Number.isNaN(value));
+  }
+
+  @step('Get all inventory item names')
+  async getItemNames(): Promise<string[]> {
+    return this.collectItemNames();
+  }
+
+  @step('Get all inventory item prices')
+  async getItemPrices(): Promise<number[]> {
+    return this.collectItemPrices();
+  }
+
+  @step('Get all inventory item names (display order)')
+  async getAllItemNames(): Promise<string[]> {
+    return this.collectItemNames();
+  }
+
+  @step('Get all inventory item prices (display order)')
+  async getAllItemPrices(): Promise<number[]> {
+    return this.collectItemPrices();
   }
 
   @step('Add first inventory item to cart')
@@ -83,6 +101,26 @@ export class InventoryPage extends BaseForm {
   @step('Sort inventory items')
   async sortBy(option: 'az' | 'za' | 'lohi' | 'hilo'): Promise<void> {
     await this.sortDropdown.selectOption(option);
+  }
+
+  @step('Sort inventory by name ascending')
+  async sortByNameAsc(): Promise<void> {
+    await this.sortBy('az');
+  }
+
+  @step('Sort inventory by name descending')
+  async sortByNameDesc(): Promise<void> {
+    await this.sortBy('za');
+  }
+
+  @step('Sort inventory by price low to high')
+  async sortByPriceLowToHigh(): Promise<void> {
+    await this.sortBy('lohi');
+  }
+
+  @step('Sort inventory by price high to low')
+  async sortByPriceHighToLow(): Promise<void> {
+    await this.sortBy('hilo');
   }
 
   @step('Get cart badge count from inventory page')
