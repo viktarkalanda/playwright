@@ -1,5 +1,6 @@
 // tests/ui/cart.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
+import { TestConfig } from '../../src/config/testConfig';
 import type { CartPage } from '../../src/pages/CartPage';
 
 const BACKPACK_NAME = 'Sauce Labs Backpack';
@@ -7,6 +8,7 @@ const BIKE_LIGHT_NAME = 'Sauce Labs Bike Light';
 const BOLT_TSHIRT_NAME = 'Sauce Labs Bolt T-Shirt';
 const FLEECE_JACKET_NAME = 'Sauce Labs Fleece Jacket';
 const ONESIE_NAME = 'Sauce Labs Onesie';
+const standardUser = TestConfig.getInstance().getUser('standard');
 
 async function getCartItemNames(cartPage: CartPage): Promise<string[]> {
   const names = await cartPage.cartItemNames.allTextContents();
@@ -822,6 +824,195 @@ test('re-adding the same product after removal keeps only one entry', { tag: '@c
 
   expect(finalCount, 'Re-adding the same product should keep a single cart entry').toBe(1);
   expect(names, 'Cart should contain the re-added product only once').toEqual([ONESIE_NAME]);
+});
+
+// -------------------- CART COVERAGE EXPANSION --------------------
+
+test('cart displays selected products with accurate badge and prices', { tag: ['@cart', '@smoke'] }, async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  const itemsToAdd = [BACKPACK_NAME, BIKE_LIGHT_NAME, BOLT_TSHIRT_NAME];
+  const priceByItem = new Map<string, number>();
+
+  for (const name of itemsToAdd) {
+    await inventoryPage.addItemToCartByName(name);
+    const price = await inventoryPage.getItemPriceByName(name);
+    priceByItem.set(name, price);
+  }
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const namesInCart = await cartPage.getItemNames();
+  expect(namesInCart, 'Cart should list all selected items in order').toEqual(itemsToAdd);
+
+  const pricesInCart = await cartPage.getItemPrices();
+  const expectedPrices = itemsToAdd.map((name) => priceByItem.get(name) ?? 0);
+  expect(pricesInCart, 'Cart prices should match the inventory prices').toEqual(expectedPrices);
+
+  const badgeCount = await cartPage.getCartBadgeCount();
+  expect(badgeCount, 'Cart badge should equal number of selected items').toBe(itemsToAdd.length);
+});
+
+test('cart allows removing a specific product by name', { tag: '@cart' }, async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  const itemsToAdd = [BACKPACK_NAME, FLEECE_JACKET_NAME, ONESIE_NAME];
+
+  for (const name of itemsToAdd) {
+    await inventoryPage.addItemToCartByName(name);
+  }
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  await cartPage.removeItemByName(FLEECE_JACKET_NAME);
+
+  const remainingItems = await cartPage.getItemNames();
+  expect(
+    remainingItems,
+    'Only the selected item should be removed while others remain',
+  ).toEqual([BACKPACK_NAME, ONESIE_NAME]);
+
+  const badgeCount = await cartPage.getCartBadgeCount();
+  expect(badgeCount, 'Cart badge should reflect the updated number of items').toBe(
+    remainingItems.length,
+  );
+});
+
+test('continue shopping navigates back to inventory and keeps added items', { tag: '@cart' }, async ({
+  page,
+  inventoryPage,
+  cartPage,
+}) => {
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  await cartPage.continueShopping();
+  await inventoryPage.waitForVisible();
+
+  await expect(page, 'Continue shopping should bring the user back to inventory').toHaveURL(
+    /inventory\.html/,
+  );
+
+  await inventoryPage.addItemToCartByName(FLEECE_JACKET_NAME);
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const namesInCart = await cartPage.getItemNames();
+  expect(namesInCart, 'Cart should reflect items added after continuing shopping').toContain(
+    FLEECE_JACKET_NAME,
+  );
+});
+
+test('cart retains items when returning from checkout step one', { tag: ['@cart', '@e2e'] }, async ({
+  inventoryPage,
+  cartPage,
+  checkoutStepOnePage,
+}) => {
+  const itemsToAdd = [BACKPACK_NAME, BIKE_LIGHT_NAME];
+  for (const name of itemsToAdd) {
+    await inventoryPage.addItemToCartByName(name);
+  }
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  await cartPage.startCheckout();
+  await checkoutStepOnePage.waitForVisible();
+  await checkoutStepOnePage.cancel();
+
+  await cartPage.waitForVisible();
+  const namesInCart = await cartPage.getItemNames();
+
+  expect(
+    namesInCart,
+    'Canceling checkout should return to cart with previously selected items intact',
+  ).toEqual(itemsToAdd);
+});
+
+test('reset app state clears cart contents and badge', { tag: '@cart' }, async ({
+  inventoryPage,
+  cartPage,
+  mainMenu,
+}) => {
+  await inventoryPage.addItemToCartByName(BACKPACK_NAME);
+  await inventoryPage.addItemToCartByName(ONESIE_NAME);
+
+  await mainMenu.resetAppState();
+  if (await mainMenu.isVisible()) {
+    await mainMenu.close();
+  }
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  expect(await cartPage.isEmpty(), 'Cart should be empty after resetting app state').toBe(true);
+  expect(await cartPage.getCartBadgeCount(), 'Cart badge should reset to zero').toBe(0);
+});
+
+test('cart is cleared after logout and new login', { tag: ['@cart', '@e2e'] }, async ({
+  inventoryPage,
+  cartPage,
+  mainMenu,
+  loginPage,
+}) => {
+  await inventoryPage.addItemToCartByName(BOLT_TSHIRT_NAME);
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  expect(await cartPage.isEmpty(), 'Cart should contain the added product before logout').toBe(
+    false,
+  );
+
+  await mainMenu.logout();
+  await loginPage.login(standardUser.username, standardUser.password);
+  await inventoryPage.waitForVisible();
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  expect(await cartPage.isEmpty(), 'Cart should be cleared for a new session').toBe(true);
+  expect(await cartPage.getCartBadgeCount(), 'Cart badge should reset after logout').toBe(0);
+});
+
+test('cart badge count matches number of listed items', { tag: '@cart' }, async ({
+  inventoryPage,
+  cartPage,
+}) => {
+  const itemsToAdd = [BACKPACK_NAME, FLEECE_JACKET_NAME, ONESIE_NAME];
+
+  for (const name of itemsToAdd) {
+    await inventoryPage.addItemToCartByName(name);
+  }
+
+  await inventoryPage.openCart();
+  await cartPage.waitForVisible();
+
+  const namesInCart = await cartPage.getItemNames();
+  const badgeCount = await cartPage.getCartBadgeCount();
+  const itemsCount = await cartPage.getItemsCount();
+
+  expect(namesInCart.length, 'Cart should list every added product').toBe(itemsToAdd.length);
+  expect(badgeCount, 'Badge should equal the number of listed products').toBe(namesInCart.length);
+  expect(itemsCount, 'getItemsCount should align with the listed product count').toBe(
+    namesInCart.length,
+  );
+});
+
+test('direct cart access without prior selections keeps empty state', { tag: ['@cart', '@smoke'] }, async ({
+  page,
+  cartPage,
+}) => {
+  await page.goto('/cart.html');
+  await cartPage.waitForVisible();
+
+  expect(await cartPage.isEmpty(), 'Cart should be empty on direct access without selections').toBe(
+    true,
+  );
+  expect(await cartPage.getCartBadgeCount(), 'Cart badge should be zero without items').toBe(0);
 });
 
 test('checkout cannot be started when cart is empty (skipped on Sauce Demo)', { tag: '@cart' }, async ({

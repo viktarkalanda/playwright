@@ -6,8 +6,10 @@ import { step } from '../utils/stepDecorator';
 export class CartPage extends BaseForm {
   readonly cartItems: Locator = this.page.locator('.cart_item');
   readonly cartItemNames: Locator = this.page.locator('.inventory_item_name');
+  readonly cartItemPrices: Locator = this.cartItems.locator('.inventory_item_price');
   readonly continueShoppingButton: Locator = this.page.locator('[data-test="continue-shopping"]');
   readonly checkoutButton: Locator = this.page.locator('[data-test="checkout"]');
+  readonly cartBadge: Locator = this.page.locator('.shopping_cart_badge');
 
   constructor(page: Page) {
     super(page, page.locator('.cart_list'), 'Cart page');
@@ -29,6 +31,27 @@ export class CartPage extends BaseForm {
     return names.map((text) => text.trim()).some((value) => value === name);
   }
 
+  @step('Get cart item names')
+  async getItemNames(): Promise<string[]> {
+    const names = await this.cartItemNames.allTextContents();
+    return names.map((name) => name.trim());
+  }
+
+  @step('Get cart item prices')
+  async getItemPrices(): Promise<number[]> {
+    const texts = await this.cartItemPrices.allTextContents();
+    return texts
+      .map((text) => text.replace('$', '').trim())
+      .map((raw) => Number.parseFloat(raw))
+      .filter((value) => !Number.isNaN(value));
+  }
+
+  @step('Remove item from cart by name')
+  async removeItemByName(name: string): Promise<void> {
+    const item = this.cartItems.filter({ hasText: name });
+    await item.getByRole('button', { name: 'Remove' }).click();
+  }
+
   @step('Continue shopping from cart')
   async continueShopping(): Promise<void> {
     await this.continueShoppingButton.click();
@@ -37,5 +60,22 @@ export class CartPage extends BaseForm {
   @step('Start checkout from cart')
   async startCheckout(): Promise<void> {
     await this.checkoutButton.click();
+  }
+
+  @step('Get cart badge count from cart page')
+  async getCartBadgeCount(): Promise<number> {
+    const count = await this.cartBadge.count();
+    if (count === 0) {
+      return 0;
+    }
+
+    const text = await this.cartBadge.textContent();
+    const numeric = Number.parseInt((text ?? '').trim(), 10);
+    return Number.isNaN(numeric) ? 0 : numeric;
+  }
+
+  @step('Check if cart is empty')
+  async isEmpty(): Promise<boolean> {
+    return (await this.getItemsCount()) === 0;
   }
 }
