@@ -5,12 +5,12 @@ import { step } from '../utils/stepDecorator';
 
 export class CheckoutStepOnePage extends BaseForm {
   readonly title: Locator = this.page.locator('.title');
-  readonly firstNameInput: Locator = this.page.locator('[data-test="firstName"]');
-  readonly lastNameInput: Locator = this.page.locator('[data-test="lastName"]');
-  readonly postalCodeInput: Locator = this.page.locator('[data-test="postalCode"]');
-  readonly continueButton: Locator = this.page.locator('[data-test="continue"]');
-  readonly cancelButton: Locator = this.page.locator('[data-test="cancel"]');
-  readonly errorMessage: Locator = this.page.locator('[data-test="error"]');
+  readonly firstNameInput: Locator = this.page.getByTestId('firstName');
+  readonly lastNameInput: Locator = this.page.getByTestId('lastName');
+  readonly postalCodeInput: Locator = this.page.getByTestId('postalCode');
+  readonly continueButton: Locator = this.page.getByTestId('continue');
+  readonly cancelButton: Locator = this.page.getByTestId('cancel');
+  readonly errorMessage: Locator = this.page.getByTestId('error');
 
   constructor(page: Page) {
     super(page, page.locator('.checkout_info'), 'Checkout step one page');
@@ -44,9 +44,15 @@ export class CheckoutStepOnePage extends BaseForm {
     await this.fillPostalCode(postalCode);
   }
 
-  @step('Submit checkout personal information')
-  async submit(): Promise<void> {
+  @step('Continue checkout step one')
+  async continue(): Promise<void> {
     await this.continueButton.click();
+  }
+
+  @step('Complete checkout step one')
+  async completeStepOne(firstName: string, lastName: string, postalCode: string): Promise<void> {
+    await this.fillForm(firstName, lastName, postalCode);
+    await this.continue();
   }
 
   @step('Cancel checkout step one')

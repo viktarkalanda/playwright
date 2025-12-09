@@ -1,5 +1,11 @@
 // tests/ui/inventory.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
+import {
+  expectStringsSortedAsc,
+  expectStringsSortedDesc,
+  expectNumbersSortedAsc,
+  expectNumbersSortedDesc,
+} from '../../src/utils/assertions';
 
 test.beforeEach(async ({ loggedInInventoryPage }) => {
   await loggedInInventoryPage.waitForVisible();
@@ -163,48 +169,28 @@ test('inventory can sort products by name A to Z', { tag: ['@inventory', '@smoke
   await inventoryPage.sortByNameAsc();
 
   const names = await inventoryPage.getAllItemNames();
-  const sorted = [...names].sort((a, b) => a.localeCompare(b));
-
-  expect(
-    names,
-    'Product names should be sorted alphabetically (A to Z) after sorting by name A to Z',
-  ).toEqual(sorted);
+  expectStringsSortedAsc(names);
 });
 
 test('inventory can sort products by name Z to A', { tag: '@inventory' }, async ({ inventoryPage }) => {
   await inventoryPage.sortByNameDesc();
 
   const names = await inventoryPage.getAllItemNames();
-  const sorted = [...names].sort((a, b) => b.localeCompare(a));
-
-  expect(
-    names,
-    'Product names should be sorted in reverse alphabetical order (Z to A) after sorting',
-  ).toEqual(sorted);
+  expectStringsSortedDesc(names);
 });
 
 test('inventory can sort products by price low to high', { tag: '@inventory' }, async ({ inventoryPage }) => {
   await inventoryPage.sortByPriceLowToHigh();
 
   const prices = await inventoryPage.getAllItemPrices();
-  const sorted = [...prices].sort((a, b) => a - b);
-
-  expect(
-    prices,
-    'Product prices should be sorted from low to high after sorting by price (low to high)',
-  ).toEqual(sorted);
+  expectNumbersSortedAsc(prices);
 });
 
 test('inventory can sort products by price high to low', { tag: '@inventory' }, async ({ inventoryPage }) => {
   await inventoryPage.sortByPriceHighToLow();
 
   const prices = await inventoryPage.getAllItemPrices();
-  const sorted = [...prices].sort((a, b) => b - a);
-
-  expect(
-    prices,
-    'Product prices should be sorted from high to low after sorting by price (high to low)',
-  ).toEqual(sorted);
+  expectNumbersSortedDesc(prices);
 });
 
 test('add to cart button changes to Remove after adding product by name', { tag: '@inventory' }, async ({
