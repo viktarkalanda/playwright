@@ -2,6 +2,7 @@
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
 import { step } from '../utils/stepDecorator';
+import { range } from '../utils/random';
 
 export interface InventoryProductView {
   name: string;
@@ -95,6 +96,56 @@ export class InventoryPage extends BaseForm {
     const item = this.inventoryItems.filter({ hasText: name });
     const button = item.getByRole('button', { name: 'Add to cart' });
     await button.click();
+  }
+
+  private async getItemCardByIndex(index: number): Promise<Locator> {
+    const count = await this.getItemsCount();
+    if (index < 0 || index >= count) {
+      throw new Error(`Inventory index ${index} is out of bounds. Total items: ${count}`);
+    }
+    return this.inventoryItems.nth(index);
+  }
+
+  @step('Add inventory item to cart by index')
+  async addItemToCartByIndex(index: number): Promise<void> {
+    const card = await this.getItemCardByIndex(index);
+    const button = card.getByRole('button');
+    const label = (await button.textContent())?.trim() ?? '';
+    if (label === 'Add to cart') {
+      await button.click();
+    }
+  }
+
+  @step('Remove inventory item from cart by index')
+  async removeItemFromCartByIndex(index: number): Promise<void> {
+    const card = await this.getItemCardByIndex(index);
+    const button = card.getByRole('button');
+    const label = (await button.textContent())?.trim() ?? '';
+    if (label === 'Remove') {
+      await button.click();
+    }
+  }
+
+  @step('Add inventory items to cart by indexes')
+  async addItemsToCartByIndexes(indexes: number[]): Promise<void> {
+    for (const index of indexes) {
+      await this.addItemToCartByIndex(index);
+    }
+  }
+
+  @step('Remove inventory items from cart by indexes')
+  async removeItemsFromCartByIndexes(indexes: number[]): Promise<void> {
+    for (const index of indexes) {
+      await this.removeItemFromCartByIndex(index);
+    }
+  }
+
+  @step('Check if inventory item is in cart by index')
+  async isItemInCartByIndex(index: number): Promise<boolean> {
+    const card = await this.getItemCardByIndex(index);
+    const button = card.getByRole('button');
+    const label = (await button.textContent())?.trim() ?? '';
+    return label === 'Remove';
   }
 
   @step('Remove inventory item from cart by name')
@@ -203,23 +254,15 @@ export class InventoryPage extends BaseForm {
 
   @step('Add all products to cart')
   async addAllProductsToCart(): Promise<void> {
-    const names = await this.getAllItemNames();
-    for (const name of names) {
-      const view = await this.getProductViewByName(name);
-      if (!view.isInCart) {
-        await this.addProductToCartByName(name);
-      }
-    }
+    const count = await this.getItemsCount();
+    const indexes = range(0, count);
+    await this.addItemsToCartByIndexes(indexes);
   }
 
   @step('Remove all products from cart')
   async removeAllProductsFromCart(): Promise<void> {
-    const names = await this.getAllItemNames();
-    for (const name of names) {
-      const view = await this.getProductViewByName(name);
-      if (view.isInCart) {
-        await this.removeProductFromCartByName(name);
-      }
-    }
+    const count = await this.getItemsCount();
+    const indexes = range(0, count);
+    await this.removeItemsFromCartByIndexes(indexes);
   }
 }

@@ -46,6 +46,12 @@ export class CartPage extends BaseForm {
       .filter((value) => !Number.isNaN(value));
   }
 
+  @step('Check if cart contains specific item names')
+  async hasItemsWithNames(names: string[]): Promise<boolean> {
+    const cartNames = await this.getItemNames();
+    return names.every((name) => cartNames.includes(name));
+  }
+
   @step('Remove item from cart by name')
   async removeItemByName(name: string): Promise<void> {
     const item = this.cartItems.filter({ hasText: name });
