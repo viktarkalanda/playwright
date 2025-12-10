@@ -66,4 +66,34 @@ export class LoginPage extends BaseForm {
   async closeError(): Promise<void> {
     await this.errorCloseButton.click();
   }
+
+  @step('Open inventory page directly')
+  async openInventoryDirect(): Promise<void> {
+    await this.page.goto('/inventory.html');
+  }
+
+  @step('Open cart page directly')
+  async openCartDirect(): Promise<void> {
+    await this.page.goto('/cart.html');
+  }
+
+  @step('Open checkout step one directly')
+  async openCheckoutStepOneDirect(): Promise<void> {
+    await this.page.goto('/checkout-step-one.html');
+  }
+
+  @step('Open checkout step two directly')
+  async openCheckoutStepTwoDirect(): Promise<void> {
+    await this.page.goto('/checkout-step-two.html');
+  }
+
+  @step('Open checkout complete directly')
+  async openCheckoutCompleteDirect(): Promise<void> {
+    await this.page.goto('/checkout-complete.html');
+  }
+
+  @step('Open product details directly')
+  async openProductDetailsDirect(itemId = 4): Promise<void> {
+    await this.page.goto(`/inventory-item.html?id=${itemId}`);
+  }
 }

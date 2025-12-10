@@ -147,6 +147,14 @@ export class InventoryPage extends BaseForm {
     await link.click();
   }
 
+  @step('Get product image src by name')
+  async getItemImageSrcByName(name: string): Promise<string> {
+    const item = this.inventoryItems.filter({ hasText: name });
+    const image = item.locator('img').first();
+    const src = await image.getAttribute('src');
+    return src ?? '';
+  }
+
   @step('Get price of item by name on inventory page')
   async getItemPriceByName(name: string): Promise<number> {
     const item = this.inventoryItems.filter({ hasText: name });
