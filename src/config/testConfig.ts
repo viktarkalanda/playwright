@@ -57,6 +57,10 @@ export class TestConfig {
   }
 
   getUser(key: UserKey): UserCredentials {
-    return this.users[key];
+    const user = this.users[key];
+    if (!user) {
+      throw new Error(`Unknown user key: ${key}`);
+    }
+    return user;
   }
 }
