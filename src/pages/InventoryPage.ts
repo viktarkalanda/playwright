@@ -1,7 +1,14 @@
-// src/pages/InventoryPage.ts
+﻿// src/pages/InventoryPage.ts
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
 import { step } from '../utils/stepDecorator';
+
+export interface InventoryProductView {
+  name: string;
+  price: number;
+  description: string;
+  isInCart: boolean;
+}
 
 export class InventoryPage extends BaseForm {
   readonly inventoryContainer: Locator = this.page.locator('.inventory_list');
@@ -80,6 +87,11 @@ export class InventoryPage extends BaseForm {
 
   @step('Add inventory item to cart by name')
   async addItemToCartByName(name: string): Promise<void> {
+    await this.addProductToCartByName(name);
+  }
+
+  @step('Add product to cart by name')
+  async addProductToCartByName(name: string): Promise<void> {
     const item = this.inventoryItems.filter({ hasText: name });
     const button = item.getByRole('button', { name: 'Add to cart' });
     await button.click();
@@ -87,6 +99,11 @@ export class InventoryPage extends BaseForm {
 
   @step('Remove inventory item from cart by name')
   async removeItemFromCartByName(name: string): Promise<void> {
+    await this.removeProductFromCartByName(name);
+  }
+
+  @step('Remove product from cart by name')
+  async removeProductFromCartByName(name: string): Promise<void> {
     const item = this.inventoryItems.filter({ hasText: name });
     const button = item.getByRole('button', { name: 'Remove' });
     await button.click();
@@ -155,6 +172,25 @@ export class InventoryPage extends BaseForm {
     return src ?? '';
   }
 
+  @step('Get product view by name')
+  async getProductViewByName(name: string): Promise<InventoryProductView> {
+    const card = this.inventoryItems.filter({ hasText: name }).first();
+    await card.waitFor();
+    const nameText = (await card.locator('.inventory_item_name').first().textContent())?.trim() ?? '';
+    const description = (await card.locator('.inventory_item_desc').first().textContent())?.trim() ?? '';
+    const priceText = (await card.locator('.inventory_item_price').first().textContent()) ?? '';
+    const button = card.getByRole('button').first();
+    const buttonText = (await button.textContent())?.trim() ?? '';
+    const price = Number.parseFloat(priceText.replace('$', '').trim()) || 0;
+
+    return {
+      name: nameText,
+      price,
+      description,
+      isInCart: buttonText === 'Remove',
+    };
+  }
+
   @step('Get price of item by name on inventory page')
   async getItemPriceByName(name: string): Promise<number> {
     const item = this.inventoryItems.filter({ hasText: name });
@@ -163,5 +199,27 @@ export class InventoryPage extends BaseForm {
     const cleaned = (text ?? '').replace('$', '').trim();
     const value = Number.parseFloat(cleaned);
     return Number.isNaN(value) ? 0 : value;
+  }
+
+  @step('Add all products to cart')
+  async addAllProductsToCart(): Promise<void> {
+    const names = await this.getAllItemNames();
+    for (const name of names) {
+      const view = await this.getProductViewByName(name);
+      if (!view.isInCart) {
+        await this.addProductToCartByName(name);
+      }
+    }
+  }
+
+  @step('Remove all products from cart')
+  async removeAllProductsFromCart(): Promise<void> {
+    const names = await this.getAllItemNames();
+    for (const name of names) {
+      const view = await this.getProductViewByName(name);
+      if (view.isInCart) {
+        await this.removeProductFromCartByName(name);
+      }
+    }
   }
 }

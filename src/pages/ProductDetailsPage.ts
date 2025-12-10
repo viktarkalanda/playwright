@@ -3,6 +3,13 @@ import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
 import { step } from '../utils/stepDecorator';
 
+export interface ProductDetailsView {
+  name: string;
+  price: number;
+  description: string;
+  isInCart: boolean;
+}
+
 export class ProductDetailsPage extends BaseForm {
   readonly title: Locator = this.page.locator('.title');
   readonly productName: Locator = this.page.locator('.inventory_details_name');
@@ -44,11 +51,19 @@ export class ProductDetailsPage extends BaseForm {
 
   @step('Add product to cart from details page')
   async addToCart(): Promise<void> {
+    if (await this.isInCart()) {
+      return;
+    }
+
     await this.addToCartButton.click();
   }
 
   @step('Remove product from cart from details page')
   async removeFromCart(): Promise<void> {
+    if (!(await this.isInCart())) {
+      return;
+    }
+
     await this.removeButton.click();
   }
 
@@ -60,6 +75,28 @@ export class ProductDetailsPage extends BaseForm {
   @step('Check if "Remove" button is visible on details page')
   async isRemoveButtonVisible(): Promise<boolean> {
     return this.removeButton.isVisible();
+  }
+
+  @step('Check if product is currently in cart from details page')
+  async isInCart(): Promise<boolean> {
+    return this.removeButton.isVisible();
+  }
+
+  @step('Get product view from details page')
+  async getView(): Promise<ProductDetailsView> {
+    const [name, price, description, isInCart] = await Promise.all([
+      this.getProductName(),
+      this.getProductPrice(),
+      this.getProductDescription(),
+      this.isInCart(),
+    ]);
+
+    return {
+      name,
+      price,
+      description,
+      isInCart,
+    };
   }
 
   @step('Back to products from details page')
