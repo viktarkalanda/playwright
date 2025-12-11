@@ -49,6 +49,11 @@ export class CheckoutStepOnePage extends BaseForm {
     await this.continueButton.click();
   }
 
+  @step('Continue to checkout step two')
+  async continueToStepTwo(): Promise<void> {
+    await this.continue();
+  }
+
   @step('Complete checkout step one')
   async completeStepOne(firstName: string, lastName: string, postalCode: string): Promise<void> {
     await this.fillForm(firstName, lastName, postalCode);

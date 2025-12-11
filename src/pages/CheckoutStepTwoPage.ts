@@ -68,6 +68,11 @@ export class CheckoutStepTwoPage extends BaseForm {
     await this.finishButton.click();
   }
 
+  @step('Finish checkout from overview')
+  async finishCheckout(): Promise<void> {
+    await this.finish();
+  }
+
   @step('Cancel checkout step two')
   async cancel(): Promise<void> {
     await this.cancelButton.click();

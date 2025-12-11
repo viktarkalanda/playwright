@@ -68,6 +68,16 @@ export class CartPage extends BaseForm {
     await this.checkoutButton.click();
   }
 
+  @step('Proceed to checkout from cart')
+  async proceedToCheckout(): Promise<void> {
+    await this.startCheckout();
+  }
+
+  @step('Try to proceed to checkout with empty cart')
+  async tryProceedToCheckoutWithEmptyCart(): Promise<void> {
+    await this.checkoutButton.click();
+  }
+
   @step('Get cart badge count from cart page')
   async getCartBadgeCount(): Promise<number> {
     const count = await this.cartBadge.count();
