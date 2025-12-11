@@ -2,6 +2,14 @@
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
 import { step } from '../utils/stepDecorator';
+import {
+  CartSnapshot,
+  CartItemSnapshot,
+  calculateSubtotal,
+  roundToCents,
+  findProductDefinitionByName,
+  toCartItemSnapshotFromDefinition,
+} from '../utils/cartState';
 
 export class CartPage extends BaseForm {
   readonly cartItems: Locator = this.page.locator('.cart_item');
@@ -93,5 +101,18 @@ export class CartPage extends BaseForm {
   @step('Check if cart is empty')
   async isEmpty(): Promise<boolean> {
     return (await this.getItemsCount()) === 0;
+  }
+
+  @step('Get cart snapshot')
+  async getSnapshot(): Promise<CartSnapshot> {
+    const names = await this.getItemNames();
+    const items: CartItemSnapshot[] = names.map((name) =>
+      toCartItemSnapshotFromDefinition(findProductDefinitionByName(name)),
+    );
+
+    return {
+      items,
+      subtotal: roundToCents(calculateSubtotal(items)),
+    };
   }
 }

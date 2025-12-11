@@ -2,6 +2,12 @@
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
 import { step } from '../utils/stepDecorator';
+import {
+  CheckoutSummarySnapshot,
+  CartItemSnapshot,
+  findProductDefinitionByName,
+  toCartItemSnapshotFromDefinition,
+} from '../utils/cartState';
 
 export class CheckoutStepTwoPage extends BaseForm {
   readonly title: Locator = this.page.locator('.title');
@@ -76,6 +82,21 @@ export class CheckoutStepTwoPage extends BaseForm {
   @step('Cancel checkout step two')
   async cancel(): Promise<void> {
     await this.cancelButton.click();
+  }
+
+  @step('Get checkout summary snapshot')
+  async getSummarySnapshot(): Promise<CheckoutSummarySnapshot> {
+    const names = await this.getItemNames();
+    const items: CartItemSnapshot[] = names.map((name) =>
+      toCartItemSnapshotFromDefinition(findProductDefinitionByName(name)),
+    );
+
+    return {
+      items,
+      itemTotal: await this.getItemTotal(),
+      tax: await this.getTax(),
+      total: await this.getTotal(),
+    };
   }
 
   private extractAmount(text: string | null): number {
