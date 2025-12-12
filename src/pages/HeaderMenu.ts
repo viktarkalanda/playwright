@@ -1,83 +1,76 @@
 // src/pages/HeaderMenu.ts
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
-import { step } from '../utils/stepDecorator';
 
 export class HeaderMenu extends BaseForm {
-  readonly menuButton: Locator = this.page.locator('#react-burger-menu-btn');
-  readonly closeButton: Locator = this.page.locator('#react-burger-cross-btn');
-  readonly menuPanel: Locator = this.page.locator('.bm-menu');
-  readonly allItemsLink: Locator = this.page.locator('[data-test="inventory-sidebar-link"]');
-  readonly aboutLink: Locator = this.page.locator('[data-test="about-sidebar-link"]');
-  readonly logoutLink: Locator = this.page.locator('[data-test="logout-sidebar-link"]');
-  readonly resetAppStateLink: Locator = this.page.locator('[data-test="reset-sidebar-link"]');
-  readonly cartIcon: Locator = this.page.locator('[data-test="shopping-cart-link"]');
-  readonly cartBadge: Locator = this.page.locator('[data-test="shopping-cart-badge"]');
+  readonly menuButton: Locator;
+  readonly closeButton: Locator;
+  readonly menuPanel: Locator;
+  readonly allItemsLink: Locator;
+  readonly aboutLink: Locator;
+  readonly logoutLink: Locator;
+  readonly resetAppStateLink: Locator;
+  readonly cartBadge: Locator;
 
   constructor(page: Page) {
-    super(page, page.locator('header'), 'Header menu');
+    super(page, page.locator('#header_container'), 'Header and burger menu');
+
+    this.menuButton = this.page.locator('#react-burger-menu-btn');
+    this.closeButton = this.page.locator('#react-burger-cross-btn');
+    this.menuPanel = this.page.locator('.bm-menu-wrap');
+    this.allItemsLink = this.page.locator('#inventory_sidebar_link');
+    this.aboutLink = this.page.locator('#about_sidebar_link');
+    this.logoutLink = this.page.locator('#logout_sidebar_link');
+    this.resetAppStateLink = this.page.locator('#reset_sidebar_link');
+    this.cartBadge = this.page.locator('.shopping_cart_badge');
   }
 
-  @step('Open header menu')
   async openMenu(): Promise<void> {
-    if (await this.menuPanel.isVisible()) {
+    if (await this.isMenuOpen()) {
       return;
     }
     await this.menuButton.click();
     await this.menuPanel.waitFor({ state: 'visible' });
   }
 
-  @step('Close header menu')
+  async isMenuOpen(): Promise<boolean> {
+    return this.menuPanel.isVisible();
+  }
+
   async closeMenu(): Promise<void> {
-    if (!(await this.menuPanel.isVisible())) {
+    if (!(await this.isMenuOpen())) {
       return;
     }
     await this.closeButton.click();
     await this.menuPanel.waitFor({ state: 'hidden' });
   }
 
-  @step('Click All Items in header menu')
   async clickAllItems(): Promise<void> {
     await this.openMenu();
     await this.allItemsLink.click();
   }
 
-  @step('Click About in header menu')
-  async clickAbout(): Promise<Page> {
+  async clickAbout(): Promise<void> {
     await this.openMenu();
-    const [aboutPage] = await Promise.all([
-      this.page.context().waitForEvent('page'),
-      this.aboutLink.click(),
-    ]);
-    await aboutPage.waitForLoadState('domcontentloaded');
-    return aboutPage;
+    await this.aboutLink.click();
   }
 
-  @step('Click Logout in header menu')
   async clickLogout(): Promise<void> {
     await this.openMenu();
     await this.logoutLink.click();
   }
 
-  @step('Click Reset App State in header menu')
   async clickResetAppState(): Promise<void> {
     await this.openMenu();
     await this.resetAppStateLink.click();
   }
 
-  @step('Get cart badge count from header')
   async getCartBadgeCount(): Promise<number> {
-    const count = await this.cartBadge.count();
-    if (count === 0) {
+    if (!(await this.cartBadge.isVisible())) {
       return 0;
     }
     const text = await this.cartBadge.textContent();
-    const numeric = Number.parseInt((text ?? '').trim(), 10);
-    return Number.isNaN(numeric) ? 0 : numeric;
-  }
-
-  @step('Check if header menu is open')
-  async isMenuOpen(): Promise<boolean> {
-    return this.menuPanel.isVisible();
+    const parsed = Number(text ?? '0');
+    return Number.isNaN(parsed) ? 0 : parsed;
   }
 }
