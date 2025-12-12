@@ -38,6 +38,10 @@ export function expectInvalidCredentialsError(actual: string): void {
   expectValidationMessage(actual, validationMessages.login.invalidCredentials, 'Invalid credentials error should match fixture message');
 }
 
+export function expectLockedOutUserError(actual: string): void {
+  expectValidationMessage(actual, validationMessages.login.lockedOut, 'Locked out user error should match fixture message');
+}
+
 export function expectFirstNameRequiredError(actual: string): void {
   expectValidationMessage(actual, validationMessages.checkout.firstNameRequired, 'First name required error should match fixture message');
 }
