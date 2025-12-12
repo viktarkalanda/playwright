@@ -10,6 +10,7 @@ import { CheckoutCompletePage } from '../pages/CheckoutCompletePage';
 import { ProductDetailsPage } from '../pages/ProductDetailsPage';
 import { MainMenu } from '../pages/MainMenu';
 import { HeaderMenu } from '../pages/HeaderMenu';
+import { Footer } from '../pages/Footer';
 
 const config = TestConfig.getInstance();
 
@@ -24,6 +25,7 @@ type Pages = {
   productDetailsPage: ProductDetailsPage;
   mainMenu: MainMenu;
   headerMenu: HeaderMenu;
+  footer: Footer;
 };
 
 type ExtraFixtures = {
@@ -91,6 +93,11 @@ export const test = base.extend<Fixtures>({
   productDetailsPage: async ({ page }, use) => {
     const productDetailsPage = new ProductDetailsPage(page);
     await use(productDetailsPage);
+  },
+
+  footer: async ({ page }, use) => {
+    const footer = new Footer(page);
+    await use(footer);
   },
 
   consoleLogs: async ({ page }, use, testInfo) => {
