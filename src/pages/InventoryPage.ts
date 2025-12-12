@@ -11,6 +11,8 @@ export interface InventoryProductView {
   isInCart: boolean;
 }
 
+export type InventorySortOption = 'nameAsc' | 'nameDesc' | 'priceAsc' | 'priceDesc';
+
 export class InventoryPage extends BaseForm {
   readonly inventoryContainer: Locator = this.page.locator('.inventory_list');
   readonly inventoryItems: Locator = this.page.locator('.inventory_item');
@@ -167,28 +169,34 @@ export class InventoryPage extends BaseForm {
   }
 
   @step('Sort inventory items')
-  async sortBy(option: 'az' | 'za' | 'lohi' | 'hilo'): Promise<void> {
-    await this.sortDropdown.selectOption(option);
+  async sortBy(option: InventorySortOption): Promise<void> {
+    const valueMap: Record<InventorySortOption, string> = {
+      nameAsc: 'az',
+      nameDesc: 'za',
+      priceAsc: 'lohi',
+      priceDesc: 'hilo',
+    };
+    await this.sortDropdown.selectOption(valueMap[option]);
   }
 
   @step('Sort inventory by name ascending')
   async sortByNameAsc(): Promise<void> {
-    await this.sortBy('az');
+    await this.sortBy('nameAsc');
   }
 
   @step('Sort inventory by name descending')
   async sortByNameDesc(): Promise<void> {
-    await this.sortBy('za');
+    await this.sortBy('nameDesc');
   }
 
   @step('Sort inventory by price low to high')
   async sortByPriceLowToHigh(): Promise<void> {
-    await this.sortBy('lohi');
+    await this.sortBy('priceAsc');
   }
 
   @step('Sort inventory by price high to low')
   async sortByPriceHighToLow(): Promise<void> {
-    await this.sortBy('hilo');
+    await this.sortBy('priceDesc');
   }
 
   @step('Get cart badge count from inventory page')
