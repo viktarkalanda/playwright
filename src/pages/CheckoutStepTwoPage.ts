@@ -31,6 +31,23 @@ export class CheckoutStepTwoPage extends BaseForm {
     return text?.trim() ?? '';
   }
 
+  @step('Get checkout step two header text')
+  async getHeaderText(): Promise<string> {
+    return this.getTitleText();
+  }
+
+  @step('Get checkout step two primary button text')
+  async getPrimaryButtonText(): Promise<string> {
+    const text = await this.finishButton.textContent();
+    return text?.trim() ?? '';
+  }
+
+  @step('Get checkout step two secondary button text')
+  async getSecondaryButtonText(): Promise<string> {
+    const text = await this.cancelButton.textContent();
+    return text?.trim() ?? '';
+  }
+
   @step('Get summary item count')
   async getSummaryItemCount(): Promise<number> {
     return this.summaryItems.count();

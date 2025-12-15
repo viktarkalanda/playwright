@@ -50,6 +50,11 @@ export class InventoryPage extends BaseForm {
     return text?.trim() ?? '';
   }
 
+  @step('Get inventory header text')
+  async getHeaderText(): Promise<string> {
+    return this.getTitleText();
+  }
+
   private async collectItemNames(): Promise<string[]> {
     const texts = await this.itemNames.allTextContents();
     return texts.map((t) => t.trim());

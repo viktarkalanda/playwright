@@ -18,6 +18,7 @@ export class CartPage extends BaseForm {
   readonly continueShoppingButton: Locator = this.page.locator('[data-test="continue-shopping"]');
   readonly checkoutButton: Locator = this.page.locator('[data-test="checkout"]');
   readonly cartBadge: Locator = this.page.locator('.shopping_cart_badge');
+  readonly pageTitle: Locator = this.page.locator('.title');
 
   constructor(page: Page) {
     super(page, page.locator('.cart_list'), 'Cart page');
@@ -31,6 +32,24 @@ export class CartPage extends BaseForm {
   @step('Get cart items count')
   async getItemsCount(): Promise<number> {
     return this.cartItems.count();
+  }
+
+  @step('Get cart header text')
+  async getHeaderText(): Promise<string> {
+    const text = await this.pageTitle.textContent();
+    return text?.trim() ?? '';
+  }
+
+  @step('Get checkout button text')
+  async getCheckoutButtonText(): Promise<string> {
+    const text = await this.checkoutButton.textContent();
+    return text?.trim() ?? '';
+  }
+
+  @step('Get continue shopping button text')
+  async getContinueShoppingButtonText(): Promise<string> {
+    const text = await this.continueShoppingButton.textContent();
+    return text?.trim() ?? '';
   }
 
   @step('Check if cart has item with given name')

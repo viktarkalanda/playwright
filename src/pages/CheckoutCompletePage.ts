@@ -26,6 +26,11 @@ export class CheckoutCompletePage extends BaseForm {
 
   @step('Get checkout complete header text')
   async getHeaderText(): Promise<string> {
+    return this.getTitleText();
+  }
+
+  @step('Get checkout complete success message text')
+  async getSuccessMessageText(): Promise<string> {
     const text = await this.header.textContent();
     return text?.trim() ?? '';
   }
@@ -33,6 +38,12 @@ export class CheckoutCompletePage extends BaseForm {
   @step('Get checkout complete body text')
   async getBodyText(): Promise<string> {
     const text = await this.body.textContent();
+    return text?.trim() ?? '';
+  }
+
+  @step('Get checkout complete primary button text')
+  async getPrimaryButtonText(): Promise<string> {
+    const text = await this.backHomeButton.textContent();
     return text?.trim() ?? '';
   }
 

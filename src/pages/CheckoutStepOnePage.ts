@@ -22,6 +22,23 @@ export class CheckoutStepOnePage extends BaseForm {
     return text?.trim() ?? '';
   }
 
+  @step('Get checkout step one header text')
+  async getHeaderText(): Promise<string> {
+    return this.getTitleText();
+  }
+
+  @step('Get checkout step one primary button text')
+  async getPrimaryButtonText(): Promise<string> {
+    const text = await this.continueButton.textContent();
+    return text?.trim() ?? '';
+  }
+
+  @step('Get checkout step one secondary button text')
+  async getSecondaryButtonText(): Promise<string> {
+    const text = await this.cancelButton.textContent();
+    return text?.trim() ?? '';
+  }
+
   @step('Fill first name')
   async fillFirstName(value: string): Promise<void> {
     await this.firstNameInput.fill(value);

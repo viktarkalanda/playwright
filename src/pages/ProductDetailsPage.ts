@@ -29,6 +29,11 @@ export class ProductDetailsPage extends BaseForm {
     return text?.trim() ?? '';
   }
 
+  @step('Get product details header text')
+  async getHeaderText(): Promise<string> {
+    return this.getTitleText();
+  }
+
   @step('Get product name on details page')
   async getProductName(): Promise<string> {
     const text = await this.productName.textContent();
@@ -102,5 +107,11 @@ export class ProductDetailsPage extends BaseForm {
   @step('Back to products from details page')
   async backToProducts(): Promise<void> {
     await this.backToProductsButton.click();
+  }
+
+  @step('Get back to products button text')
+  async getBackToProductsButtonText(): Promise<string> {
+    const text = await this.backToProductsButton.textContent();
+    return text?.trim() ?? '';
   }
 }

@@ -12,6 +12,7 @@ export class LoginPage extends BaseForm {
   readonly loginButton: Locator = this.page.getByTestId('login-button');
   readonly errorMessage: Locator = this.page.getByTestId('error');
   readonly errorCloseButton: Locator = this.page.locator('.error-button');
+  readonly mainHeader: Locator = this.page.locator('.login_logo');
 
   constructor(page: Page) {
     super(page, page.locator('body'), 'Login form');
@@ -55,6 +56,18 @@ export class LoginPage extends BaseForm {
   async getErrorText(): Promise<string> {
     const text = await this.errorMessage.textContent();
     return text ?? '';
+  }
+
+  @step('Get login page main header text')
+  async getMainHeaderText(): Promise<string> {
+    const text = await this.mainHeader.textContent();
+    return text?.trim() ?? '';
+  }
+
+  @step('Get login button text')
+  async getLoginButtonText(): Promise<string> {
+    const text = await this.loginButton.textContent();
+    return text?.trim() ?? '';
   }
 
   @step('Check if login error is visible')
