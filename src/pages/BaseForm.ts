@@ -14,4 +14,8 @@ export abstract class BaseForm {
   async waitForHidden(): Promise<void> {
     await this.formLocator.waitFor({ state: 'hidden' });
   }
+
+  async getCurrentUrl(): Promise<string> {
+    return this.page.url();
+  }
 }

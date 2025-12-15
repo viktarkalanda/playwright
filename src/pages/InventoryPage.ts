@@ -228,6 +228,11 @@ export class InventoryPage extends BaseForm {
     await link.click();
   }
 
+  @step('Open first product details')
+  async openFirstProductDetails(): Promise<void> {
+    await this.itemNames.first().click();
+  }
+
   @step('Get product image src by name')
   async getItemImageSrcByName(name: string): Promise<string> {
     const item = this.inventoryItems.filter({ hasText: name });
