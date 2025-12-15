@@ -44,22 +44,26 @@ function escapeTag(tagValue: TagName): string {
   return tagValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export function toPlaywrightGrepPattern(node: TagExprNode): string {
+function wrap(node: TagExprNode): string {
   switch (node.type) {
     case 'tag':
       return `(?=.*${escapeTag(node.value)})`;
     case 'not':
       return `(?!.*${escapeTag((node.child as TagExprTagNode).value)})`;
     case 'and':
-      return `${toPlaywrightGrepPattern(node.left)}${toPlaywrightGrepPattern(node.right)}`;
+      return `${wrap(node.left)}${wrap(node.right)}`;
     case 'or': {
-      const left = toPlaywrightGrepPattern(node.left);
-      const right = toPlaywrightGrepPattern(node.right);
+      const left = wrap(node.left);
+      const right = wrap(node.right);
       return `(?:${left}|${right})`;
     }
     default:
       return '';
   }
+}
+
+export function toPlaywrightGrepPattern(node: TagExprNode): string {
+  return `${wrap(node)}.*`;
 }
 
 interface Token {
