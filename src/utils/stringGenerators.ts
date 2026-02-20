@@ -44,13 +44,17 @@ export function trimToMaxLength(value: string, maxLength: number): string {
   return value.slice(0, maxLength);
 }
 
+// Static strings are plain values. Dynamic strings use `get` accessors so each
+// property access generates a fresh random value rather than reusing the string
+// computed at module-load time (which would defeat the purpose of randomised
+// edge-case testing).
 export const edgeCaseStrings = {
   empty: '',
   singleSpace: ' ',
   multiSpace: '     ',
-  longLatin: generateString(256, 'latin'),
-  longDigits: generateString(256, 'digits'),
-  specialSymbols: generateString(64, 'symbols'),
-  unicodeShort: generateString(16, 'unicode'),
-  unicodeLong: generateString(128, 'unicode'),
+  get longLatin() { return generateString(256, 'latin'); },
+  get longDigits() { return generateString(256, 'digits'); },
+  get specialSymbols() { return generateString(64, 'symbols'); },
+  get unicodeShort() { return generateString(16, 'unicode'); },
+  get unicodeLong() { return generateString(128, 'unicode'); },
 };

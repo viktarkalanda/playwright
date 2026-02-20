@@ -91,7 +91,13 @@ pipeline {
             exit 0
           fi
 
-          echo "Packing allure-results into zip..."
+          RESULT_COUNT=$(find allure-results -type f | wc -l)
+          if [ "$RESULT_COUNT" -eq 0 ]; then
+            echo "allure-results directory is empty (tests may not have run), skipping upload."
+            exit 0
+          fi
+
+          echo "Packing allure-results into zip ($RESULT_COUNT files)..."
           rm -f allure-results.zip
           zip -r allure-results.zip allure-results
 

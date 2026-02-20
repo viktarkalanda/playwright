@@ -1,27 +1,8 @@
-import { expect, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { getPageContent, PageKey } from '../data/pageContent';
-import { LoginPage } from '../pages/LoginPage';
-import { InventoryPage } from '../pages/InventoryPage';
-import { CartPage } from '../pages/CartPage';
-import { ProductDetailsPage } from '../pages/ProductDetailsPage';
-import { CheckoutStepOnePage } from '../pages/CheckoutStepOnePage';
-import { CheckoutStepTwoPage } from '../pages/CheckoutStepTwoPage';
-import { CheckoutCompletePage } from '../pages/CheckoutCompletePage';
-import { HeaderMenu } from '../pages/HeaderMenu';
-import { Footer } from '../pages/Footer';
+import type { SauceDemoContext } from '../types/appContext';
 
-export interface PageContentContext {
-  page: Page;
-  loginPage: LoginPage;
-  inventoryPage: InventoryPage;
-  cartPage: CartPage;
-  productDetailsPage: ProductDetailsPage;
-  checkoutStepOnePage: CheckoutStepOnePage;
-  checkoutStepTwoPage: CheckoutStepTwoPage;
-  checkoutCompletePage: CheckoutCompletePage;
-  headerMenu: HeaderMenu;
-  footer: Footer;
-}
+export type PageContentContext = SauceDemoContext;
 
 export async function expectDocumentTitle(ctx: PageContentContext, pageKey: PageKey): Promise<void> {
   const def = getPageContent(pageKey);

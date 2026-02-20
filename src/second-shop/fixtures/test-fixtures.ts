@@ -1,8 +1,8 @@
 import { test as base, expect, Page } from '@playwright/test';
-import { HomePage } from '../pages/HomePage';
-import { ProductPage } from '../pages/ProductPage';
-import { CartPage } from '../pages/CartPage';
-import { OrderModal } from '../pages/OrderModal';
+import { HomePage } from '../../pages/second-shop/HomePage';
+import { ProductPage } from '../../pages/second-shop/ProductPage';
+import { CartPage } from '../../pages/second-shop/CartPage';
+import { OrderModal } from '../../pages/second-shop/OrderModal';
 
 type Pages = {
   secondHomePage: HomePage;

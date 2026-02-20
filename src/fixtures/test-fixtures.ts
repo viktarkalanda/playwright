@@ -1,16 +1,16 @@
 // src/fixtures/test-fixtures.ts
 import { test as base, expect, TestInfo } from '@playwright/test';
-import { LoginPage } from '../pages/LoginPage';
-import { InventoryPage } from '../pages/InventoryPage';
-import { CartPage } from '../pages/CartPage';
-import { CheckoutStepOnePage } from '../pages/CheckoutStepOnePage';
-import { CheckoutStepTwoPage } from '../pages/CheckoutStepTwoPage';
+import { LoginPage } from '../pages/saucedemo/LoginPage';
+import { InventoryPage } from '../pages/saucedemo/InventoryPage';
+import { CartPage } from '../pages/saucedemo/CartPage';
+import { CheckoutStepOnePage } from '../pages/saucedemo/CheckoutStepOnePage';
+import { CheckoutStepTwoPage } from '../pages/saucedemo/CheckoutStepTwoPage';
 import { TestConfig } from '../config/testConfig';
-import { CheckoutCompletePage } from '../pages/CheckoutCompletePage';
-import { ProductDetailsPage } from '../pages/ProductDetailsPage';
-import { MainMenu } from '../pages/MainMenu';
-import { HeaderMenu } from '../pages/HeaderMenu';
-import { Footer } from '../pages/Footer';
+import { CheckoutCompletePage } from '../pages/saucedemo/CheckoutCompletePage';
+import { ProductDetailsPage } from '../pages/saucedemo/ProductDetailsPage';
+import { MainMenu } from '../pages/saucedemo/MainMenu';
+import { HeaderMenu } from '../pages/saucedemo/HeaderMenu';
+import { Footer } from '../pages/saucedemo/Footer';
 
 const config = TestConfig.getInstance();
 

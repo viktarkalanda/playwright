@@ -16,8 +16,9 @@ export default defineConfig({
   // Retry failed tests on CI
   retries: process.env.CI ? 2 : 0,
 
-  // Disable parallel workers on CI (more stable)
-  workers: process.env.CI ? 1 : undefined,
+  // Allow some parallelism on CI; 2 workers keeps resource usage low while
+  // avoiding fully-serial execution across ~300+ tests.
+  workers: process.env.CI ? 2 : undefined,
 
   // Reporters: console, HTML report, Allure
   reporter: [
@@ -26,15 +27,16 @@ export default defineConfig({
     ['allure-playwright', { resultsDir: 'allure-results' }],
   ],
 
-  // Global timeout for a single test (ms)
-  // If a test runs longer than this, it will fail
-  timeout: 10_000,
+  // Global timeout for a single test (ms).
+  // 30 s accommodates both the fast SauceDemo mock and the live demoblaze.com
+  // second-shop tests, while still catching genuinely hung tests.
+  timeout: 30_000,
 
   // Default timeouts for Playwright expect(...)
   expect: {
     // Max time for expect(...) to wait for condition (ms)
     // Example: await expect(locator).toBeVisible();
-    timeout: 3_000,
+    timeout: 8_000,
   },
 
   // Shared settings for all projects
@@ -55,10 +57,11 @@ export default defineConfig({
     trace: 'on-first-retry',
 
     // Max time for a single action (click, fill, etc.)
-    actionTimeout: 3_000,
+    actionTimeout: 8_000,
 
     // Max time for navigations (page.goto, page.waitForURL, etc.)
-    navigationTimeout: 5_000,
+    // 15 s is necessary for demoblaze.com which can be slow on cold requests.
+    navigationTimeout: 15_000,
   },
 
   // Browser projects configuration

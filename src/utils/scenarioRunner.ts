@@ -1,30 +1,14 @@
 import { expect, Page } from '@playwright/test';
 import { ScenarioDefinition, ScenarioStep } from './scenarioDefinitions';
 import { TestConfig, UserKey } from '../config/testConfig';
-import { LoginPage } from '../pages/LoginPage';
-import { InventoryPage } from '../pages/InventoryPage';
-import { CartPage } from '../pages/CartPage';
-import { CheckoutStepOnePage } from '../pages/CheckoutStepOnePage';
-import { CheckoutStepTwoPage } from '../pages/CheckoutStepTwoPage';
-import { CheckoutCompletePage } from '../pages/CheckoutCompletePage';
-import { ProductDetailsPage } from '../pages/ProductDetailsPage';
-import { HeaderMenu } from '../pages/HeaderMenu';
 import { productCatalog } from '../data/products';
+import type { SauceDemoContext } from '../types/appContext';
 
 const config = TestConfig.getInstance();
 
-export interface ScenarioRunnerContext {
-  page: Page;
-  loginPage: LoginPage;
-  inventoryPage: InventoryPage;
-  cartPage: CartPage;
-  checkoutStepOnePage: CheckoutStepOnePage;
-  checkoutStepTwoPage: CheckoutStepTwoPage;
-  checkoutCompletePage: CheckoutCompletePage;
-  productDetailsPage: ProductDetailsPage;
-  headerMenu: HeaderMenu;
+export type ScenarioRunnerContext = Omit<SauceDemoContext, 'footer'> & {
   aboutPage?: Page;
-}
+};
 
 async function executeLoginStep(ctx: ScenarioRunnerContext, step: ScenarioStep): Promise<void> {
   if (step.type !== 'login') {

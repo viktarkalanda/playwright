@@ -48,8 +48,24 @@ function wrap(node: TagExprNode): string {
   switch (node.type) {
     case 'tag':
       return `(?=.*${escapeTag(node.value)})`;
-    case 'not':
-      return `(?!.*${escapeTag((node.child as TagExprTagNode).value)})`;
+    case 'not': {
+      const child = node.child;
+      switch (child.type) {
+        case 'tag':
+          // Base case: simple negative lookahead.
+          return `(?!.*${escapeTag(child.value)})`;
+        case 'not':
+          // Double negation: not(not(X)) === X.
+          return wrap(child.child);
+        case 'and':
+          // De Morgan: not(A and B) === not(A) or not(B).
+          return wrap(or(not(child.left), not(child.right)));
+        case 'or':
+          // De Morgan: not(A or B) === not(A) and not(B).
+          return wrap(and(not(child.left), not(child.right)));
+      }
+      break;
+    }
     case 'and':
       return `${wrap(node.left)}${wrap(node.right)}`;
     case 'or': {

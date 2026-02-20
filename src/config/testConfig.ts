@@ -11,31 +11,17 @@ export interface UserCredentials {
   password: string;
 }
 
+// All SauceDemo test users share a single password.
+// Override via SAUCE_PASSWORD env var in CI or when the site credentials change.
+const sharedPassword = process.env.SAUCE_PASSWORD ?? 'secret_sauce';
+
 const users: Record<UserKey, UserCredentials> = {
-  standard: {
-    username: 'standard_user',
-    password: 'secret_sauce',
-  },
-  lockedOut: {
-    username: 'locked_out_user',
-    password: 'secret_sauce',
-  },
-  problem: {
-    username: 'problem_user',
-    password: 'secret_sauce',
-  },
-  performanceGlitch: {
-    username: 'performance_glitch_user',
-    password: 'secret_sauce',
-  },
-  error: {
-    username: 'error_user',
-    password: 'secret_sauce',
-  },
-  visual: {
-    username: 'visual_user',
-    password: 'secret_sauce',
-  },
+  standard: { username: 'standard_user', password: sharedPassword },
+  lockedOut: { username: 'locked_out_user', password: sharedPassword },
+  problem: { username: 'problem_user', password: sharedPassword },
+  performanceGlitch: { username: 'performance_glitch_user', password: sharedPassword },
+  error: { username: 'error_user', password: sharedPassword },
+  visual: { username: 'visual_user', password: sharedPassword },
 };
 
 export class TestConfig {

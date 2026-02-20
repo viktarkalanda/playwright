@@ -14,7 +14,7 @@ module.exports = [
       'test-results/**',
       'allure-results/**',
       'allure-report/**',
-      '/src/utils/stepDecorator.ts'
+      'src/utils/stepDecorator.ts'
     ],
   },
 

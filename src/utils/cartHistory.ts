@@ -1,3 +1,15 @@
+/**
+ * CartHistory tracks cart operations for test assertions and audit purposes.
+ *
+ * IMPORTANT: This class is NOT automatically integrated with page objects.
+ * To use it in a test, you must manually call addItem()/removeItem()/etc.
+ * after every corresponding page action. Example:
+ *
+ *   await inventoryPage.addProductToCartByName('Backpack');
+ *   cartHistory.addItem('Backpack');
+ *
+ * Consider injecting CartHistory via a fixture if you need it across many tests.
+ */
 export type CartEventType =
   | 'add'
   | 'remove'

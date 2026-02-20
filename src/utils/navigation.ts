@@ -1,23 +1,18 @@
-import { expect, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { getRoute, RouteKey } from '../data/routes';
-import { LoginPage } from '../pages/LoginPage';
-import { InventoryPage } from '../pages/InventoryPage';
-import { CartPage } from '../pages/CartPage';
-import { CheckoutStepOnePage } from '../pages/CheckoutStepOnePage';
-import { CheckoutStepTwoPage } from '../pages/CheckoutStepTwoPage';
-import { CheckoutCompletePage } from '../pages/CheckoutCompletePage';
-import { ProductDetailsPage } from '../pages/ProductDetailsPage';
+import type { SauceDemoContext } from '../types/appContext';
 
-export interface NavigationContext {
-  page: Page;
-  loginPage: LoginPage;
-  inventoryPage: InventoryPage;
-  cartPage: CartPage;
-  checkoutStepOnePage: CheckoutStepOnePage;
-  checkoutStepTwoPage: CheckoutStepTwoPage;
-  checkoutCompletePage: CheckoutCompletePage;
-  productDetailsPage: ProductDetailsPage;
-}
+export type NavigationContext = Pick<
+  SauceDemoContext,
+  | 'page'
+  | 'loginPage'
+  | 'inventoryPage'
+  | 'cartPage'
+  | 'checkoutStepOnePage'
+  | 'checkoutStepTwoPage'
+  | 'checkoutCompletePage'
+  | 'productDetailsPage'
+>;
 
 async function expectUrlContains(ctx: NavigationContext, key: RouteKey): Promise<void> {
   const route = getRoute(key);

@@ -1,19 +1,15 @@
 import { TestConfig, UserKey } from '../config/testConfig';
-import { LoginPage } from '../pages/LoginPage';
-import { InventoryPage } from '../pages/InventoryPage';
-import { CartPage } from '../pages/CartPage';
-import { CheckoutStepOnePage } from '../pages/CheckoutStepOnePage';
-import { CheckoutStepTwoPage } from '../pages/CheckoutStepTwoPage';
-import { CheckoutCompletePage } from '../pages/CheckoutCompletePage';
+import type { SauceDemoContext } from '../types/appContext';
 
-export interface BasicUserFlowContext {
-  loginPage: LoginPage;
-  inventoryPage: InventoryPage;
-  cartPage: CartPage;
-  checkoutStepOnePage: CheckoutStepOnePage;
-  checkoutStepTwoPage: CheckoutStepTwoPage;
-  checkoutCompletePage: CheckoutCompletePage;
-}
+export type BasicUserFlowContext = Pick<
+  SauceDemoContext,
+  | 'loginPage'
+  | 'inventoryPage'
+  | 'cartPage'
+  | 'checkoutStepOnePage'
+  | 'checkoutStepTwoPage'
+  | 'checkoutCompletePage'
+>;
 
 export async function loginAsUser(ctx: BasicUserFlowContext, userKey: UserKey): Promise<void> {
   const config = TestConfig.getInstance();
