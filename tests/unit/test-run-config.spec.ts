@@ -7,7 +7,7 @@ import {
   not,
   parseTagExpression,
   toPlaywrightGrepPattern,
-} from '../../src/utils/tagExpression';
+} from '../../src/utils';
 import {
   getTestSuite,
   buildGrepFromSuite,
@@ -126,3 +126,8 @@ test.describe('testRunConfig helpers', () => {
     expect(resolved.grep.length).toBeGreaterThan(0);
   });
 });
+
+
+
+
+

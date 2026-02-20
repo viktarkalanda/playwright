@@ -2,12 +2,12 @@
 import { test, expect } from '../../src/fixtures/test-fixtures';
 import { productCatalog } from '../../src/data/products';
 import { userBehaviorMatrix, getUserProfile } from '../../src/data/userMatrix';
-import type { BasicUserFlowContext } from '../../src/utils/userFlows';
-import { loginAsUser, didLoginSucceed, tryFullCheckout } from '../../src/utils/userFlows';
+import type { BasicUserFlowContext } from '../../src/utils';
+import { loginAsUser, didLoginSucceed, tryFullCheckout } from '../../src/utils';
 import {
   expectLockedOutUserError,
   expectInvalidCredentialsError,
-} from '../../src/utils/assertions';
+} from '../../src/utils';
 
 const productNames = productCatalog.products.map((product) => product.name);
 
@@ -402,3 +402,8 @@ test.describe('SauceDemo user types behavior matrix', () => {
     }
   });
 });
+
+
+
+
+

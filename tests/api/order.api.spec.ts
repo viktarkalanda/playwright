@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 import { allure } from 'allure-playwright';
 import { faker } from '@faker-js/faker';
-import axiosClient from '../../src/utils/axiosClient';
+import { axiosClient } from '../../src/utils';
 
 /**
  * Order API Test Suite
@@ -288,3 +288,8 @@ test.describe('Order API Tests @api @order', () => {
     });
   });
 }); 
+
+
+
+
+

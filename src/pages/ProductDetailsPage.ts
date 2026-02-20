@@ -1,7 +1,7 @@
 // src/pages/ProductDetailsPage.ts
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
-import { step } from '../utils/stepDecorator';
+import { step } from '../utils';
 
 export interface ProductDetailsView {
   name: string;
@@ -115,3 +115,8 @@ export class ProductDetailsPage extends BaseForm {
     return text?.trim() ?? '';
   }
 }
+
+
+
+
+

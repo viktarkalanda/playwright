@@ -1,7 +1,7 @@
 // tests/ui/scenarios-e2e.spec.ts
 import { test } from '../../src/fixtures/test-fixtures';
-import { scenarios, getScenarioById, ScenarioDefinition } from '../../src/utils/scenarioDefinitions';
-import { runScenario, ScenarioRunnerContext } from '../../src/utils/scenarioRunner';
+import { scenarios, getScenarioById, ScenarioDefinition } from '../../src/utils';
+import { runScenario, ScenarioRunnerContext } from '../../src/utils';
 
 test.describe('Scenario DSL e2e flows', () => {
   const execute = (scenario: ScenarioDefinition): void => {
@@ -91,3 +91,8 @@ test.describe('Scenario DSL e2e flows', () => {
     await runScenario(ctx, scenario);
   });
 });
+
+
+
+
+

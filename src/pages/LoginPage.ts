@@ -1,7 +1,7 @@
 // src/pages/LoginPage.ts
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
-import { step } from '../utils/stepDecorator';
+import { step } from '../utils';
 import { TestConfig, UserKey } from '../config/testConfig';
 
 const config = TestConfig.getInstance();
@@ -110,3 +110,8 @@ export class LoginPage extends BaseForm {
     await this.page.goto(`/inventory-item.html?id=${itemId}`);
   }
 }
+
+
+
+
+

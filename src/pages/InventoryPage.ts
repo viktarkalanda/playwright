@@ -1,8 +1,8 @@
-﻿// src/pages/InventoryPage.ts
+// src/pages/InventoryPage.ts
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
-import { step } from '../utils/stepDecorator';
-import { range } from '../utils/random';
+import { step } from '../utils';
+import { range } from '../utils';
 
 export interface InventoryProductView {
   name: string;
@@ -284,3 +284,8 @@ export class InventoryPage extends BaseForm {
     await this.removeItemsFromCartByIndexes(indexes);
   }
 }
+
+
+
+
+

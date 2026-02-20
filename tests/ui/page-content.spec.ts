@@ -11,7 +11,7 @@ import {
   expectBackToProductsButtonText,
   expectCheckoutCompleteSuccessMessage,
   expectFooterVisibleWithText,
-} from '../../src/utils/pageContentAssertions';
+} from '../../src/utils';
 import { validationMessages } from '../../src/data/validationMessages';
 import {
   expectUsernameRequiredError,
@@ -20,7 +20,7 @@ import {
   expectFirstNameRequiredError,
   expectLastNameRequiredError,
   expectPostalCodeRequiredError,
-} from '../../src/utils/assertions';
+} from '../../src/utils';
 import { productCatalog } from '../../src/data/products';
 
 const firstProductName = productCatalog.products[0]?.name ?? 'Sauce Labs Backpack';
@@ -378,3 +378,8 @@ test.describe('Page content consistency', () => {
     await expectFooterVisibleWithText(ctx);
   });
 });
+
+
+
+
+

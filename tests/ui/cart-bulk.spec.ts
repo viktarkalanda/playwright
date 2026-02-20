@@ -1,8 +1,8 @@
 // tests/ui/cart-bulk.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
 import { productCatalog } from '../../src/data/products';
-import { range, shuffle, pickRandomSubset, randomInt } from '../../src/utils/random';
-import { makeCheckoutUserData } from '../../src/utils/testData';
+import { range, shuffle, pickRandomSubset, randomInt } from '../../src/utils';
+import { makeCheckoutUserData } from '../../src/utils';
 
 const catalogSize = productCatalog.products.length;
 
@@ -202,3 +202,8 @@ test.describe('Cart bulk and stress scenarios', () => {
     expect(await cartPage.isEmpty()).toBe(true);
   });
 });
+
+
+
+
+

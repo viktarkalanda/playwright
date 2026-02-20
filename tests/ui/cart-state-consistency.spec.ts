@@ -6,9 +6,9 @@ import {
   roundToCents,
   CartSnapshot,
   CheckoutSummarySnapshot,
-} from '../../src/utils/cartState';
-import { pickRandomSubset, randomInt } from '../../src/utils/random';
-import { makeCheckoutUserData } from '../../src/utils/testData';
+} from '../../src/utils';
+import { pickRandomSubset, randomInt } from '../../src/utils';
+import { makeCheckoutUserData } from '../../src/utils';
 import { LoginPage } from '../../src/pages/LoginPage';
 import { InventoryPage } from '../../src/pages/InventoryPage';
 import { CartPage } from '../../src/pages/CartPage';
@@ -216,3 +216,8 @@ test.describe('Cart state and totals consistency', () => {
     expect(roundToCents(summary.itemTotal)).toBe(expectedSubtotal);
   });
 });
+
+
+
+
+

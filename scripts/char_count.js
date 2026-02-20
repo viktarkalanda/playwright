@@ -75,7 +75,7 @@ async function main() {
     await processDirectory('tests/api', 'API Tests');
     await processDirectory('tests/api/smoke', 'API Smoke Tests');
     await processDirectory('tests/ui', 'UI Tests');
-    await processDirectory('src/helpers', 'Helper Files');
+    await processDirectory('src/utils', 'Utility Files');
     await processDirectory('src/pageObjects', 'Page Objects');
 
     // Print totals
@@ -88,7 +88,7 @@ async function main() {
 
     // Check minimum requirements
     console.log(`${colors.blue}Checking minimum requirements...${colors.reset}`);
-    const directories = ['tests/api', 'tests/api/smoke', 'tests/ui', 'src/helpers', 'src/pageObjects'];
+    const directories = ['tests/api', 'tests/api/smoke', 'tests/ui', 'src/utils', 'src/pageObjects'];
     for (const dir of directories) {
         try {
             const files = await readdir(dir);

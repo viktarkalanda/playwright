@@ -1,6 +1,6 @@
 // tests/ui/cart-history-integration.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
-import { CartHistory } from '../../src/utils/cartHistory';
+import { CartHistory } from '../../src/utils';
 import { productCatalog } from '../../src/data/products';
 
 const sortNames = (values: string[]): string[] => [...values].sort();
@@ -184,3 +184,8 @@ test.describe('Cart history integration with UI flows', () => {
     expect(history.getItemState(defaultProducts[1])?.inCart).toBe(true);
   });
 });
+
+
+
+
+

@@ -1,12 +1,12 @@
 // tests/ui/checkout-negative-input.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
-import { edgeCaseStrings, generateString } from '../../src/utils/stringGenerators';
+import { edgeCaseStrings, generateString } from '../../src/utils';
 import { productCatalog } from '../../src/data/products';
 import {
   expectFirstNameRequiredError,
   expectLastNameRequiredError,
   expectPostalCodeRequiredError,
-} from '../../src/utils/assertions';
+} from '../../src/utils';
 
 const defaultProduct =
   productCatalog.products[0]?.name ??
@@ -184,3 +184,8 @@ test.describe('Checkout step one advanced negative input', () => {
     },
   );
 });
+
+
+
+
+

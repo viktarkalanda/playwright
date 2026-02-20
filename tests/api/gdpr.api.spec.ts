@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { GdprHelper } from '../../src/utils/gdprHelper';
+import { GdprHelper } from '../../src/utils';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -203,3 +203,8 @@ test.describe('GDPR Data Export API @gdpr @api', () => {
     });
   });
 }); 
+
+
+
+
+

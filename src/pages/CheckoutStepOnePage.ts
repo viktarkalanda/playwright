@@ -1,7 +1,7 @@
 // src/pages/CheckoutStepOnePage.ts
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
-import { step } from '../utils/stepDecorator';
+import { step } from '../utils';
 
 export class CheckoutStepOnePage extends BaseForm {
   readonly title: Locator = this.page.locator('.title');
@@ -107,3 +107,8 @@ export class CheckoutStepOnePage extends BaseForm {
     return this.postalCodeInput.inputValue();
   }
 }
+
+
+
+
+

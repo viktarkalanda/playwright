@@ -1,7 +1,7 @@
 // tests/ui/auth-guards.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
-import { makeCheckoutUserData } from '../../src/utils/testData';
-import { expectStringsSortedAsc } from '../../src/utils/assertions';
+import { makeCheckoutUserData } from '../../src/utils';
+import { expectStringsSortedAsc } from '../../src/utils';
 
 const BACKPACK_NAME = 'Sauce Labs Backpack';
 const BIKE_LIGHT_NAME = 'Sauce Labs Bike Light';
@@ -172,3 +172,8 @@ test.describe('Authentication guards and direct access', () => {
     expect(errorText.length).toBeGreaterThan(0);
   });
 });
+
+
+
+
+

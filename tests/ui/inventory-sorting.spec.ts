@@ -1,7 +1,7 @@
 // tests/ui/inventory-sorting.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
 import { productCatalog } from '../../src/data/products';
-import { isSortedStrings, isSortedNumbers, haveSameElementsIgnoreOrder } from '../../src/utils/sortUtils';
+import { isSortedStrings, isSortedNumbers, haveSameElementsIgnoreOrder } from '../../src/utils';
 import { InventorySortOption } from '../../src/pages/InventoryPage';
 
 const catalogNames = productCatalog.products.map((product) => product.name);
@@ -138,3 +138,8 @@ test.describe('Inventory sorting', () => {
     }
   });
 });
+
+
+
+
+

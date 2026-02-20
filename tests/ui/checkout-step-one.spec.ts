@@ -1,6 +1,6 @@
 // tests/ui/checkout-step-one.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
-import { makeCheckoutUserData } from '../../src/utils/testData';
+import { makeCheckoutUserData } from '../../src/utils';
 
 const PRODUCT_NAME = 'Sauce Labs Backpack';
 const ERROR_MESSAGES = {
@@ -107,3 +107,8 @@ test.describe('Checkout step one', () => {
     expect(itemsCount, 'Cart should still contain the product after cancelling checkout').toBe(1);
   });
 });
+
+
+
+
+

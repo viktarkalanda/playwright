@@ -1,7 +1,7 @@
 import type { APIRequestContext, TestInfo } from '@playwright/test';
 import { BaseApiClient, type ResponseEnvelope } from '../base/BaseApiClient';
 import type { Manifest } from '../types/Manifest';
-import { step } from '../../utils/stepDecorator';
+import { step } from '../../utils';
 
 export class AssetsClient extends BaseApiClient {
   constructor(request: APIRequestContext, testInfo?: TestInfo) {
@@ -36,3 +36,8 @@ export class AssetsClient extends BaseApiClient {
     return this.getBinary(normalizedPath);
   }
 }
+
+
+
+
+

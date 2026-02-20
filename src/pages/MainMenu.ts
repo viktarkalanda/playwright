@@ -1,6 +1,6 @@
 // src/pages/MainMenu.ts
 import { Page, Locator } from '@playwright/test';
-import { step } from '../utils/stepDecorator';
+import { step } from '../utils';
 
 export class MainMenu {
   readonly menuButton: Locator;
@@ -62,3 +62,8 @@ export class MainMenu {
     await this.resetAppStateLink.click();
   }
 }
+
+
+
+
+

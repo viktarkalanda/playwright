@@ -1,5 +1,5 @@
 import { test } from '@playwright/test';
-import { VisualHelper } from '../../src/utils/visual';
+import { VisualHelper } from '../../src/utils';
 import { ProductPage } from '../../src/pageObjects/ProductPage';
 
 /**
@@ -231,3 +231,8 @@ test.describe('Product Page Visual Tests @visual', () => {
     }
   });
 }); 
+
+
+
+
+

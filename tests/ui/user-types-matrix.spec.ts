@@ -1,7 +1,7 @@
 // tests/ui/user-types-matrix.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
 import { UserKey } from '../../src/config/testConfig';
-import { makeCheckoutUserData } from '../../src/utils/testData';
+import { makeCheckoutUserData } from '../../src/utils';
 
 const BACKPACK = 'Sauce Labs Backpack';
 const BIKE_LIGHT = 'Sauce Labs Bike Light';
@@ -198,3 +198,8 @@ test.describe('User types behaviour matrix', () => {
     );
   }
 });
+
+
+
+
+

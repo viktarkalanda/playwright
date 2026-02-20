@@ -5,7 +5,7 @@ import {
   expectStringsSortedDesc,
   expectNumbersSortedAsc,
   expectNumbersSortedDesc,
-} from '../../src/utils/assertions';
+} from '../../src/utils';
 
 test.beforeEach(async ({ loggedInInventoryPage }) => {
   await loggedInInventoryPage.waitForVisible();
@@ -501,3 +501,8 @@ test('cart badge matches cart page count after adding products on inventory', { 
   ).toBe(products.length);
   expect(cartItemsCount, 'Cart should list all products added from inventory').toBe(products.length);
 });
+
+
+
+
+

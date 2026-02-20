@@ -1,7 +1,7 @@
 // src/pages/CartPage.ts
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
-import { step } from '../utils/stepDecorator';
+import { step } from '../utils';
 import {
   CartSnapshot,
   CartItemSnapshot,
@@ -9,7 +9,7 @@ import {
   roundToCents,
   findProductDefinitionByName,
   toCartItemSnapshotFromDefinition,
-} from '../utils/cartState';
+} from '../utils';
 
 export class CartPage extends BaseForm {
   readonly cartItems: Locator = this.page.locator('.cart_item');
@@ -135,3 +135,8 @@ export class CartPage extends BaseForm {
     };
   }
 }
+
+
+
+
+

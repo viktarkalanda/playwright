@@ -1,6 +1,6 @@
 import type { APIRequestContext, TestInfo } from '@playwright/test';
 import { BaseApiClient, type ResponseEnvelope } from '../base/BaseApiClient';
-import { step } from '../../utils/stepDecorator';
+import { step } from '../../utils';
 
 type CheckoutStep = 'one' | 'two' | 'complete';
 
@@ -46,3 +46,8 @@ export class StatusClient extends BaseApiClient {
     return this.getText(path);
   }
 }
+
+
+
+
+

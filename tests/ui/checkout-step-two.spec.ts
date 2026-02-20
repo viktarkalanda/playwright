@@ -1,6 +1,6 @@
 // tests/ui/checkout-step-two.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
-import { makeCheckoutUserData } from '../../src/utils/testData';
+import { makeCheckoutUserData } from '../../src/utils';
 import type { InventoryPage } from '../../src/pages/InventoryPage';
 import type { CartPage } from '../../src/pages/CartPage';
 import type { CheckoutStepOnePage } from '../../src/pages/CheckoutStepOnePage';
@@ -145,3 +145,8 @@ test.describe('Checkout step two overview', () => {
     );
   });
 });
+
+
+
+
+

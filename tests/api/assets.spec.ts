@@ -58,3 +58,8 @@ apiTest.describe('Static asset delivery', () => {
     expect(response.headers['content-type']).toContain('image');
   });
 });
+
+
+
+
+

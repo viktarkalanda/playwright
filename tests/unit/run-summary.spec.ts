@@ -8,7 +8,7 @@ import {
   getSlowTests,
   sortResultsByDurationDesc,
   sortResultsByName,
-} from '../../src/utils/runSummary';
+} from '../../src/utils';
 
 function makeResult(partial: Partial<TestResult>): TestResult {
   return {
@@ -208,3 +208,8 @@ test.describe('runSummary aggregations', () => {
     expect(sorted.map((r) => r.name)).toEqual(['a test', 'b test', 'c test']);
   });
 });
+
+
+
+
+

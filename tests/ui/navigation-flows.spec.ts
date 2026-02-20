@@ -14,8 +14,8 @@ import {
   navigateToCartFromInventory,
   navigateToInventoryFromCart,
   goBackAndAssert,
-} from '../../src/utils/navigation';
-import { makeCheckoutUserData } from '../../src/utils/testData';
+} from '../../src/utils';
+import { makeCheckoutUserData } from '../../src/utils';
 
 test.describe('Navigation and URL flow', () => {
   test('login redirects to inventory and reload keeps user on inventory', {
@@ -435,3 +435,8 @@ test.describe('Navigation and URL flow', () => {
     await goBackAndAssert(ctx, 'inventoryItem');
   });
 });
+
+
+
+
+

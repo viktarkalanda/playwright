@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 import { allure } from 'allure-playwright';
 import { faker } from '@faker-js/faker';
-import axiosClient from '../../src/utils/axiosClient';
+import { axiosClient } from '../../src/utils';
 
 /**
  * Product API Test Suite
@@ -223,3 +223,8 @@ test.describe('Product API Tests @api @product', () => {
     });
   });
 }); 
+
+
+
+
+

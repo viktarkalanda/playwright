@@ -6,7 +6,6 @@
 - `src/fixtures`: shared fixtures for Playwright tests.
 - `src/types`: shared TypeScript types.
 - `src/utils`: reusable test utilities (preferred import path).
-- `src/helpers`: legacy utility implementations kept for backward compatibility.
 - `tests/ui`: end-to-end UI test suites.
 - `tests/api`: API integration test suites.
 - `tests/api/smoke`: lightweight API smoke coverage.

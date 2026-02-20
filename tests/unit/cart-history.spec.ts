@@ -1,6 +1,6 @@
 // tests/unit/cart-history.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
-import { CartHistory } from '../../src/utils/cartHistory';
+import { CartHistory } from '../../src/utils';
 
 const sortNames = (names: string[]): string[] => [...names].sort();
 
@@ -134,3 +134,8 @@ test.describe('CartHistory unit behavior', () => {
     expect(snapshotAfter.items['Item'].addedCount).toBe(2);
   });
 });
+
+
+
+
+

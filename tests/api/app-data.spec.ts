@@ -50,3 +50,8 @@ apiTest.describe('Embedded application data (bundle inspection)', () => {
     expect(bundleText).toContain('submit.backtrace.io');
   });
 });
+
+
+
+
+

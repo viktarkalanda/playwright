@@ -1,6 +1,6 @@
 // tests/ui/responsive-layout.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
-import { getDeviceViewport } from '../../src/utils/viewports';
+import { getDeviceViewport } from '../../src/utils';
 import { productCatalog } from '../../src/data/products';
 import type { LoginPage } from '../../src/pages/LoginPage';
 import type { InventoryPage } from '../../src/pages/InventoryPage';
@@ -278,3 +278,8 @@ test.describe('Responsive: mobile', () => {
     },
   );
 });
+
+
+
+
+

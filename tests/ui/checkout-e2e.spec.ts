@@ -1,6 +1,6 @@
 // tests/ui/checkout-e2e.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
-import { makeCheckoutUserData } from '../../src/utils/testData';
+import { makeCheckoutUserData } from '../../src/utils';
 import type { InventoryPage } from '../../src/pages/InventoryPage';
 import type { CartPage } from '../../src/pages/CartPage';
 import type { CheckoutStepOnePage } from '../../src/pages/CheckoutStepOnePage';
@@ -124,3 +124,8 @@ test.describe('Checkout end-to-end flows', () => {
     expect(badgeCount, 'Cart badge should reset after completing checkout').toBe(0);
   });
 });
+
+
+
+
+

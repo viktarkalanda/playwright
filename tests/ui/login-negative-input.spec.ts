@@ -1,12 +1,12 @@
 // tests/ui/login-negative-input.spec.ts
 import { test, expect } from '../../src/fixtures/test-fixtures';
-import { edgeCaseStrings, generateString } from '../../src/utils/stringGenerators';
+import { edgeCaseStrings, generateString } from '../../src/utils';
 import { validationMessages } from '../../src/data/validationMessages';
 import {
   expectUsernameRequiredError,
   expectPasswordRequiredError,
   expectInvalidCredentialsError,
-} from '../../src/utils/assertions';
+} from '../../src/utils';
 
 const standardPassword = 'secret_sauce';
 const sqlPayload = "standard_user' OR '1'='1";
@@ -147,3 +147,8 @@ test.describe('Login advanced negative input', () => {
     expectInvalidCredentialsError(error);
   });
 });
+
+
+
+
+

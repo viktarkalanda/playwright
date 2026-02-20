@@ -109,27 +109,6 @@ function formatErrorMessage(error: Error, attempt: number): string {
 }
 
 /**
- * Log retry attempt information
- * @param attempt - Current attempt number
- * @param maxRetries - Maximum number of retries
- * @param delay - Delay before next attempt
- * @param error - Original error
- */
-function logRetryAttempt(
-    attempt: number,
-    maxRetries: number,
-    delay: number,
-    error: Error
-)
-): void {
-    console.log('\n=== Flaky Test Retry Information ===');
-    console.log(`Attempt: ${attempt}/${maxRetries}`);
-    console.log(`Next retry in: ${delay}ms`);
-    console.log('Failure reason:', error.message);
-    console.log('Stack trace:', error.stack || 'No stack trace available');
-    console.log('=====================================\n');
-
-/**
  * Sleep for specified duration
  * @param ms Duration in milliseconds
  */
@@ -200,7 +179,7 @@ function getRetryDelay(attempt: number): number {
  * @example
  * ```typescript
  * import { test, expect } from '@playwright/test';
- * import { withRetry } from '../helpers/flaky';
+ * import { withRetry } from '../utils';
  * 
  * // Basic usage - retries twice with 1s and 3s delays
  * test('flaky element test', withRetry(async ({ page }) => {
@@ -322,7 +301,7 @@ export function withRetry(
  * @example
  * ```typescript
  * import { expect } from '@playwright/test';
- * import { createFlakeTest } from '../helpers/flaky';
+ * import { createFlakeTest } from '../utils';
  * 
  * // Create test fixture with 2 retries by default
  * const test = createFlakeTest(2);
@@ -359,3 +338,8 @@ export function trackFlakiness(testInfo: TestInfo): void {
         console.log('==========================\n');
     }
 } 
+
+
+
+
+
