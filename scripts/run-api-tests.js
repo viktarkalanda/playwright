@@ -1,7 +1,11 @@
 const { spawn } = require('child_process');
 
 function runApiTests() {
-  const child = spawn('npx', ['playwright', 'test', '--config=playwright.api.config.ts'], {
+  const extraArgs = process.argv.slice(2);
+  const child = spawn(
+    'npx',
+    ['playwright', 'test', '--config=playwright.api.config.ts', ...extraArgs],
+    {
     stdio: 'inherit',
     shell: true,
   });

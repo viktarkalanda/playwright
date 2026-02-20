@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "test:all": "npx playwright test && node scripts/run-api-tests.js",
+    "test:ui": "npx playwright test",
+    "test:api": "node scripts/run-api-tests.js",
+    "test:all": "npm run test:ui && npm run test:api",
     "char:count": "node scripts/char_count.js"
   },
   "devDependencies": {

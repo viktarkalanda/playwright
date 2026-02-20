@@ -128,8 +128,14 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
         
-      - name: Run all tests
-        run: npm run test:all
+      - name: Run UI tests
+        run: npm run test:ui
+        env:
+          CI: true
+          BASE_URL: http://localhost:8080
+
+      - name: Run API tests
+        run: npm run test:api
         env:
           CI: true
           BASE_URL: http://localhost:8080

@@ -56,9 +56,16 @@ pipeline {
     stage('Lint') {
       steps {
         script {
-          // Линт может падать, но пайплайн не останавливаем
+          // Lint is optional while script/deps are not defined in package.json.
+          // Do not fail pipeline when lint command is unavailable.
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            sh 'npm run lint'
+            sh '''
+              if npm run | grep -q "  lint"; then
+                npm run lint
+              else
+                echo "lint script not defined in package.json, skipping"
+              fi
+            '''
           }
         }
       }
@@ -75,9 +82,9 @@ pipeline {
     stage('Test') {
       steps {
         script {
-          // Тесты могут падать, но последующие стадии всё равно выполняем
+          // Tests may fail, but post stages still run for artifact collection
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            sh 'npx playwright test'
+            sh 'npm run test:all'
           }
         }
       }
