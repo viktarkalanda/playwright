@@ -30,8 +30,8 @@ export class VisualHelper {
       maxDiffPixels = 100,
       threshold = 0.1,
       baselineDir = 'tests/visual/baseline',
-      diffDir = 'tests/visual/diff',
-      screenshotDir = 'tests/visual/screenshots'
+      diffDir = 'test-results/visual/diff',
+      screenshotDir = 'test-results/visual/screenshots'
     } = options;
 
     this.maxDiffPixels = maxDiffPixels;

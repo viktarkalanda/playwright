@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 import { allure } from 'allure-playwright';
 import { faker } from '@faker-js/faker';
-import axiosClient from '../../src/helpers/axiosClient';
+import axiosClient from '../../src/utils/axiosClient';
 
 /**
  * Order API Test Suite

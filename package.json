@@ -1,7 +1,7 @@
 {
   "scripts": {
     "test:all": "npx playwright test && node scripts/run-api-tests.js",
-    "char:count": "bash char_count.sh"
+    "char:count": "node scripts/char_count.js"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",

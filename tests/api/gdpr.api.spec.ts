@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { GdprHelper } from '../../src/helpers/gdprHelper';
+import { GdprHelper } from '../../src/utils/gdprHelper';
 import { v4 as uuidv4 } from 'uuid';
 
 /**

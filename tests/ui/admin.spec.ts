@@ -4,7 +4,7 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { AdminPage } from '../../src/pageObjects/AdminPage';
 import { ProductPage } from '../../src/pageObjects/ProductPage';
-import { axiosClient } from '../../src/helpers/axiosClient';
+import axiosClient from '../../src/utils/axiosClient';
 
 /**
  * @fileoverview Back-Office Administration Test Suite

@@ -1,5 +1,5 @@
 import { test } from '@playwright/test';
-import { VisualHelper } from '../../src/helpers/visual';
+import { VisualHelper } from '../../src/utils/visual';
 import { HomePage } from '../../src/pageObjects/HomePage';
 
 /**
