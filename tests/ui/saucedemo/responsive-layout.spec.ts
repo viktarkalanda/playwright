@@ -37,13 +37,19 @@ test.describe('Responsive: desktop', () => {
     async ({ loggedInInventoryPage: inventoryPage, headerMenu, footer }) => {
       await inventoryPage.waitForVisible();
       const totalProducts = await inventoryPage.getItemsCount();
-      expect(totalProducts).toBe(productCatalog.products.length);
+      expect(
+        totalProducts,
+        `Desktop inventory should show all ${productCatalog.products.length} catalog products`,
+      ).toBe(productCatalog.products.length);
 
-      await expect(headerMenu.menuButton).toBeVisible();
+      await expect(headerMenu.menuButton, 'Header menu button should be visible on desktop').toBeVisible();
 
       await footer.waitForVisible();
       const footerText = await footer.getFooterText();
-      expect(footerText.length).toBeGreaterThan(0);
+      expect(
+        footerText.length,
+        'Footer text should be non-empty on desktop inventory page',
+      ).toBeGreaterThan(0);
     },
   );
 
@@ -65,12 +71,15 @@ test.describe('Responsive: desktop', () => {
 
       await inventoryPage.openCart();
       await cartPage.waitForVisible();
-      await expect(headerMenu.menuButton).toBeVisible();
+      await expect(headerMenu.menuButton, 'Menu button should be visible on cart page (desktop)').toBeVisible();
       await footer.waitForVisible();
 
       await cartPage.proceedToCheckout();
       await checkoutStepOnePage.waitForVisible();
-      await expect(headerMenu.menuButton).toBeVisible();
+      await expect(
+        headerMenu.menuButton,
+        'Menu button should be visible on checkout step one (desktop)',
+      ).toBeVisible();
       await footer.waitForVisible();
 
       await checkoutStepOnePage.fillForm(
@@ -81,12 +90,18 @@ test.describe('Responsive: desktop', () => {
       await checkoutStepOnePage.continueToStepTwo();
 
       await checkoutStepTwoPage.waitForVisible();
-      await expect(headerMenu.menuButton).toBeVisible();
+      await expect(
+        headerMenu.menuButton,
+        'Menu button should be visible on checkout step two (desktop)',
+      ).toBeVisible();
       await footer.waitForVisible();
 
       await checkoutStepTwoPage.finishCheckout();
       await checkoutCompletePage.waitForVisible();
-      await expect(headerMenu.menuButton).toBeVisible();
+      await expect(
+        headerMenu.menuButton,
+        'Menu button should be visible on checkout complete page (desktop)',
+      ).toBeVisible();
       await footer.waitForVisible();
     },
   );
@@ -102,13 +117,22 @@ test.describe('Responsive: tablet', () => {
     async ({ loggedInInventoryPage: inventoryPage, headerMenu, page }) => {
       await inventoryPage.waitForVisible();
       const productCount = await inventoryPage.getItemsCount();
-      expect(productCount).toBe(productCatalog.products.length);
+      expect(
+        productCount,
+        `Tablet inventory should show all ${productCatalog.products.length} catalog products`,
+      ).toBe(productCatalog.products.length);
 
       const viewport = page.viewportSize();
-      expect(viewport?.width).toBe(tablet.viewport.width);
-      expect(viewport?.height).toBe(tablet.viewport.height);
+      expect(
+        viewport?.width,
+        `Viewport width should match the tablet portrait setting (${tablet.viewport.width}px)`,
+      ).toBe(tablet.viewport.width);
+      expect(
+        viewport?.height,
+        `Viewport height should match the tablet portrait setting (${tablet.viewport.height}px)`,
+      ).toBe(tablet.viewport.height);
 
-      await expect(headerMenu.menuButton).toBeVisible();
+      await expect(headerMenu.menuButton, 'Header menu button should be visible on tablet').toBeVisible();
     },
   );
 
@@ -128,13 +152,19 @@ test.describe('Responsive: tablet', () => {
 
       await inventoryPage.openCart();
       await cartPage.waitForVisible();
-      await expect(cartPage.checkoutButton).toBeVisible();
-      await expect(headerMenu.menuButton).toBeVisible();
+      await expect(cartPage.checkoutButton, 'Checkout button should be visible on tablet cart').toBeVisible();
+      await expect(headerMenu.menuButton, 'Menu button should be visible on tablet cart').toBeVisible();
 
       await cartPage.proceedToCheckout();
       await checkoutStepOnePage.waitForVisible();
-      await expect(checkoutStepOnePage.firstNameInput).toBeVisible();
-      await expect(checkoutStepOnePage.continueButton).toBeVisible();
+      await expect(
+        checkoutStepOnePage.firstNameInput,
+        'First name input should be visible on checkout step one (tablet)',
+      ).toBeVisible();
+      await expect(
+        checkoutStepOnePage.continueButton,
+        'Continue button should be visible on checkout step one (tablet)',
+      ).toBeVisible();
 
       await checkoutStepOnePage.fillForm(
         checkoutUser.firstName,
@@ -143,7 +173,10 @@ test.describe('Responsive: tablet', () => {
       );
       await checkoutStepOnePage.continueToStepTwo();
       await checkoutStepTwoPage.waitForVisible();
-      await expect(checkoutStepTwoPage.finishButton).toBeVisible();
+      await expect(
+        checkoutStepTwoPage.finishButton,
+        'Finish button should be visible on checkout step two (tablet)',
+      ).toBeVisible();
     },
   );
 
@@ -154,14 +187,23 @@ test.describe('Responsive: tablet', () => {
       await loginStandard(loginPage, inventoryPage);
       await addProductsToCart(inventoryPage, [firstProductName, secondProductName]);
 
-      expect(await headerMenu.getCartBadgeCount()).toBeGreaterThanOrEqual(2);
+      expect(
+        await headerMenu.getCartBadgeCount(),
+        'Cart badge should show at least 2 items after adding products on tablet',
+      ).toBeGreaterThanOrEqual(2);
       await headerMenu.clickResetAppState();
       await inventoryPage.waitForVisible();
 
-      expect(await headerMenu.getCartBadgeCount()).toBe(0);
+      expect(
+        await headerMenu.getCartBadgeCount(),
+        'Cart badge should be cleared after reset app state on tablet',
+      ).toBe(0);
       await inventoryPage.openCart();
       await cartPage.waitForVisible();
-      expect(await cartPage.getItemsCount()).toBe(0);
+      expect(
+        await cartPage.getItemsCount(),
+        'Cart should be empty after reset app state on tablet',
+      ).toBe(0);
     },
   );
 
@@ -178,7 +220,7 @@ test.describe('Responsive: tablet', () => {
       ]);
 
       await aboutPage.waitForLoadState('domcontentloaded');
-      await expect(aboutPage).toHaveURL(/saucelabs\.com/);
+      await expect(aboutPage, 'About link should open the Sauce Labs website').toHaveURL(/saucelabs\.com/);
       await aboutPage.close();
       await page.bringToFront();
     },
@@ -194,9 +236,9 @@ test.describe('Responsive: mobile', () => {
     { tag: ['@responsive', '@mobile', '@login'] },
     async ({ loginPage, inventoryPage }) => {
       await loginPage.open();
-      await expect(loginPage.usernameInput).toBeVisible();
-      await expect(loginPage.passwordInput).toBeVisible();
-      await expect(loginPage.loginButton).toBeVisible();
+      await expect(loginPage.usernameInput, 'Username input should be visible on mobile login').toBeVisible();
+      await expect(loginPage.passwordInput, 'Password input should be visible on mobile login').toBeVisible();
+      await expect(loginPage.loginButton, 'Login button should be visible on mobile').toBeVisible();
 
       await loginPage.loginAs('standard');
       await inventoryPage.waitForVisible();
@@ -208,10 +250,16 @@ test.describe('Responsive: mobile', () => {
     { tag: ['@responsive', '@mobile', '@inventory'] },
     async ({ loginPage, inventoryPage, headerMenu }) => {
       await loginStandard(loginPage, inventoryPage);
-      await expect(inventoryPage.inventoryItems.first()).toBeVisible();
+      await expect(
+        inventoryPage.inventoryItems.first(),
+        'At least the first product card should be visible on mobile',
+      ).toBeVisible();
       const totalItems = await inventoryPage.getItemsCount();
-      expect(totalItems).toBe(productCatalog.products.length);
-      await expect(headerMenu.menuButton).toBeVisible();
+      expect(
+        totalItems,
+        `Mobile inventory should contain all ${productCatalog.products.length} products`,
+      ).toBe(productCatalog.products.length);
+      await expect(headerMenu.menuButton, 'Header menu button should be visible on mobile inventory').toBeVisible();
     },
   );
 
@@ -223,8 +271,11 @@ test.describe('Responsive: mobile', () => {
       await addProductsToCart(inventoryPage, [firstProductName, secondProductName, thirdProductName]);
 
       const badgeCount = await headerMenu.getCartBadgeCount();
-      expect(badgeCount).toBe(3);
-      await expect(headerMenu.cartBadge).toBeVisible();
+      expect(
+        badgeCount,
+        'Cart badge should show 3 after adding three products on mobile',
+      ).toBe(3);
+      await expect(headerMenu.cartBadge, 'Cart badge element should be visible on mobile').toBeVisible();
     },
   );
 
@@ -271,10 +322,13 @@ test.describe('Responsive: mobile', () => {
     { tag: ['@responsive', '@mobile', '@menu', '@footer'] },
     async ({ loginPage, inventoryPage, headerMenu, footer }) => {
       await loginStandard(loginPage, inventoryPage);
-      await expect(headerMenu.menuButton).toBeVisible();
+      await expect(headerMenu.menuButton, 'Header menu button should be visible on mobile').toBeVisible();
       await footer.waitForVisible();
       const footerText = await footer.getFooterText();
-      expect(footerText.length).toBeGreaterThan(0);
+      expect(
+        footerText.length,
+        'Footer should render text content on mobile',
+      ).toBeGreaterThan(0);
     },
   );
 });

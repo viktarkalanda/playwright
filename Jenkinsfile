@@ -9,10 +9,13 @@ pipeline {
 
   environment {
     NODE_ENV = 'test'
-    // URL Allure Docker Service внутри docker-сети
+    // Allure Docker Service URL inside the docker network
     ALLURE_DOCKER_URL = 'http://allure-docker-service:5050'
-    // проект в Allure Docker Service (используем default)
+    // Allure Docker Service project ID
     ALLURE_PROJECT_ID = 'default'
+    // Anthropic API key — stored in Jenkins Credentials, never in git
+    // Add via: Manage Jenkins → Credentials → Add → Secret text → ID: anthropic-api-key
+    ANTHROPIC_API_KEY = credentials('anthropic-api-key')
   }
 
   stages {
@@ -56,7 +59,7 @@ pipeline {
     stage('Lint') {
       steps {
         script {
-          // Линт может падать, но пайплайн не останавливаем
+          // Lint failures mark the build as UNSTABLE but do not stop the pipeline
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
             sh 'npm run lint'
           }
@@ -75,7 +78,7 @@ pipeline {
     stage('Test') {
       steps {
         script {
-          // Тесты могут падать, но последующие стадии всё равно выполняем
+          // Test failures mark the build as UNSTABLE but subsequent stages still run
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
             sh 'npx playwright test'
           }
@@ -127,7 +130,7 @@ pipeline {
       // Allure raw results
       archiveArtifacts artifacts: 'allure-results/**', fingerprint: true, allowEmptyArchive: true
 
-      // Allure report через Jenkins-плагин
+      // Allure report via Jenkins plugin
       allure results: [[path: 'allure-results']], reportBuildPolicy: 'ALWAYS'
     }
   }

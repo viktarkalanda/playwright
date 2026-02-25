@@ -20,8 +20,11 @@ test.describe('Inventory sorting', () => {
   }, async ({ inventoryPage }) => {
     await inventoryPage.sortBy('nameAsc');
     const names = await inventoryPage.getAllItemNames();
-    expect(isSortedStrings(names, 'asc')).toBe(true);
-    expect(haveSameElementsIgnoreOrder(names, catalogNames)).toBe(true);
+    expect(isSortedStrings(names, 'asc'), 'Products should be sorted alphabetically A→Z').toBe(true);
+    expect(
+      haveSameElementsIgnoreOrder(names, catalogNames),
+      'Set of products should not change when sorting by name ascending',
+    ).toBe(true);
   });
 
   test('Z→A sorting sorts products by name descending', {
@@ -29,8 +32,11 @@ test.describe('Inventory sorting', () => {
   }, async ({ inventoryPage }) => {
     await inventoryPage.sortBy('nameDesc');
     const names = await inventoryPage.getAllItemNames();
-    expect(isSortedStrings(names, 'desc')).toBe(true);
-    expect(haveSameElementsIgnoreOrder(names, catalogNames)).toBe(true);
+    expect(isSortedStrings(names, 'desc'), 'Products should be sorted alphabetically Z→A').toBe(true);
+    expect(
+      haveSameElementsIgnoreOrder(names, catalogNames),
+      'Set of products should not change when sorting by name descending',
+    ).toBe(true);
   });
 
   test('Price low→high sorts products by price ascending', {
@@ -38,7 +44,7 @@ test.describe('Inventory sorting', () => {
   }, async ({ inventoryPage }) => {
     await inventoryPage.sortBy('priceAsc');
     const prices = await inventoryPage.getAllItemPrices();
-    expect(isSortedNumbers(prices, 'asc')).toBe(true);
+    expect(isSortedNumbers(prices, 'asc'), 'Products should be sorted by price from lowest to highest').toBe(true);
   });
 
   test('Price high→low sorts products by price descending', {
@@ -46,7 +52,7 @@ test.describe('Inventory sorting', () => {
   }, async ({ inventoryPage }) => {
     await inventoryPage.sortBy('priceDesc');
     const prices = await inventoryPage.getAllItemPrices();
-    expect(isSortedNumbers(prices, 'desc')).toBe(true);
+    expect(isSortedNumbers(prices, 'desc'), 'Products should be sorted by price from highest to lowest').toBe(true);
   });
 
   test('sorting by name does not lose or duplicate products', {
@@ -55,7 +61,10 @@ test.describe('Inventory sorting', () => {
     const namesBefore = await inventoryPage.getAllItemNames();
     await inventoryPage.sortBy('nameDesc');
     const namesAfter = await inventoryPage.getAllItemNames();
-    expect(haveSameElementsIgnoreOrder(namesBefore, namesAfter)).toBe(true);
+    expect(
+      haveSameElementsIgnoreOrder(namesBefore, namesAfter),
+      'Sorting by name should not add or remove products from the list',
+    ).toBe(true);
   });
 
   test('sorting by price does not lose or duplicate products', {
@@ -65,7 +74,10 @@ test.describe('Inventory sorting', () => {
     await inventoryPage.sortBy('priceAsc');
     await inventoryPage.sortBy('priceDesc');
     const namesAfter = await inventoryPage.getAllItemNames();
-    expect(haveSameElementsIgnoreOrder(namesBefore, namesAfter)).toBe(true);
+    expect(
+      haveSameElementsIgnoreOrder(namesBefore, namesAfter),
+      'Multiple price sorts should not add or remove products from the list',
+    ).toBe(true);
   });
 
   test('sorting after adding items to cart keeps cart state but changes visual order only', {
@@ -78,12 +90,18 @@ test.describe('Inventory sorting', () => {
 
     await inventoryPage.sortBy('priceAsc');
     const names = await inventoryPage.getAllItemNames();
-    expect(isSortedStrings(names, 'asc')).toBe(true);
+    expect(
+      isSortedStrings(names, 'asc'),
+      'Product names order should reflect the sort selected before adding items to cart',
+    ).toBe(true);
 
     await inventoryPage.openCart();
     await cartPage.waitForVisible();
     const cartNames = await cartPage.getItemNames();
-    expect(haveSameElementsIgnoreOrder(cartNames, selectedProducts.map((p) => p.name))).toBe(true);
+    expect(
+      haveSameElementsIgnoreOrder(cartNames, selectedProducts.map((p) => p.name)),
+      'Cart should contain exactly the products that were added before sorting',
+    ).toBe(true);
   });
 
   test('switching sort order multiple times does not break set of products', {
@@ -93,7 +111,10 @@ test.describe('Inventory sorting', () => {
     for (const option of sequences) {
       await inventoryPage.sortBy(option);
       const names = await inventoryPage.getAllItemNames();
-      expect(haveSameElementsIgnoreOrder(names, catalogNames)).toBe(true);
+      expect(
+        haveSameElementsIgnoreOrder(names, catalogNames),
+        `No products should be lost or duplicated after switching to sort option "${option}"`,
+      ).toBe(true);
     }
   });
 
@@ -104,7 +125,10 @@ test.describe('Inventory sorting', () => {
     const pairs = await inventoryPage.getAllItemNamesAndPrices();
     for (const pair of pairs) {
       const product = productCatalog.getByName(pair.name);
-      expect(product?.price).toBeCloseTo(pair.price, 2);
+      expect(
+        product?.price,
+        `Inventory price for "${pair.name}" should match the catalog price`,
+      ).toBeCloseTo(pair.price, 2);
     }
   });
 
@@ -119,8 +143,14 @@ test.describe('Inventory sorting', () => {
     await productDetailsPage.backToProducts();
     await inventoryPage.waitForVisible();
     const afterBackNames = await inventoryPage.getAllItemNames();
-    expect(afterBackNames[0]).toBe(firstProduct);
-    expect(isSortedStrings(afterBackNames, 'asc')).toBe(true);
+    expect(
+      afterBackNames[0],
+      'First product after navigating back should still be the one opened in details',
+    ).toBe(firstProduct);
+    expect(
+      isSortedStrings(afterBackNames, 'asc'),
+      'Alphabetical sort order should persist after opening and closing product details',
+    ).toBe(true);
   });
 
   test('cart badge does not depend on sort order', {
@@ -134,7 +164,10 @@ test.describe('Inventory sorting', () => {
     const sorts: InventorySortOption[] = ['nameAsc', 'nameDesc', 'priceAsc', 'priceDesc'];
     for (const option of sorts) {
       await inventoryPage.sortBy(option);
-      expect(await inventoryPage.getCartBadgeCount()).toBe(badgeBefore);
+      expect(
+        await inventoryPage.getCartBadgeCount(),
+        `Cart badge count should remain ${badgeBefore} after switching to sort option "${option}"`,
+      ).toBe(badgeBefore);
     }
   });
 });

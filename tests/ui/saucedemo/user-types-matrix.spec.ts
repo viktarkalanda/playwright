@@ -26,16 +26,22 @@ test.describe('User types behaviour matrix', () => {
   }) => {
     await loginPage.loginAs('standard');
     await inventoryPage.waitForVisible();
-    expect(await inventoryPage.getTitleText()).toBe('Products');
+    expect(
+      await inventoryPage.getTitleText(),
+      'Standard user should see the "Products" inventory page after login',
+    ).toBe('Products');
   });
 
   test('locked out user cannot login and sees error message', { tag: ['@login', '@auth', '@userType'] }, async ({
     loginPage,
   }) => {
     await loginPage.loginAs('lockedOut');
-    expect(await loginPage.isErrorVisible()).toBe(true);
+    expect(
+      await loginPage.isErrorVisible(),
+      'Locked out user should see an error on the login page',
+    ).toBe(true);
     const errorText = await loginPage.getErrorText();
-    expect(errorText).toContain('locked out');
+    expect(errorText, 'Error message should mention that the user is locked out').toContain('locked out');
   });
 
   for (const { key, shouldLogin } of loginExpectations) {
@@ -46,9 +52,15 @@ test.describe('User types behaviour matrix', () => {
         await loginPage.loginAs(key);
         if (shouldLogin) {
           await inventoryPage.waitForVisible();
-          expect(await inventoryPage.getItemsCount()).toBeGreaterThan(0);
+          expect(
+            await inventoryPage.getItemsCount(),
+            `User "${key}" should see inventory items after successful login`,
+          ).toBeGreaterThan(0);
         } else {
-          expect(await loginPage.isErrorVisible()).toBe(true);
+          expect(
+            await loginPage.isErrorVisible(),
+            `User "${key}" should see a login error when login is expected to fail`,
+          ).toBe(true);
         }
       },
     );
@@ -61,7 +73,10 @@ test.describe('User types behaviour matrix', () => {
     await loginPage.loginAs('problem');
     await inventoryPage.waitForVisible();
     const imageSrc = await inventoryPage.getItemImageSrcByName(BACKPACK);
-    expect(imageSrc).toContain('sl-404');
+    expect(
+      imageSrc,
+      'Problem user should see the broken-image placeholder (sl-404) for product images',
+    ).toContain('sl-404');
   });
 
   test('problem user can add and remove products in cart despite UI issues', { tag: ['@cart', '@userType'] }, async ({
@@ -73,15 +88,27 @@ test.describe('User types behaviour matrix', () => {
     await inventoryPage.waitForVisible();
     await inventoryPage.addProductToCartByName(FLEECE);
     await inventoryPage.addProductToCartByName(BIKE_LIGHT);
-    expect(await inventoryPage.getCartBadgeCount()).toBe(2);
+    expect(
+      await inventoryPage.getCartBadgeCount(),
+      'Cart badge should show 2 after adding two products as problem user',
+    ).toBe(2);
 
     await inventoryPage.openCart();
     await cartPage.waitForVisible();
-    expect(await cartPage.getItemsCount()).toBe(2);
+    expect(
+      await cartPage.getItemsCount(),
+      'Cart page should contain 2 items after adding them as problem user',
+    ).toBe(2);
 
     await cartPage.removeItemByName(BIKE_LIGHT);
-    expect(await cartPage.getItemsCount()).toBe(1);
-    expect(await cartPage.hasItemWithName(FLEECE)).toBe(true);
+    expect(
+      await cartPage.getItemsCount(),
+      'Cart should contain 1 item after removing one as problem user',
+    ).toBe(1);
+    expect(
+      await cartPage.hasItemWithName(FLEECE),
+      `"${FLEECE}" should still be in cart after removing "${BIKE_LIGHT}"`,
+    ).toBe(true);
   });
 
   test('performance glitch user eventually reaches inventory and can add products', {
@@ -90,7 +117,10 @@ test.describe('User types behaviour matrix', () => {
     await loginPage.loginAs('performanceGlitch');
     await inventoryPage.waitForVisible();
     await inventoryPage.addProductToCartByName(ONESIE);
-    expect(await inventoryPage.getCartBadgeCount()).toBe(1);
+    expect(
+      await inventoryPage.getCartBadgeCount(),
+      'Performance glitch user should have 1 item in cart after adding it',
+    ).toBe(1);
   });
 
   test('performance glitch user can proceed to checkout overview', {
@@ -115,7 +145,10 @@ test.describe('User types behaviour matrix', () => {
     await checkoutStepOnePage.completeStepOne(user.firstName, user.lastName, user.postalCode);
 
     await checkoutStepTwoPage.waitForVisible();
-    expect(await checkoutStepTwoPage.getSummaryItemCount()).toBe(2);
+    expect(
+      await checkoutStepTwoPage.getSummaryItemCount(),
+      'Performance glitch user checkout overview should list 2 items',
+    ).toBe(2);
   });
 
   test('error user login succeeds but checkout step one shows blocking error', {
@@ -132,8 +165,14 @@ test.describe('User types behaviour matrix', () => {
     const user = makeCheckoutUserData();
     await checkoutStepOnePage.completeStepOne(user.firstName, user.lastName, user.postalCode);
     const errorText = await checkoutStepOnePage.getErrorText();
-    expect(errorText.length).toBeGreaterThan(0);
-    expect(errorText).toContain('Error');
+    expect(
+      errorText.length,
+      'Error user should see a non-empty error on checkout step one',
+    ).toBeGreaterThan(0);
+    expect(
+      errorText,
+      'Error user checkout error should contain the word "Error"',
+    ).toContain('Error');
   });
 
   test('standard user can complete checkout with one product', {
@@ -161,7 +200,10 @@ test.describe('User types behaviour matrix', () => {
     await checkoutStepTwoPage.finish();
 
     await checkoutCompletePage.waitForVisible();
-    expect(await checkoutCompletePage.getHeaderText()).toContain('Thank you');
+    expect(
+      await checkoutCompletePage.getHeaderText(),
+      'Checkout complete header should thank the user',
+    ).toContain('Thank you');
   });
 
   test('logout and switching user types resets cart and reflects new anomalies', {
@@ -171,19 +213,31 @@ test.describe('User types behaviour matrix', () => {
     await inventoryPage.waitForVisible();
     await inventoryPage.addProductToCartByName(BACKPACK);
     await inventoryPage.addProductToCartByName(BIKE_LIGHT);
-    expect(await inventoryPage.getCartBadgeCount()).toBe(2);
+    expect(
+      await inventoryPage.getCartBadgeCount(),
+      'Standard user should have 2 items in cart before switching users',
+    ).toBe(2);
 
     await headerMenu.clickLogout();
     await loginPage.loginAs('problem');
     await inventoryPage.waitForVisible();
-    expect(await inventoryPage.getCartBadgeCount()).toBe(0);
+    expect(
+      await inventoryPage.getCartBadgeCount(),
+      'Problem user cart badge should be 0 after switching from standard user',
+    ).toBe(0);
 
     await inventoryPage.openCart();
     await cartPage.waitForVisible();
-    expect(await cartPage.isEmpty()).toBe(true);
+    expect(
+      await cartPage.isEmpty(),
+      'Problem user cart should be empty after switching from standard user',
+    ).toBe(true);
 
     const imageSrc = await inventoryPage.getItemImageSrcByName(BACKPACK);
-    expect(imageSrc).toContain('sl-404');
+    expect(
+      imageSrc,
+      'Problem user should see broken product image placeholder (sl-404)',
+    ).toContain('sl-404');
   });
 
   for (const key of cartCapableUsers) {
@@ -193,7 +247,10 @@ test.describe('User types behaviour matrix', () => {
       async ({ loginPage, inventoryPage }) => {
         await loginPage.loginAs(key);
         await inventoryPage.waitForVisible();
-        expect(await inventoryPage.getCartBadgeCount()).toBe(0);
+        expect(
+          await inventoryPage.getCartBadgeCount(),
+          `User "${key}" should start with an empty cart after login`,
+        ).toBe(0);
       },
     );
   }

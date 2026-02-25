@@ -46,7 +46,7 @@ test.describe('Login flows on Sauce Demo', () => {
       true,
     );
     const errorText = await loginPage.getErrorText();
-    expect(errorText).toContain('Username and password do not match');
+    expect(errorText, 'Error should mention credentials mismatch').toContain('Username and password do not match');
   });
 
   test('invalid username shows error message', { tag: '@login' }, async ({ loginPage }) => {
@@ -55,7 +55,7 @@ test.describe('Login flows on Sauce Demo', () => {
       true,
     );
     const errorText = await loginPage.getErrorText();
-    expect(errorText).toContain('Username and password do not match');
+    expect(errorText, 'Error should mention credentials mismatch for unknown username').toContain('Username and password do not match');
   });
 
   test('missing username triggers validation error', { tag: '@login' }, async ({ loginPage }) => {
@@ -63,7 +63,7 @@ test.describe('Login flows on Sauce Demo', () => {
     await loginPage.fillPassword('secret_sauce');
     await loginPage.submitLogin();
     const errorText = await loginPage.getErrorText();
-    expect(errorText).toContain('Username is required');
+    expect(errorText, 'Validation error should require username when field is empty').toContain('Username is required');
   });
 
   test('missing password triggers validation error', { tag: '@login' }, async ({ loginPage }) => {
@@ -71,13 +71,13 @@ test.describe('Login flows on Sauce Demo', () => {
     await loginPage.fillUsername('standard_user');
     await loginPage.submitLogin();
     const errorText = await loginPage.getErrorText();
-    expect(errorText).toContain('Password is required');
+    expect(errorText, 'Validation error should require password when field is empty').toContain('Password is required');
   });
 
   test('locked out user cannot log in', { tag: '@login' }, async ({ loginPage }) => {
     await loginPage.loginAs(userKeys.lockedOut);
     const errorText = await loginPage.getErrorText();
-    expect(errorText).toContain('Sorry, this user has been locked out');
+    expect(errorText, 'Locked out user should see an appropriate error message').toContain('Sorry, this user has been locked out');
   });
 
   test('problem user logs in but product images have known issue', { tag: '@login' }, async ({
@@ -138,7 +138,7 @@ test.describe('Login flows on Sauce Demo', () => {
     await loginPage.loginAs(userKeys.visual);
     await inventoryPage.waitForVisible();
     const badgeCount = await inventoryPage.getCartBadgeCount();
-    expect(badgeCount).toBe(0);
+    expect(badgeCount, 'Cart badge should be zero for a freshly logged-in visual user').toBe(0);
   });
 });
 

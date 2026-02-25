@@ -40,7 +40,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
     footer,
   }) => {
     const profile = getUserProfile('standard');
-    expect(profile.loginExpectation).toBe('success');
+    expect(
+      profile.loginExpectation,
+      'Standard user profile should have "success" login expectation',
+    ).toBe('success');
     const ctx = buildContext({
       loginPage,
       inventoryPage,
@@ -50,11 +53,14 @@ test.describe('SauceDemo user types behavior matrix', () => {
       checkoutCompletePage,
     });
     await loginAsUser(ctx, 'standard');
-    expect(await didLoginSucceed(ctx)).toBe(true);
+    expect(
+      await didLoginSucceed(ctx),
+      'Standard user login should succeed',
+    ).toBe(true);
 
     await footer.waitForVisible();
     const checkoutResult = await tryFullCheckout(ctx);
-    expect(checkoutResult).toBe(true);
+    expect(checkoutResult, 'Standard user should complete the full checkout successfully').toBe(true);
   });
 
   test('locked out user: login is rejected with locked message', {
@@ -68,7 +74,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
     checkoutCompletePage,
   }) => {
     const profile = getUserProfile('lockedOut');
-    expect(profile.loginExpectation).toBe('locked');
+    expect(
+      profile.loginExpectation,
+      'Locked out user profile should have "locked" login expectation',
+    ).toBe('locked');
     const ctx = buildContext({
       loginPage,
       inventoryPage,
@@ -80,7 +89,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
     await loginAsUser(ctx, 'lockedOut');
     const error = await loginPage.getErrorText();
     expectLockedOutUserError(error);
-    expect(await didLoginSucceed(ctx)).toBe(false);
+    expect(
+      await didLoginSucceed(ctx),
+      'Locked out user login should fail',
+    ).toBe(false);
   });
 
   test('problem user: login succeeds but full checkout may still work', {
@@ -94,7 +106,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
     checkoutCompletePage,
   }) => {
     const profile = getUserProfile('problem');
-    expect(profile.loginExpectation).toBe('success');
+    expect(
+      profile.loginExpectation,
+      'Problem user profile should have "success" login expectation',
+    ).toBe('success');
     const ctx = buildContext({
       loginPage,
       inventoryPage,
@@ -104,10 +119,13 @@ test.describe('SauceDemo user types behavior matrix', () => {
       checkoutCompletePage,
     });
     await loginAsUser(ctx, 'problem');
-    expect(await didLoginSucceed(ctx)).toBe(true);
+    expect(
+      await didLoginSucceed(ctx),
+      'Problem user login should succeed',
+    ).toBe(true);
 
     const checkoutResult = await tryFullCheckout(ctx);
-    expect(checkoutResult).toBe(true);
+    expect(checkoutResult, 'Problem user should be able to complete checkout').toBe(true);
   });
 
   test('performance glitch user: login succeeds and flow eventually passes', {
@@ -121,7 +139,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
     checkoutCompletePage,
   }) => {
     const profile = getUserProfile('performanceGlitch');
-    expect(profile.loginExpectation).toBe('success');
+    expect(
+      profile.loginExpectation,
+      'Performance glitch user profile should have "success" login expectation',
+    ).toBe('success');
     const ctx = buildContext({
       loginPage,
       inventoryPage,
@@ -135,11 +156,14 @@ test.describe('SauceDemo user types behavior matrix', () => {
     const loginOk = await didLoginSucceed(ctx);
     const elapsedLogin = Date.now() - start;
 
-    expect(loginOk).toBe(true);
-    expect(elapsedLogin).toBeGreaterThan(0);
+    expect(loginOk, 'Performance glitch user login should eventually succeed').toBe(true);
+    expect(
+      elapsedLogin,
+      'Login should take a measurable amount of time (performance glitch user)',
+    ).toBeGreaterThan(0);
 
     const checkoutResult = await tryFullCheckout(ctx);
-    expect(checkoutResult).toBe(true);
+    expect(checkoutResult, 'Performance glitch user should be able to complete checkout').toBe(true);
   });
 
   test('error user: login succeeds but checkout may fail', {
@@ -153,7 +177,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
     checkoutCompletePage,
   }) => {
     const profile = getUserProfile('error');
-    expect(profile.loginExpectation).toBe('success');
+    expect(
+      profile.loginExpectation,
+      'Error user profile should have "success" login expectation',
+    ).toBe('success');
     const ctx = buildContext({
       loginPage,
       inventoryPage,
@@ -163,10 +190,13 @@ test.describe('SauceDemo user types behavior matrix', () => {
       checkoutCompletePage,
     });
     await loginAsUser(ctx, 'error');
-    expect(await didLoginSucceed(ctx)).toBe(true);
+    expect(
+      await didLoginSucceed(ctx),
+      'Error user login should succeed',
+    ).toBe(true);
 
     const checkoutResult = await tryFullCheckout(ctx);
-    expect(checkoutResult).toBe(false);
+    expect(checkoutResult, 'Error user checkout should fail due to known error behaviour').toBe(false);
   });
 
   test('visual user: login succeeds and checkout still works', {
@@ -180,7 +210,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
     checkoutCompletePage,
   }) => {
     const profile = getUserProfile('visual');
-    expect(profile.loginExpectation).toBe('success');
+    expect(
+      profile.loginExpectation,
+      'Visual user profile should have "success" login expectation',
+    ).toBe('success');
     const ctx = buildContext({
       loginPage,
       inventoryPage,
@@ -190,10 +223,13 @@ test.describe('SauceDemo user types behavior matrix', () => {
       checkoutCompletePage,
     });
     await loginAsUser(ctx, 'visual');
-    expect(await didLoginSucceed(ctx)).toBe(true);
+    expect(
+      await didLoginSucceed(ctx),
+      'Visual user login should succeed',
+    ).toBe(true);
 
     const checkoutResult = await tryFullCheckout(ctx);
-    expect(checkoutResult).toBe(true);
+    expect(checkoutResult, 'Visual user should complete checkout successfully').toBe(true);
   });
 
   test('locked out user cannot access inventory even via direct navigation', {
@@ -208,7 +244,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
     checkoutCompletePage,
   }) => {
     const profile = getUserProfile('lockedOut');
-    expect(profile.loginExpectation).toBe('locked');
+    expect(
+      profile.loginExpectation,
+      'Locked out user profile should have "locked" login expectation',
+    ).toBe('locked');
     const ctx = buildContext({
       loginPage,
       inventoryPage,
@@ -218,11 +257,17 @@ test.describe('SauceDemo user types behavior matrix', () => {
       checkoutCompletePage,
     });
     await loginAsUser(ctx, 'lockedOut');
-    expect(await didLoginSucceed(ctx)).toBe(false);
+    expect(
+      await didLoginSucceed(ctx),
+      'Locked out user login should fail',
+    ).toBe(false);
 
     await openInventoryDirect(page);
     await loginPage.waitForVisible();
-    expect(await loginPage.isErrorVisible()).toBe(true);
+    expect(
+      await loginPage.isErrorVisible(),
+      'Locked out user should still see an error when trying to access inventory directly',
+    ).toBe(true);
   });
 
   test('standard user logout and re-login keeps behavior consistent', {
@@ -237,7 +282,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
     headerMenu,
   }) => {
     const profile = getUserProfile('standard');
-    expect(profile.loginExpectation).toBe('success');
+    expect(
+      profile.loginExpectation,
+      'Standard user profile should have "success" login expectation',
+    ).toBe('success');
     const ctx = buildContext({
       loginPage,
       inventoryPage,
@@ -247,14 +295,20 @@ test.describe('SauceDemo user types behavior matrix', () => {
       checkoutCompletePage,
     });
     await loginAsUser(ctx, 'standard');
-    expect(await didLoginSucceed(ctx)).toBe(true);
+    expect(
+      await didLoginSucceed(ctx),
+      'First standard user login should succeed',
+    ).toBe(true);
     await headerMenu.clickLogout();
     await loginPage.waitForVisible();
 
     await loginAsUser(ctx, 'standard');
-    expect(await didLoginSucceed(ctx)).toBe(true);
+    expect(
+      await didLoginSucceed(ctx),
+      'Second standard user login after logout should also succeed',
+    ).toBe(true);
     const checkoutResult = await tryFullCheckout(ctx);
-    expect(checkoutResult).toBe(true);
+    expect(checkoutResult, 'Standard user checkout after re-login should succeed').toBe(true);
   });
 
   test('problem user: images or items do not break cart interactions', {
@@ -268,7 +322,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
     checkoutCompletePage,
   }) => {
     const profile = getUserProfile('problem');
-    expect(profile.loginExpectation).toBe('success');
+    expect(
+      profile.loginExpectation,
+      'Problem user profile should have "success" login expectation',
+    ).toBe('success');
     const ctx = buildContext({
       loginPage,
       inventoryPage,
@@ -287,7 +344,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
 
     await inventoryPage.openCart();
     await cartPage.waitForVisible();
-    expect(await cartPage.getItemsCount()).toBe(selectedProducts.length);
+    expect(
+      await cartPage.getItemsCount(),
+      'Problem user cart should contain all 3 added products despite UI issues',
+    ).toBe(selectedProducts.length);
   });
 
   test('visual user: inventory and cart remain functionally correct despite visual glitches', {
@@ -301,7 +361,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
     checkoutCompletePage,
   }) => {
     const profile = getUserProfile('visual');
-    expect(profile.loginExpectation).toBe('success');
+    expect(
+      profile.loginExpectation,
+      'Visual user profile should have "success" login expectation',
+    ).toBe('success');
     const ctx = buildContext({
       loginPage,
       inventoryPage,
@@ -320,7 +383,10 @@ test.describe('SauceDemo user types behavior matrix', () => {
 
     await inventoryPage.openCart();
     await cartPage.waitForVisible();
-    expect(await cartPage.getItemsCount()).toBe(itemsToAdd.length);
+    expect(
+      await cartPage.getItemsCount(),
+      'Visual user cart should contain the 2 added products',
+    ).toBe(itemsToAdd.length);
 
     await cartPage.continueShopping();
     await inventoryPage.waitForVisible();
@@ -352,15 +418,24 @@ test.describe('SauceDemo user types behavior matrix', () => {
         const loginOk = await didLoginSucceed(ctx);
 
         if (profile.loginExpectation === 'success') {
-          expect(loginOk).toBe(true);
+          expect(
+            loginOk,
+            `User "${profile.key}" with expectation "success" should log in successfully`,
+          ).toBe(true);
           await headerMenu.clickLogout();
           await loginPage.waitForVisible();
         } else if (profile.loginExpectation === 'locked') {
-          expect(loginOk).toBe(false);
+          expect(
+            loginOk,
+            `User "${profile.key}" with expectation "locked" should not log in`,
+          ).toBe(false);
           const error = await loginPage.getErrorText();
           expectLockedOutUserError(error);
         } else {
-          expect(loginOk).toBe(false);
+          expect(
+            loginOk,
+            `User "${profile.key}" with expectation "invalid" should not log in`,
+          ).toBe(false);
           const error = await loginPage.getErrorText();
           expectInvalidCredentialsError(error);
         }
@@ -392,13 +467,22 @@ test.describe('SauceDemo user types behavior matrix', () => {
       await test.step(`Checkout capability for ${profile.key}`, async () => {
         await loginAsUser(ctx, profile.key);
         const loginOk = await didLoginSucceed(ctx);
-        expect(loginOk).toBe(true);
+        expect(
+          loginOk,
+          `User "${profile.key}" should log in successfully before attempting checkout`,
+        ).toBe(true);
 
         const checkoutResult = await tryFullCheckout(ctx);
         if (profile.canCheckout === false) {
-          expect(checkoutResult).toBe(false);
+          expect(
+            checkoutResult,
+            `User "${profile.key}" is expected to fail checkout per matrix`,
+          ).toBe(false);
         } else {
-          expect(checkoutResult).toBe(true);
+          expect(
+            checkoutResult,
+            `User "${profile.key}" is expected to complete checkout successfully per matrix`,
+          ).toBe(true);
         }
 
         await logoutIfPossible(headerMenu, loginPage);
