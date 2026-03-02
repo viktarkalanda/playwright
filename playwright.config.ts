@@ -13,12 +13,12 @@ export default defineConfig({
   // Fail the build on CI if test.only is left in source
   forbidOnly: !!process.env.CI,
 
-  // Retry failed tests on CI
-  retries: process.env.CI ? 2 : 0,
+  // Retry failed tests on CI (disabled in Docker to save resources)
+  retries: process.env.CI && !process.env.DOCKER ? 2 : 0,
 
-  // Allow some parallelism on CI; 2 workers keeps resource usage low while
-  // avoiding fully-serial execution across ~300+ tests.
-  workers: process.env.CI ? 2 : undefined,
+  // Allow some parallelism on CI; 1-2 workers keeps resource usage low.
+  // For Docker environments, use 1 worker to prevent overload.
+  workers: process.env.CI ? 1 : undefined,
 
   // Reporters: console, HTML report, Allure
   reporter: [
@@ -48,13 +48,13 @@ export default defineConfig({
     testIdAttribute: 'data-test',
 
     // Take screenshots only on test failure
-    screenshot: 'only-on-failure',
+    screenshot: process.env.DOCKER ? 'off' : 'only-on-failure',
 
-    // Keep video only for failed tests
-    video: 'retain-on-failure',
+    // Disable video recording in Docker to save resources
+    video: process.env.DOCKER ? 'off' : 'retain-on-failure',
 
-    // Record trace on first retry (useful for debugging flaky tests)
-    trace: 'on-first-retry',
+    // Disable trace recording in Docker to save resources
+    trace: process.env.DOCKER ? 'off' : 'on-first-retry',
 
     // Max time for a single action (click, fill, etc.)
     actionTimeout: 8_000,
