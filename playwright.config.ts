@@ -18,7 +18,8 @@ export default defineConfig({
 
   // Allow some parallelism on CI; 1-2 workers keeps resource usage low.
   // For Docker environments, use 1 worker to prevent overload.
-  workers: process.env.CI ? 1 : undefined,
+  // Local development: limit to 2 workers to prevent system lag
+  workers: process.env.CI ? 1 : 2,
 
   // Reporters: console, HTML report, Allure
   reporter: [
@@ -50,8 +51,8 @@ export default defineConfig({
     // Take screenshots only on test failure
     screenshot: process.env.DOCKER ? 'off' : 'only-on-failure',
 
-    // Disable video recording in Docker to save resources
-    video: process.env.DOCKER ? 'off' : 'retain-on-failure',
+    // Disable video recording (locally and in Docker) to save resources
+    video: 'off',
 
     // Disable trace recording in Docker to save resources
     trace: process.env.DOCKER ? 'off' : 'on-first-retry',
