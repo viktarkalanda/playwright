@@ -13,9 +13,6 @@ pipeline {
     ALLURE_DOCKER_URL = 'http://allure-docker-service:5050'
     // Allure Docker Service project ID
     ALLURE_PROJECT_ID = 'default'
-    // Anthropic API key — stored in Jenkins Credentials, never in git
-    // Add via: Manage Jenkins → Credentials → Add → Secret text → ID: anthropic-api-key
-    ANTHROPIC_API_KEY = credentials('anthropic-api-key')
   }
 
   stages {
