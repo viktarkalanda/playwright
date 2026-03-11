@@ -13,13 +13,11 @@ export default defineConfig({
   // Fail the build on CI if test.only is left in source
   forbidOnly: !!process.env.CI,
 
-  // Retry failed tests on CI (disabled in Docker to save resources)
-  retries: process.env.CI && !process.env.DOCKER ? 2 : 0,
+  // No retries — flaky tests should be fixed, not hidden
+  retries: 0,
 
-  // Allow some parallelism on CI; 1-2 workers keeps resource usage low.
-  // For Docker environments, use 1 worker to prevent overload.
-  // Local development: limit to 2 workers to prevent system lag
-  workers: process.env.CI ? 1 : 2,
+  // 4 workers everywhere for faster runs
+  workers: 4,
 
   // Reporters: console, HTML report, Allure
   reporter: [
@@ -31,13 +29,11 @@ export default defineConfig({
   // Global timeout for a single test (ms).
   // 30 s accommodates both the fast SauceDemo mock and the live demoblaze.com
   // second-shop tests, while still catching genuinely hung tests.
-  timeout: 30_000,
+  timeout: 20_000,
 
   // Default timeouts for Playwright expect(...)
   expect: {
-    // Max time for expect(...) to wait for condition (ms)
-    // Example: await expect(locator).toBeVisible();
-    timeout: 8_000,
+    timeout: 5_000,
   },
 
   // Shared settings for all projects
@@ -58,11 +54,10 @@ export default defineConfig({
     trace: process.env.DOCKER ? 'off' : 'on-first-retry',
 
     // Max time for a single action (click, fill, etc.)
-    actionTimeout: 8_000,
+    actionTimeout: 5_000,
 
     // Max time for navigations (page.goto, page.waitForURL, etc.)
-    // 15 s is necessary for demoblaze.com which can be slow on cold requests.
-    navigationTimeout: 15_000,
+    navigationTimeout: 10_000,
   },
 
   // Browser projects configuration
