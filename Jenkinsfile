@@ -1,14 +1,9 @@
 pipeline {
-  // Use the official Playwright Docker image — Node.js and all browser
-  // dependencies are pre-installed, so no apt-get installs are needed at
-  // runtime. The image version must match @playwright/test in package.json.
-  agent {
-    docker {
-      image 'mcr.microsoft.com/playwright:v1.56.0-noble'
-      // Run as root so npx can write to the workspace and install zip.
-      args '--user root'
-    }
-  }
+  // Runs on the Jenkins controller.
+  // To use the official Playwright Docker image instead, install the
+  // "Docker Pipeline" Jenkins plugin and replace this with:
+  //   agent { docker { image 'mcr.microsoft.com/playwright:v1.56.0-noble' args '--user root' } }
+  agent any
 
   options {
     // Timestamps in console output
@@ -33,15 +28,24 @@ pipeline {
     stage('Install dependencies') {
       steps {
         sh '''
-          node -v
-          npm -v
+          # Install Node.js 20 if not present
+          if ! command -v node >/dev/null 2>&1; then
+            echo "Installing Node.js 20..."
+            apt-get update -qq
+            apt-get install -y -qq curl
+            curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+            apt-get install -y -qq nodejs
+          fi
 
-          # Install zip if missing (needed for Allure upload step)
+          # Install zip if not present (needed for Allure upload)
           if ! command -v zip >/dev/null 2>&1; then
             apt-get update -qq && apt-get install -y -qq zip
           fi
 
+          node -v
+          npm -v
           npm ci
+          npx playwright install --with-deps
         '''
       }
     }
