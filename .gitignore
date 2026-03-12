@@ -12,3 +12,9 @@ node_modules/
 allure-results/
 allure-report/
 logs/
+
+# playwright-cli session files
+.playwright-cli/
+
+# playwright-mcp session files
+.playwright-mcp/
