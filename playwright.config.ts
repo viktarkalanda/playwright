@@ -23,8 +23,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
 
   // On CI limit to 2 workers to avoid resource contention in Docker.
-  // Locally: auto (half the CPU cores) for maximum parallelism.
-  workers: process.env.CI ? 2 : undefined,
+  // Locally: 4 workers for fast feedback (matches previous behaviour).
+  workers: process.env.CI ? 2 : 4,
 
   // Reporters: console + Allure always; HTML only locally (CI uses Allure Docker).
   // Text log path is configurable via LOG_FILE env var.
@@ -73,21 +73,19 @@ export default defineConfig({
   },
 
   // Browser projects configuration.
-  // All three browsers run by default. On CI the Playwright Docker image
-  // ships with Chromium, Firefox, and WebKit pre-installed.
-  // To run a single browser locally: npx playwright test --project=chromium
+  // Locally: Chromium only for fast feedback.
+  // On CI: all three browsers to catch cross-browser regressions.
+  // To run Firefox/WebKit locally: npx playwright test --project=firefox
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
+    ...(process.env.CI
+      ? [
+          { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+          { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+        ]
+      : []),
   ],
 });
