@@ -24,6 +24,7 @@ export default defineConfig({
     ['line'],
     ['html', { open: 'never' }],
     ['allure-playwright', { resultsDir: 'allure-results' }],
+    ['./src/reporters/TextFileReporter.ts', { outputFile: 'logs/test-run.log' }],
   ],
 
   // Global timeout for a single test (ms).

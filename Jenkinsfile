@@ -67,7 +67,8 @@ pipeline {
     stage('Clean reports') {
       steps {
         sh '''
-          rm -rf allure-results allure-report playwright-report || true
+          rm -rf allure-results allure-report playwright-report logs || true
+          mkdir -p logs
         '''
       }
     }
@@ -77,7 +78,7 @@ pipeline {
         script {
           // Test failures mark the build as UNSTABLE but subsequent stages still run
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            sh 'npx playwright test'
+            sh 'npx playwright test 2>&1 | tee logs/playwright-output.log; exit ${PIPESTATUS[0]}'
           }
         }
       }
@@ -121,14 +122,19 @@ pipeline {
 
   post {
     always {
-      // Playwright HTML report
-      archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true, allowEmptyArchive: true
+      script {
+        // Playwright HTML report
+        archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
 
-      // Allure raw results
-      archiveArtifacts artifacts: 'allure-results/**', fingerprint: true, allowEmptyArchive: true
+        // Allure raw results
+        archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
 
-      // Allure report via Jenkins plugin
-      allure results: [[path: 'allure-results']], reportBuildPolicy: 'ALWAYS'
+        // Text logs (playwright-output.log + test-run.log)
+        archiveArtifacts artifacts: 'logs/**', allowEmptyArchive: true
+
+        // Allure report via Jenkins plugin
+        allure results: [[path: 'allure-results']], reportBuildPolicy: 'ALWAYS'
+      }
     }
   }
 }
