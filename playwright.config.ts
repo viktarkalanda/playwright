@@ -18,12 +18,11 @@ export default defineConfig({
   // Fail the build on CI if test.only is left in source
   forbidOnly: !!process.env.CI,
 
-  // On CI allow 2 retries to absorb transient network flakiness.
-  // Locally: 0 retries so developers see failures immediately.
-  retries: process.env.CI ? 2 : 0,
+  // No retries — failures are investigated immediately.
+  retries: 0,
 
   // On CI limit to 2 workers to avoid resource contention in Docker.
-  // Locally: 4 workers for fast feedback (matches previous behaviour).
+  // Locally: 4 workers for fast feedback.
   workers: process.env.CI ? 2 : 4,
 
   // Reporters: console + Allure always; HTML only locally (CI uses Allure Docker).
