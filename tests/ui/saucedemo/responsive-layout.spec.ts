@@ -1,5 +1,5 @@
 // tests/ui/responsive-layout.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { getDeviceViewport } from '../../../src/utils/viewports';
 import { productCatalog } from '../../../src/data/products';
 import type { LoginPage } from '../../../src/pages/saucedemo/LoginPage';

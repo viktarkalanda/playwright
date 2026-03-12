@@ -1,5 +1,5 @@
 // tests/ui/header-menu.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { productCatalog } from '../../../src/data/products';
 import { routesConfig } from '../../../src/data/routes';
 import { openInventoryDirect, openCartDirect } from '../../../src/utils/directNavigation';

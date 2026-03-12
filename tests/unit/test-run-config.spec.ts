@@ -1,5 +1,5 @@
 // tests/unit/test-run-config.spec.ts
-import { test, expect } from '../../src/fixtures/test-fixtures';
+import { test, expect } from '../../src/saucedemo/fixtures/test-fixtures';
 import {
   tag,
   and,

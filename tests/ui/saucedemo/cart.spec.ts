@@ -1,5 +1,5 @@
 // tests/ui/saucedemo/cart.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import type { CartPage } from '../../../src/pages/saucedemo/CartPage';
 
 const BACKPACK_NAME = 'Sauce Labs Backpack';
@@ -869,13 +869,13 @@ test.describe('Cart', () => {
     test(
       'reset app state clears cart contents and badge',
       { tag: '@cart' },
-      async ({ inventoryPage, cartPage, mainMenu }) => {
+      async ({ inventoryPage, cartPage, headerMenu }) => {
         await inventoryPage.addItemToCartByName(BACKPACK_NAME);
         await inventoryPage.addItemToCartByName(ONESIE_NAME);
 
-        await mainMenu.resetAppState();
-        if (await mainMenu.isVisible()) {
-          await mainMenu.close();
+        await headerMenu.clickResetAppState();
+        if (await headerMenu.isMenuOpen()) {
+          await headerMenu.closeMenu();
         }
 
         await inventoryPage.openCart();
@@ -889,14 +889,14 @@ test.describe('Cart', () => {
     test(
       'cart is cleared after logout and new login',
       { tag: ['@cart', '@e2e'] },
-      async ({ inventoryPage, cartPage, mainMenu, loginPage }) => {
+      async ({ inventoryPage, cartPage, headerMenu, loginPage }) => {
         await inventoryPage.addItemToCartByName(BOLT_TSHIRT_NAME);
         await inventoryPage.openCart();
         await cartPage.waitForVisible();
 
         expect(await cartPage.isEmpty(), 'Cart should contain the added product before logout').toBe(false);
 
-        await mainMenu.logout();
+        await headerMenu.clickLogout();
         await loginPage.loginAs('standard');
         await inventoryPage.waitForVisible();
         await inventoryPage.openCart();

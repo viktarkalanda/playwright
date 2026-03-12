@@ -1,5 +1,5 @@
 // tests/ui/cart-bulk.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { productCatalog } from '../../../src/data/products';
 import { range, shuffle, pickRandomSubset, randomInt } from '../../../src/utils/random';
 import { makeCheckoutUserData } from '../../../src/utils/testData';

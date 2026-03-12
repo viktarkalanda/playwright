@@ -1,5 +1,8 @@
 // tests/ui/login-negative-input.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
+
+// Negative login tests require a clean, unauthenticated browser context.
+test.use({ storageState: undefined });
 import type { LoginPage } from '../../../src/pages/saucedemo/LoginPage';
 import { edgeCaseStrings, generateString } from '../../../src/utils/stringGenerators';
 import { validationMessages } from '../../../src/data/validationMessages';

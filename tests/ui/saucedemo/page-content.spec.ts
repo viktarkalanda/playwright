@@ -1,5 +1,5 @@
 // tests/ui/page-content.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { getPageContent, pageContent, PageKey } from '../../../src/data/pageContent';
 import {
   PageContentContext,

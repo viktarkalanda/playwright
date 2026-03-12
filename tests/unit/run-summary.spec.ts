@@ -1,5 +1,5 @@
 // tests/unit/run-summary.spec.ts
-import { test, expect } from '../../src/fixtures/test-fixtures';
+import { test, expect } from '../../src/saucedemo/fixtures/test-fixtures';
 import {
   TestResult,
   buildRunSummary,

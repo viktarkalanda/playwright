@@ -1,5 +1,5 @@
 // tests/ui/menu.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import type { InventoryPage } from '../../../src/pages/saucedemo/InventoryPage';
 
 const CART_ITEMS = ['Sauce Labs Backpack', 'Sauce Labs Bike Light'];

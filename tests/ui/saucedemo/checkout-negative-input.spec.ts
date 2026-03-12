@@ -1,5 +1,5 @@
 // tests/ui/checkout-negative-input.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import type { InventoryPage } from '../../../src/pages/saucedemo/InventoryPage';
 import type { CartPage } from '../../../src/pages/saucedemo/CartPage';
 import type { CheckoutStepOnePage } from '../../../src/pages/saucedemo/CheckoutStepOnePage';

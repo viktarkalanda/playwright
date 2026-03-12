@@ -1,5 +1,5 @@
 // tests/ui/products-catalog.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { productCatalog } from '../../../src/data/products';
 
 test.describe('Products catalog consistency', () => {

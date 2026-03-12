@@ -1,5 +1,5 @@
 // tests/ui/product-details.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import type { InventoryPage } from '../../../src/pages/saucedemo/InventoryPage';
 import type { ProductDetailsPage } from '../../../src/pages/saucedemo/ProductDetailsPage';
 

@@ -1,5 +1,5 @@
 // tests/ui/user-types-behavior.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { productCatalog } from '../../../src/data/products';
 import { userBehaviorMatrix, getUserProfile } from '../../../src/data/userMatrix';
 import type { BasicUserFlowContext } from '../../../src/utils/userFlows';

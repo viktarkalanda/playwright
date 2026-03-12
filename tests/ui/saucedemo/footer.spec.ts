@@ -6,7 +6,7 @@
 //
 // Also validates social media links and copyright text.
 
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { makeCheckoutUserData } from '../../../src/utils/testData';
 import { productCatalog } from '../../../src/data/products';
 

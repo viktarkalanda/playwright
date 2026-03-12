@@ -1,5 +1,5 @@
 // tests/ui/checkout-e2e.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { makeCheckoutUserData } from '../../../src/utils/testData';
 import type { InventoryPage } from '../../../src/pages/saucedemo/InventoryPage';
 import type { CartPage } from '../../../src/pages/saucedemo/CartPage';

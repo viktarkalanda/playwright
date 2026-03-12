@@ -1,7 +1,11 @@
 // tests/ui/login.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { TestConfig, UserKey } from '../../../src/config/testConfig';
 import type { LoginPage } from '../../../src/pages/saucedemo/LoginPage';
+
+// These tests exercise the login page itself — start from an unauthenticated
+// browser so the stored session from global-setup doesn't interfere.
+test.use({ storageState: undefined });
 
 const config = TestConfig.getInstance();
 

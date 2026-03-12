@@ -1,5 +1,5 @@
 // tests/ui/user-types-matrix.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { UserKey } from '../../../src/config/testConfig';
 import { makeCheckoutUserData } from '../../../src/utils/testData';
 

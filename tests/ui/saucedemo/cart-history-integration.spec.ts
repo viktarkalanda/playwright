@@ -1,5 +1,5 @@
 // tests/ui/cart-history-integration.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { CartHistory } from '../../../src/utils/cartHistory';
 import { productCatalog } from '../../../src/data/products';
 

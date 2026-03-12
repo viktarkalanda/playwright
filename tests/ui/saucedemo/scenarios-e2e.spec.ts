@@ -1,5 +1,5 @@
 // tests/ui/scenarios-e2e.spec.ts
-import { test } from '../../../src/fixtures/test-fixtures';
+import { test } from '../../../src/saucedemo/fixtures/test-fixtures';
 import { scenarios, getScenarioById, ScenarioDefinition } from '../../../src/utils/scenarioDefinitions';
 import { runScenario, ScenarioRunnerContext } from '../../../src/utils/scenarioRunner';
 

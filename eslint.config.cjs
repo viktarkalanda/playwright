@@ -13,8 +13,7 @@ module.exports = [
       'playwright-report/**',
       'test-results/**',
       'allure-results/**',
-      'allure-report/**',
-      'src/utils/stepDecorator.ts'
+      'allure-report/**'
     ],
   },
 

@@ -1,5 +1,5 @@
 // tests/ui/checkout-step-one.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
 import type { SauceDemoContext } from '../../../src/types/appContext';
 import { makeCheckoutUserData } from '../../../src/utils/testData';
 

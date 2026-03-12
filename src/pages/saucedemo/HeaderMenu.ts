@@ -1,6 +1,7 @@
 // src/pages/saucedemo/HeaderMenu.ts
 import { Page, Locator } from '@playwright/test';
 import { BaseForm } from './BaseForm';
+import { step } from '../../utils/stepDecorator';
 
 export class HeaderMenu extends BaseForm {
   readonly menuButton: Locator;
@@ -25,6 +26,7 @@ export class HeaderMenu extends BaseForm {
     this.cartBadge = this.page.locator('.shopping_cart_badge');
   }
 
+  @step('Open burger menu')
   async openMenu(): Promise<void> {
     if (await this.isMenuOpen()) {
       return;
@@ -37,6 +39,7 @@ export class HeaderMenu extends BaseForm {
     return this.menuPanel.isVisible();
   }
 
+  @step('Close burger menu')
   async closeMenu(): Promise<void> {
     if (!(await this.isMenuOpen())) {
       return;
@@ -45,21 +48,25 @@ export class HeaderMenu extends BaseForm {
     await this.menuPanel.waitFor({ state: 'hidden' });
   }
 
+  @step('Navigate to All Items from menu')
   async clickAllItems(): Promise<void> {
     await this.openMenu();
     await this.allItemsLink.click();
   }
 
+  @step('Navigate to About from menu')
   async clickAbout(): Promise<void> {
     await this.openMenu();
     await this.aboutLink.click();
   }
 
+  @step('Logout from menu')
   async clickLogout(): Promise<void> {
     await this.openMenu();
     await this.logoutLink.click();
   }
 
+  @step('Reset app state from menu')
   async clickResetAppState(): Promise<void> {
     await this.openMenu();
     await this.resetAppStateLink.click();

@@ -1,5 +1,9 @@
 // tests/ui/saucedemo/auth-guards.spec.ts
-import { test, expect } from '../../../src/fixtures/test-fixtures';
+import { test, expect } from '../../../src/saucedemo/fixtures/test-fixtures';
+
+// Auth-guard tests verify that unauthenticated users are redirected to login.
+// They must start from a clean browser — not the stored session.
+test.use({ storageState: undefined });
 import {
   openInventoryDirect,
   openCartDirect,

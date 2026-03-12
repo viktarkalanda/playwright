@@ -24,6 +24,23 @@ const users: Record<UserKey, UserCredentials> = {
   visual: { username: 'visual_user', password: sharedPassword },
 };
 
+// Environment → base URL lookup.
+// Override individual URLs with the BASE_URL env var, or switch the entire
+// profile with ENV=staging|local (falls back to 'prod' if unset or unknown).
+const envBaseUrls: Record<string, string> = {
+  prod: 'https://www.saucedemo.com/',
+  staging: process.env.STAGING_BASE_URL ?? 'https://www.saucedemo.com/',
+  local: process.env.LOCAL_BASE_URL ?? 'http://localhost:3000/',
+};
+
+function resolveBaseUrl(): string {
+  if (process.env.BASE_URL) {
+    return process.env.BASE_URL;
+  }
+  const env = process.env.ENV ?? 'prod';
+  return envBaseUrls[env] ?? envBaseUrls['prod'];
+}
+
 export class TestConfig {
   private static instance: TestConfig | null = null;
 
@@ -31,7 +48,7 @@ export class TestConfig {
   readonly users: Record<UserKey, UserCredentials>;
 
   private constructor() {
-    this.baseUrl = process.env.BASE_URL ?? 'https://www.saucedemo.com/';
+    this.baseUrl = resolveBaseUrl();
     this.users = users;
   }
 
@@ -40,6 +57,17 @@ export class TestConfig {
       this.instance = new TestConfig();
     }
     return this.instance;
+  }
+
+  /**
+   * Resets the singleton so that the next `getInstance()` call reads env vars
+   * again. Intended for use in unit tests that need to test different env
+   * configurations without module re-loading.
+   *
+   * Do NOT call this in production test code.
+   */
+  static reset(): void {
+    this.instance = null;
   }
 
   getUser(key: UserKey): UserCredentials {

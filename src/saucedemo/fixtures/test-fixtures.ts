@@ -1,16 +1,15 @@
-// src/fixtures/test-fixtures.ts
+// src/saucedemo/fixtures/test-fixtures.ts
 import { test as base, expect, TestInfo } from '@playwright/test';
-import { LoginPage } from '../pages/saucedemo/LoginPage';
-import { InventoryPage } from '../pages/saucedemo/InventoryPage';
-import { CartPage } from '../pages/saucedemo/CartPage';
-import { CheckoutStepOnePage } from '../pages/saucedemo/CheckoutStepOnePage';
-import { CheckoutStepTwoPage } from '../pages/saucedemo/CheckoutStepTwoPage';
-import { TestConfig } from '../config/testConfig';
-import { CheckoutCompletePage } from '../pages/saucedemo/CheckoutCompletePage';
-import { ProductDetailsPage } from '../pages/saucedemo/ProductDetailsPage';
-import { MainMenu } from '../pages/saucedemo/MainMenu';
-import { HeaderMenu } from '../pages/saucedemo/HeaderMenu';
-import { Footer } from '../pages/saucedemo/Footer';
+import { LoginPage } from '../../pages/saucedemo/LoginPage';
+import { InventoryPage } from '../../pages/saucedemo/InventoryPage';
+import { CartPage } from '../../pages/saucedemo/CartPage';
+import { CheckoutStepOnePage } from '../../pages/saucedemo/CheckoutStepOnePage';
+import { CheckoutStepTwoPage } from '../../pages/saucedemo/CheckoutStepTwoPage';
+import { TestConfig } from '../../config/testConfig';
+import { CheckoutCompletePage } from '../../pages/saucedemo/CheckoutCompletePage';
+import { ProductDetailsPage } from '../../pages/saucedemo/ProductDetailsPage';
+import { HeaderMenu } from '../../pages/saucedemo/HeaderMenu';
+import { Footer } from '../../pages/saucedemo/Footer';
 
 const config = TestConfig.getInstance();
 
@@ -23,7 +22,6 @@ type Pages = {
   checkoutStepTwoPage: CheckoutStepTwoPage;
   checkoutCompletePage: CheckoutCompletePage;
   productDetailsPage: ProductDetailsPage;
-  mainMenu: MainMenu;
   headerMenu: HeaderMenu;
   footer: Footer;
 };
@@ -63,11 +61,6 @@ export const test = base.extend<Fixtures>({
   cartPage: async ({ page }, use) => {
     const cartPage = new CartPage(page);
     await use(cartPage);
-  },
-
-  mainMenu: async ({ page }, use) => {
-    const mainMenu = new MainMenu(page);
-    await use(mainMenu);
   },
 
   headerMenu: async ({ page }, use) => {
