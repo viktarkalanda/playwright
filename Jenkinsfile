@@ -76,8 +76,10 @@ pipeline {
             specList.each { spec ->
               def proc = ['bash', '-c', "cd ${WORKSPACE} && npx playwright test ${spec} --list 2>/dev/null"].execute()
               proc.text.readLines().each { line ->
-                def m = line =~ /›\s+.+?\s+›\s+(.+)/
-                if (m) result << "${spec} :: ${m[0][1].trim()}"
+                def parts = line.split('\u203A')
+                if (parts.size() >= 3) {
+                  result << "${spec} :: ${parts[-1].trim()}"
+                }
               }
             }
             return result ?: ['(no tests found)']
