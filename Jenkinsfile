@@ -19,12 +19,13 @@ pipeline {
         $class: 'GroovyScript',
         script: [
           script: '''
-            def base = new File(WORKSPACE + '/tests')
+            def ws = "${JENKINS_HOME}/workspace/${JOB_NAME}"
+            def base = new File(ws + '/tests')
             if (!base.exists()) return ['(all)']
             def dirs = ['(all)']
             base.eachDirRecurse { d ->
               if (d.listFiles({ f -> f.name.endsWith('.spec.ts') } as FileFilter)) {
-                dirs << d.path.replace(WORKSPACE + '/', '')
+                dirs << d.path.replace(ws + '/', '')
               }
             }
             return dirs.sort()
@@ -43,13 +44,14 @@ pipeline {
         $class: 'GroovyScript',
         script: [
           script: '''
-            def base = new File(WORKSPACE + '/tests')
+            def ws = "${JENKINS_HOME}/workspace/${JOB_NAME}"
+            def base = new File(ws + '/tests')
             if (!base.exists()) return []
             def files = []
             base.eachFileRecurse { f ->
               if (f.name.endsWith('.spec.ts')) {
-                def rel = f.path.replace(WORKSPACE + '/', '')
-                if (FOLDER == '(all)' || f.path.startsWith(WORKSPACE + '/' + FOLDER)) {
+                def rel = f.path.replace(ws + '/', '')
+                if (FOLDER == '(all)' || f.path.startsWith(ws + '/' + FOLDER)) {
                   files << rel
                 }
               }
@@ -73,8 +75,9 @@ pipeline {
             if (!SPECS || SPECS.trim().isEmpty()) return ['(select specs above)']
             def specList = SPECS.split(',').collect { it.trim() }.findAll { it }
             def result = []
+            def ws = "${JENKINS_HOME}/workspace/${JOB_NAME}"
             specList.each { spec ->
-              def proc = ['bash', '-c', "cd ${WORKSPACE} && npx playwright test ${spec} --list 2>/dev/null"].execute()
+              def proc = ['bash', '-c', "cd ${ws} && npx playwright test ${spec} --list 2>/dev/null"].execute()
               proc.text.readLines().each { line ->
                 def parts = line.split('\u203A')
                 if (parts.size() >= 3) {
