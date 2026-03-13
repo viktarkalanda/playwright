@@ -6,15 +6,90 @@ pipeline {
   agent any
 
   options {
-    // Timestamps in console output
     timestamps()
+  }
+
+  parameters {
+    // Level 1: folder selection
+    activeChoice(
+      name: 'FOLDER',
+      description: 'Select a test folder, or leave as (all) to show all spec files',
+      choiceType: 'PT_SINGLE_SELECT',
+      script: [
+        $class: 'GroovyScript',
+        script: [
+          script: '''
+            def base = new File(WORKSPACE + '/tests')
+            if (!base.exists()) return ['(all)']
+            def dirs = ['(all)']
+            base.eachDirRecurse { d ->
+              if (d.listFiles({ f -> f.name.endsWith('.spec.ts') } as FileFilter)) {
+                dirs << d.path.replace(WORKSPACE + '/', '')
+              }
+            }
+            return dirs.sort()
+          '''
+        ]
+      ]
+    )
+
+    // Level 2: spec files — reactive to FOLDER
+    reactiveChoice(
+      name: 'SPECS',
+      description: 'Spec files to run — all are checked by default, uncheck to exclude',
+      choiceType: 'PT_CHECKBOX',
+      referencedParameters: 'FOLDER',
+      script: [
+        $class: 'GroovyScript',
+        script: [
+          script: '''
+            def base = new File(WORKSPACE + '/tests')
+            if (!base.exists()) return []
+            def files = []
+            base.eachFileRecurse { f ->
+              if (f.name.endsWith('.spec.ts')) {
+                def rel = f.path.replace(WORKSPACE + '/', '')
+                if (FOLDER == '(all)' || f.path.startsWith(WORKSPACE + '/' + FOLDER)) {
+                  files << rel
+                }
+              }
+            }
+            return files.sort()
+          '''
+        ]
+      ]
+    )
+
+    // Level 3: individual tests — reactive to SPECS
+    reactiveChoice(
+      name: 'TESTS',
+      description: 'Individual tests to run — all checked means run all tests in selected specs',
+      choiceType: 'PT_CHECKBOX',
+      referencedParameters: 'SPECS',
+      script: [
+        $class: 'GroovyScript',
+        script: [
+          script: '''
+            if (!SPECS || SPECS.trim().isEmpty()) return ['(select specs above)']
+            def specList = SPECS.split(',').collect { it.trim() }.findAll { it }
+            def result = []
+            specList.each { spec ->
+              def proc = ['bash', '-c', "cd ${WORKSPACE} && npx playwright test ${spec} --list 2>/dev/null"].execute()
+              proc.text.readLines().each { line ->
+                def m = line =~ /›\s+.+?\s+›\s+(.+)/
+                if (m) result << "${spec} :: ${m[0][1].trim()}"
+              }
+            }
+            return result ?: ['(no tests found)']
+          '''
+        ]
+      ]
+    )
   }
 
   environment {
     NODE_ENV = 'test'
-    // Allure Docker Service URL inside the docker network
     ALLURE_DOCKER_URL = 'http://allure-docker-service:5050'
-    // Allure Docker Service project ID
     ALLURE_PROJECT_ID = 'default'
   }
 
@@ -53,7 +128,6 @@ pipeline {
     stage('Lint') {
       steps {
         script {
-          // Lint failures mark the build as UNSTABLE but do not stop the pipeline
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
             sh 'npm run lint'
           }
@@ -73,9 +147,32 @@ pipeline {
     stage('Test') {
       steps {
         script {
-          // Test failures mark the build as UNSTABLE but subsequent stages still run
+          def cmd
+
+          def hasTests = params.TESTS &&
+            params.TESTS != '(select specs above)' &&
+            params.TESTS != '(no tests found)'
+
+          def hasSpecs = params.SPECS && params.SPECS.trim()
+
+          if (hasTests) {
+            // Build grep pattern and spec list from selected individual tests
+            def entries   = params.TESTS.split(',').collect { it.trim() }.findAll { it }
+            def specFiles = entries.collect { it.replaceAll(/\s*::.*/, '') }.unique().join(' ')
+            def testNames = entries.collect { it.replaceAll(/.*::\s*/, '').replace('(', '\\(').replace(')', '\\)') }
+            def grep      = testNames.join('|')
+            cmd = "npx playwright test ${specFiles} --grep \"${grep}\""
+          } else if (hasSpecs) {
+            // Run only the selected spec files
+            def specFiles = params.SPECS.split(',').collect { it.trim() }.findAll { it }.join(' ')
+            cmd = "npx playwright test ${specFiles}"
+          } else {
+            // No parameters selected — run everything
+            cmd = 'npx playwright test'
+          }
+
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            sh 'npx playwright test 2>&1 | tee logs/playwright-output.log; exit ${PIPESTATUS[0]}'
+            sh "${cmd} 2>&1 | tee logs/playwright-output.log; exit \${PIPESTATUS[0]}"
           }
         }
       }
@@ -120,16 +217,9 @@ pipeline {
   post {
     always {
       script {
-        // Playwright HTML report
         archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
-
-        // Allure raw results
         archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
-
-        // Text logs (playwright-output.log + test-run.log)
         archiveArtifacts artifacts: 'logs/**', allowEmptyArchive: true
-
-        // Allure report via Jenkins plugin
         allure results: [[path: 'allure-results']], reportBuildPolicy: 'ALWAYS'
       }
     }
