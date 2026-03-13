@@ -21,7 +21,8 @@ pipeline {
           script: '''
             def ws = "${JENKINS_HOME}/workspace/${JOB_NAME}"
             def base = new File(ws + '/tests')
-            if (!base.exists()) return ['(all)']
+            // DEBUG: return path info to diagnose
+            if (!base.exists()) return ["DEBUG: tests dir not found at: ${ws}/tests", "JENKINS_HOME=${JENKINS_HOME}", "JOB_NAME=${JOB_NAME}"]
             def dirs = ['(all)']
             base.eachDirRecurse { d ->
               if (d.listFiles({ f -> f.name.endsWith('.spec.ts') } as FileFilter)) {
