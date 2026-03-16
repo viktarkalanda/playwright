@@ -19,7 +19,9 @@ pipeline {
         $class: 'GroovyScript',
         script: [
           script: '''
-            def ws = "${JENKINS_HOME}/workspace/${JOB_NAME}"
+            def home = System.getenv('JENKINS_HOME') ?: '/var/jenkins_home'
+            def job  = System.getenv('JOB_NAME') ?: 'Tests'
+            def ws   = home + '/workspace/' + job
             def proc = ['bash', '-c', "find ${ws}/tests -name '*.spec.ts' -type f 2>/dev/null | xargs -I{} dirname {} | sed 's|${ws}/||' | sort -u"].execute()
             def dirs = ['(all)'] + proc.text.readLines().findAll { it.trim() }
             return dirs
@@ -38,8 +40,10 @@ pipeline {
         $class: 'GroovyScript',
         script: [
           script: '''
-            def ws = "${JENKINS_HOME}/workspace/${JOB_NAME}"
-            def searchDir = (FOLDER == null || FOLDER == '(all)') ? "${ws}/tests" : "${ws}/${FOLDER}"
+            def home = System.getenv('JENKINS_HOME') ?: '/var/jenkins_home'
+            def job  = System.getenv('JOB_NAME') ?: 'Tests'
+            def ws   = home + '/workspace/' + job
+            def searchDir = (FOLDER == null || FOLDER == '(all)') ? (ws + '/tests') : (ws + '/' + FOLDER)
             def proc = ['bash', '-c', "find ${searchDir} -name '*.spec.ts' -type f 2>/dev/null | sed 's|${ws}/||' | sort"].execute()
             return proc.text.readLines().findAll { it.trim() }
           '''
@@ -60,7 +64,9 @@ pipeline {
             if (!SPECS || SPECS.trim().isEmpty()) return ['(select specs above)']
             def specList = SPECS.split(',').collect { it.trim() }.findAll { it }
             def result = []
-            def ws = "${JENKINS_HOME}/workspace/${JOB_NAME}"
+            def home = System.getenv('JENKINS_HOME') ?: '/var/jenkins_home'
+            def job  = System.getenv('JOB_NAME') ?: 'Tests'
+            def ws   = home + '/workspace/' + job
             specList.each { spec ->
               def proc = ['bash', '-c', "cd ${ws} && npx playwright test ${spec} --list 2>/dev/null"].execute()
               proc.text.readLines().each { line ->
