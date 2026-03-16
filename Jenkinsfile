@@ -72,7 +72,7 @@ pipeline {
               proc.text.readLines().each { line ->
                 def parts = line.split('\u203A')
                 if (parts.size() >= 3) {
-                  result << "${spec} :: ${parts[-1].trim()}"
+                  result << (spec + ' :: ' + parts[-1].trim())
                 }
               }
             }
