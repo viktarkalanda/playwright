@@ -31,8 +31,8 @@ module.exports = [
         sourceType: 'module',
       },
       globals: {
-        // allow using process in TS files (Node environment)
         process: 'readonly',
+        Buffer: 'readonly',
       },
     },
 
