@@ -14,7 +14,7 @@ pipeline {
     activeChoice(
       name: 'FOLDER',
       description: 'Select a test folder, or leave as (all) to show all spec files',
-      choiceType: 'PT_SINGLE_SELECT',
+      choiceType: 'PT_CHECKBOX',
       script: [
         $class: 'GroovyScript',
         script: [
@@ -23,8 +23,7 @@ pipeline {
             def job  = System.getenv('JOB_NAME') ?: 'Tests'
             def ws   = home + '/workspace/' + job
             def proc = ['bash', '-c', "find ${ws}/tests -name '*.spec.ts' -type f 2>/dev/null | xargs -I{} dirname {} | sed 's|${ws}/||' | sort -u"].execute()
-            def dirs = ['(all)'] + proc.text.readLines().findAll { it.trim() }
-            return dirs
+            return proc.text.readLines().findAll { it.trim() }
           '''
         ]
       ]
@@ -43,8 +42,11 @@ pipeline {
             def home = System.getenv('JENKINS_HOME') ?: '/var/jenkins_home'
             def job  = System.getenv('JOB_NAME') ?: 'Tests'
             def ws   = home + '/workspace/' + job
-            def searchDir = (FOLDER == null || FOLDER == '(all)') ? (ws + '/tests') : (ws + '/' + FOLDER)
-            def proc = ['bash', '-c', "find ${searchDir} -name '*.spec.ts' -type f 2>/dev/null | sed 's|${ws}/||' | sort"].execute()
+            def folders = (FOLDER == null || FOLDER.trim().isEmpty())
+              ? [ws + '/tests']
+              : FOLDER.split(',').collect { ws + '/' + it.trim() }.findAll { it }
+            def findDirs = folders.join(' ')
+            def proc = ['bash', '-c', "find ${findDirs} -name '*.spec.ts' -type f 2>/dev/null | sed 's|${ws}/||' | sort"].execute()
             return proc.text.readLines().findAll { it.trim() }
           '''
         ]
