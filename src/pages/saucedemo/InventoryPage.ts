@@ -26,7 +26,7 @@ export class InventoryPage extends BaseForm {
   // New locators
   readonly itemNames: Locator = this.page.locator('.inventory_item_name');
   readonly itemPrices: Locator = this.page.locator('.inventory_item_price');
-  readonly sortDropdown: Locator = this.page.locator('[data-test="product_sort_container"]');
+  readonly sortDropdown: Locator = this.page.locator('[data-test="product-sort-container"]');
   readonly cartBadge: Locator = this.page.locator('.shopping_cart_badge');
 
   constructor(page: Page) {

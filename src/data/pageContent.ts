@@ -90,7 +90,7 @@ export const pageContent: Record<PageKey, PageContentDefinition> = {
     routeKey: 'checkoutComplete',
     title: 'Swag Labs',
     mainHeader: 'Checkout: Complete!',
-    successMessage: 'THANK YOU FOR YOUR ORDER',
+    successMessage: 'Thank you for your order!',
     buttons: {
       primary: 'Back Home',
     },

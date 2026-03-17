@@ -51,10 +51,11 @@ export const test = base.extend<Fixtures>({
     await use(inventoryPage);
   },
 
-  loggedInInventoryPage: async ({ loginPage, inventoryPage }, use) => {
+  loggedInInventoryPage: async ({ page, loginPage, inventoryPage }, use) => {
     const { username, password } = config.getUser('standard');
     await loginPage.login(username, password);
     await inventoryPage.waitForVisible();
+    await page.waitForLoadState('networkidle');
     await use(inventoryPage);
   },
 

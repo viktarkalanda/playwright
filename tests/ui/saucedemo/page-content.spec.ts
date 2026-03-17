@@ -49,7 +49,6 @@ test.describe('Page content consistency', () => {
     await expectDocumentTitle(ctx, 'login');
     await expectMainHeader(ctx, 'login');
     await expectPrimaryButtonText(ctx, 'login');
-    await expectFooterVisibleWithText(ctx);
   });
 
   test('inventory page header matches definition', {

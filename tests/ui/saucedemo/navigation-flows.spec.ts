@@ -300,19 +300,12 @@ test.describe('Navigation and URL flow', () => {
     await goBackAndAssert(ctx, 'login');
   });
 
-  test('direct navigation to cart URL without login leads to login page', {
-    tag: ['@nav', '@auth', '@cart'],
-  }, async ({
-    page,
-    loginPage,
-    inventoryPage,
-    cartPage,
-    checkoutStepOnePage,
-    checkoutStepTwoPage,
-    checkoutCompletePage,
-    productDetailsPage,
-  }) => {
-    const ctx: NavigationContext = {
+  test.describe('Direct navigation without login', () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
+    test('direct navigation to cart URL without login leads to login page', {
+      tag: ['@nav', '@auth', '@cart'],
+    }, async ({
       page,
       loginPage,
       inventoryPage,
@@ -321,25 +314,25 @@ test.describe('Navigation and URL flow', () => {
       checkoutStepTwoPage,
       checkoutCompletePage,
       productDetailsPage,
-    };
+    }) => {
+      const ctx: NavigationContext = {
+        page,
+        loginPage,
+        inventoryPage,
+        cartPage,
+        checkoutStepOnePage,
+        checkoutStepTwoPage,
+        checkoutCompletePage,
+        productDetailsPage,
+      };
 
-    await openCartDirect(page);
-    await expectOnLoginPage(ctx);
-  });
+      await openCartDirect(page);
+      await expectOnLoginPage(ctx);
+    });
 
-  test('direct navigation to checkout step one without login leads to login page', {
-    tag: ['@nav', '@auth', '@checkout'],
-  }, async ({
-    page,
-    loginPage,
-    inventoryPage,
-    cartPage,
-    checkoutStepOnePage,
-    checkoutStepTwoPage,
-    checkoutCompletePage,
-    productDetailsPage,
-  }) => {
-    const ctx: NavigationContext = {
+    test('direct navigation to checkout step one without login leads to login page', {
+      tag: ['@nav', '@auth', '@checkout'],
+    }, async ({
       page,
       loginPage,
       inventoryPage,
@@ -348,25 +341,25 @@ test.describe('Navigation and URL flow', () => {
       checkoutStepTwoPage,
       checkoutCompletePage,
       productDetailsPage,
-    };
+    }) => {
+      const ctx: NavigationContext = {
+        page,
+        loginPage,
+        inventoryPage,
+        cartPage,
+        checkoutStepOnePage,
+        checkoutStepTwoPage,
+        checkoutCompletePage,
+        productDetailsPage,
+      };
 
-    await openCheckoutStepOneDirect(page);
-    await expectOnLoginPage(ctx);
-  });
+      await openCheckoutStepOneDirect(page);
+      await expectOnLoginPage(ctx);
+    });
 
-  test('direct navigation to checkout step two without login leads to login page', {
-    tag: ['@nav', '@auth', '@checkout'],
-  }, async ({
-    page,
-    loginPage,
-    inventoryPage,
-    cartPage,
-    checkoutStepOnePage,
-    checkoutStepTwoPage,
-    checkoutCompletePage,
-    productDetailsPage,
-  }) => {
-    const ctx: NavigationContext = {
+    test('direct navigation to checkout step two without login leads to login page', {
+      tag: ['@nav', '@auth', '@checkout'],
+    }, async ({
       page,
       loginPage,
       inventoryPage,
@@ -375,25 +368,25 @@ test.describe('Navigation and URL flow', () => {
       checkoutStepTwoPage,
       checkoutCompletePage,
       productDetailsPage,
-    };
+    }) => {
+      const ctx: NavigationContext = {
+        page,
+        loginPage,
+        inventoryPage,
+        cartPage,
+        checkoutStepOnePage,
+        checkoutStepTwoPage,
+        checkoutCompletePage,
+        productDetailsPage,
+      };
 
-    await openCheckoutStepTwoDirect(page);
-    await expectOnLoginPage(ctx);
-  });
+      await openCheckoutStepTwoDirect(page);
+      await expectOnLoginPage(ctx);
+    });
 
-  test('direct navigation to checkout complete without login leads to login page', {
-    tag: ['@nav', '@auth', '@checkout'],
-  }, async ({
-    page,
-    loginPage,
-    inventoryPage,
-    cartPage,
-    checkoutStepOnePage,
-    checkoutStepTwoPage,
-    checkoutCompletePage,
-    productDetailsPage,
-  }) => {
-    const ctx: NavigationContext = {
+    test('direct navigation to checkout complete without login leads to login page', {
+      tag: ['@nav', '@auth', '@checkout'],
+    }, async ({
       page,
       loginPage,
       inventoryPage,
@@ -402,10 +395,21 @@ test.describe('Navigation and URL flow', () => {
       checkoutStepTwoPage,
       checkoutCompletePage,
       productDetailsPage,
-    };
+    }) => {
+      const ctx: NavigationContext = {
+        page,
+        loginPage,
+        inventoryPage,
+        cartPage,
+        checkoutStepOnePage,
+        checkoutStepTwoPage,
+        checkoutCompletePage,
+        productDetailsPage,
+      };
 
-    await openCheckoutCompleteDirect(page);
-    await expectOnLoginPage(ctx);
+      await openCheckoutCompleteDirect(page);
+      await expectOnLoginPage(ctx);
+    });
   });
 
   test('product details back button returns to inventory and browser back returns to details', {

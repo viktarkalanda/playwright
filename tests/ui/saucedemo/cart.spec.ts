@@ -102,7 +102,7 @@ test.describe('Cart', () => {
       { tag: ['@cart', '@smoke'] },
       async ({ inventoryPage, cartPage }) => {
         await inventoryPage.addFirstItemToCart();
-        await inventoryPage.addFirstItemToCart(); // second click = remove on Sauce Demo
+        await inventoryPage.removeItemFromCartByIndex(0);
         await inventoryPage.openCart();
         await cartPage.waitForVisible();
         const itemsCount = await cartPage.getItemsCount();
@@ -515,7 +515,7 @@ test.describe('Cart', () => {
       { tag: '@cart' },
       async ({ page, inventoryPage, cartPage }) => {
         await inventoryPage.addFirstItemToCart();
-        await inventoryPage.addFirstItemToCart(); // remove
+        await inventoryPage.removeItemFromCartByIndex(0);
         await inventoryPage.openCart();
         await cartPage.waitForVisible();
         await page.reload();
@@ -530,7 +530,7 @@ test.describe('Cart', () => {
       { tag: '@cart' },
       async ({ inventoryPage, cartPage }) => {
         await inventoryPage.addFirstItemToCart();
-        await inventoryPage.addFirstItemToCart(); // remove
+        await inventoryPage.removeItemFromCartByIndex(0);
 
         await inventoryPage.openCart();
         await cartPage.waitForVisible();

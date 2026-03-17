@@ -68,8 +68,7 @@ export class LoginPage extends BaseForm {
 
   @step('Get login button text')
   async getLoginButtonText(): Promise<string> {
-    const text = await this.loginButton.textContent();
-    return text?.trim() ?? '';
+    return this.loginButton.inputValue();
   }
 
   @step('Check if login error is visible')

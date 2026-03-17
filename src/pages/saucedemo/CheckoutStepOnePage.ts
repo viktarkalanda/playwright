@@ -29,8 +29,7 @@ export class CheckoutStepOnePage extends BaseForm {
 
   @step('Get checkout step one primary button text')
   async getPrimaryButtonText(): Promise<string> {
-    const text = await this.continueButton.textContent();
-    return text?.trim() ?? '';
+    return this.continueButton.inputValue();
   }
 
   @step('Get checkout step one secondary button text')
