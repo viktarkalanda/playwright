@@ -26,7 +26,7 @@ export class CheckoutCompletePage extends BaseForm {
 
   @step('Get checkout complete header text')
   async getHeaderText(): Promise<string> {
-    return this.getSuccessMessageText();
+    return this.getTitleText();
   }
 
   @step('Get checkout complete success message text')

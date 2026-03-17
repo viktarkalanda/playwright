@@ -59,7 +59,6 @@ export const pageContent: Record<PageKey, PageContentDefinition> = {
     key: 'productDetails',
     routeKey: 'inventoryItem',
     title: 'Swag Labs',
-    mainHeader: 'Products',
     buttons: {
       backToProducts: 'Back to products',
     },

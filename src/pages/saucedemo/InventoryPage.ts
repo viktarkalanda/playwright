@@ -33,6 +33,11 @@ export class InventoryPage extends BaseForm {
     super(page, page.locator('.inventory_list'), 'Inventory page');
   }
 
+  override async waitForVisible(): Promise<void> {
+    await super.waitForVisible();
+    await this.page.waitForLoadState('networkidle');
+  }
+
   @step('Open inventory page')
   async open(): Promise<void> {
     await this.page.goto('/inventory.html');

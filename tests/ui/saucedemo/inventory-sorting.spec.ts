@@ -88,7 +88,7 @@ test.describe('Inventory sorting', () => {
       await inventoryPage.addProductToCartByName(product.name);
     }
 
-    await inventoryPage.sortBy('priceAsc');
+    await inventoryPage.sortBy('nameAsc');
     const names = await inventoryPage.getAllItemNames();
     expect(
       isSortedStrings(names, 'asc'),

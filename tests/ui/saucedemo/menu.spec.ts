@@ -90,16 +90,11 @@ test.describe('Header menu', () => {
 
   test('about link opens external site', { tag: '@menu' }, async ({ page, headerMenu }) => {
     await headerMenu.openMenu();
-    const [aboutPage] = await Promise.all([
-      page.context().waitForEvent('page'),
-      headerMenu.clickAbout(),
-    ]);
-    await aboutPage.waitForLoadState('domcontentloaded');
+    await headerMenu.clickAbout();
+    await page.waitForLoadState('domcontentloaded');
     await expect(
-      aboutPage,
-      'About link should open Sauce Labs website in a new tab',
+      page,
+      'About link should navigate to Sauce Labs website',
     ).toHaveURL(/saucelabs\.com/);
-    await aboutPage.close();
-    await page.bringToFront();
   });
 });

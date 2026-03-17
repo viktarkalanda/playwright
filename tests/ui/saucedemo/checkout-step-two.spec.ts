@@ -102,7 +102,7 @@ test.describe('Checkout step two overview', () => {
     expect(total, 'Total should equal item total plus tax').toBeCloseTo(itemTotal + tax, 2);
   });
 
-  test('cancel from step two navigates back to cart', { tag: '@checkout' }, async ({
+  test('cancel from step two navigates back to inventory', { tag: '@checkout' }, async ({
     inventoryPage,
     cartPage,
     checkoutStepOnePage,
@@ -115,12 +115,14 @@ test.describe('Checkout step two overview', () => {
     );
 
     await checkoutStepTwoPage.cancel();
-    await cartPage.waitForVisible();
+    await inventoryPage.waitForVisible();
 
+    await inventoryPage.openCart();
+    await cartPage.waitForVisible();
     const namesAfterCancel = await cartPage.getItemNames();
     expect(
       namesAfterCancel,
-      'Cancelling on step two should return to cart with the same items intact',
+      'Cancelling on step two should keep cart items intact',
     ).toEqual(cartNames);
   });
 

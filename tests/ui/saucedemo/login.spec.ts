@@ -98,6 +98,7 @@ test.describe('Login flows on Sauce Demo', () => {
     loginPage,
     inventoryPage,
   }) => {
+    test.slow();
     await loginPage.loginAs(userKeys.performanceGlitch);
     await inventoryPage.waitForVisible();
     const count = await inventoryPage.getItemsCount();
