@@ -7,6 +7,7 @@ export class SignUpModal {
   readonly passwordInput: Locator;
   readonly signUpButton: Locator;
   readonly closeButton: Locator;
+  readonly xButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -15,10 +16,16 @@ export class SignUpModal {
     this.passwordInput = page.locator('#sign-password');
     this.signUpButton = this.modal.locator('button', { hasText: 'Sign up' });
     this.closeButton = this.modal.locator('button', { hasText: 'Close' });
+    this.xButton = this.modal.locator('button.close');
   }
 
   async waitForOpen(): Promise<void> {
     await this.modal.waitFor({ state: 'visible' });
+  }
+
+  async waitForClosed(): Promise<void> {
+    await this.modal.waitFor({ state: 'hidden' });
+    await this.page.locator('.modal-backdrop').waitFor({ state: 'hidden' });
   }
 
   async fill(username: string, password: string): Promise<void> {
@@ -27,16 +34,20 @@ export class SignUpModal {
   }
 
   async signUpAndWaitForAlert(): Promise<string> {
-    const dialogPromise = this.page.waitForEvent('dialog');
+    const messagePromise = new Promise<string>((resolve) => {
+      this.page.once('dialog', async (dialog) => {
+        const msg = dialog.message();
+        await dialog.dismiss();
+        resolve(msg);
+      });
+    });
     await this.signUpButton.click();
-    const dialog = await dialogPromise;
-    const message = dialog.message();
-    await dialog.dismiss();
-    return message;
+    return messagePromise;
   }
 
   async close(): Promise<void> {
-    await this.closeButton.click();
+    await this.xButton.click();
+    await this.modal.waitFor({ state: 'hidden' });
   }
 
   async isOpen(): Promise<boolean> {
