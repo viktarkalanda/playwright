@@ -8,6 +8,7 @@ export class ContactModal {
   readonly messageInput: Locator;
   readonly sendButton: Locator;
   readonly closeButton: Locator;
+  readonly xButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -17,6 +18,7 @@ export class ContactModal {
     this.messageInput = page.locator('#message-text');
     this.sendButton = this.modal.locator('button', { hasText: 'Send message' });
     this.closeButton = this.modal.locator('button', { hasText: 'Close' });
+    this.xButton = this.modal.locator('button.close');
   }
 
   async waitForOpen(): Promise<void> {
@@ -30,16 +32,20 @@ export class ContactModal {
   }
 
   async sendAndWaitForAlert(): Promise<string> {
-    const dialogPromise = this.page.waitForEvent('dialog');
+    const messagePromise = new Promise<string>((resolve) => {
+      this.page.once('dialog', async (dialog) => {
+        const msg = dialog.message();
+        await dialog.accept();
+        resolve(msg);
+      });
+    });
     await this.sendButton.click();
-    const dialog = await dialogPromise;
-    const message = dialog.message();
-    await dialog.accept();
-    return message;
+    return messagePromise;
   }
 
   async close(): Promise<void> {
-    await this.closeButton.click();
+    await this.xButton.click();
+    await this.modal.waitFor({ state: 'hidden' });
   }
 
   async isOpen(): Promise<boolean> {
