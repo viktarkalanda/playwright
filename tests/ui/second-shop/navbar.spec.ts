@@ -22,7 +22,7 @@ async function registerAndLogin({ secondHomePage, secondNavBar, secondSignUpModa
 
 test.describe('NavBar', () => {
   test.describe('Before login', () => {
-    test('shows Login and Sign up buttons', { tag: ['@smoke', '@regression'] }, async ({
+    test('shows Login and Sign up buttons', { tag: ['@navbar', '@smoke', '@regression'] }, async ({
       secondHomePage, secondNavBar,
     }) => {
       await secondHomePage.open();
@@ -32,7 +32,7 @@ test.describe('NavBar', () => {
       await expect(secondNavBar.signUpButton).toBeVisible();
     });
 
-    test('does not show Logout link', { tag: ['@smoke', '@regression'] }, async ({
+    test('does not show Logout link', { tag: ['@navbar', '@smoke', '@regression'] }, async ({
       secondHomePage, secondNavBar,
     }) => {
       await secondHomePage.open();
@@ -41,7 +41,7 @@ test.describe('NavBar', () => {
       await expect(secondNavBar.logoutLink).toBeHidden();
     });
 
-    test('does not show logged-in username', { tag: ['@regression'] }, async ({
+    test('does not show logged-in username', { tag: ['@navbar', '@regression'] }, async ({
       secondHomePage, secondNavBar,
     }) => {
       await secondHomePage.open();
