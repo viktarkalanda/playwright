@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { secondShopConfig } from '../../second-shop/config/secondShopConfig';
 
 export class OrderModal {
   readonly page: Page;
@@ -17,7 +18,7 @@ export class OrderModal {
 
   constructor(page: Page) {
     this.page = page;
-    this.modal = page.locator('.modal.fade.show, .modal-dialog');
+    this.modal = page.locator('#orderModal');
     this.nameInput = page.locator('#name');
     this.countryInput = page.locator('#country');
     this.cityInput = page.locator('#city');
@@ -83,6 +84,8 @@ export class OrderModal {
     if (await this.confirmationOkButton.first().isVisible().catch(() => false)) {
       await this.confirmationOkButton.first().click();
     }
+    // After purchase confirmation, navigate to home to ensure the modal is gone
+    await this.page.goto(`${secondShopConfig.getBaseUrl()}/index.html`).catch(() => {});
   }
 
   async isOpen(): Promise<boolean> {

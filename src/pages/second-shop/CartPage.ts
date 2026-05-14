@@ -33,7 +33,13 @@ export class CartPage {
     for (let i = 0; i < count; i += 1) {
       const rowText = await rows.nth(i).locator('td:nth-child(2)').textContent();
       if ((rowText ?? '').includes(name)) {
+        const rowCount = await rows.count();
         await this.deleteButtons.nth(i).click();
+        // Wait for cart row count to decrease after deletion
+        await this.page
+          .locator(`#tbodyid > tr:nth-child(${rowCount})`)
+          .waitFor({ state: 'detached', timeout: 10_000 })
+          .catch(() => {});
         return;
       }
     }
