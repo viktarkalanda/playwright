@@ -53,7 +53,7 @@ test.describe('NavBar', () => {
   });
 
   test.describe('After login', () => {
-    test('shows Logout link after successful login', { tag: ['@smoke', '@regression', '@login'] }, async ({
+    test('shows Logout link after successful login', { tag: ['@navbar', '@smoke', '@regression', '@login'] }, async ({
       secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal,
     }) => {
       await registerAndLogin({ secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal });
@@ -61,7 +61,7 @@ test.describe('NavBar', () => {
       await expect(secondNavBar.logoutLink).toBeVisible();
     });
 
-    test('shows username in navbar after login', { tag: ['@regression', '@login'] }, async ({
+    test('shows username in navbar after login', { tag: ['@navbar', '@regression', '@login'] }, async ({
       secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal,
     }) => {
       const username = await registerAndLogin({ secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal });
@@ -70,7 +70,7 @@ test.describe('NavBar', () => {
       expect(displayed).toContain(username);
     });
 
-    test('hides Login button after login', { tag: ['@regression', '@login'] }, async ({
+    test('hides Login button after login', { tag: ['@navbar', '@regression', '@login'] }, async ({
       secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal,
     }) => {
       await registerAndLogin({ secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal });
@@ -78,7 +78,7 @@ test.describe('NavBar', () => {
       await expect(secondNavBar.loginButton).toBeHidden();
     });
 
-    test('hides Sign up button after login', { tag: ['@regression', '@login'] }, async ({
+    test('hides Sign up button after login', { tag: ['@navbar', '@regression', '@login'] }, async ({
       secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal,
     }) => {
       await registerAndLogin({ secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal });
@@ -88,7 +88,7 @@ test.describe('NavBar', () => {
   });
 
   test.describe('After logout', () => {
-    test('shows Login button again after logout', { tag: ['@regression', '@login'] }, async ({
+    test('shows Login button again after logout', { tag: ['@navbar', '@regression', '@login'] }, async ({
       secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal,
     }) => {
       await registerAndLogin({ secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal });
@@ -97,7 +97,7 @@ test.describe('NavBar', () => {
       await expect(secondNavBar.loginButton).toBeVisible();
     });
 
-    test('shows Sign up button again after logout', { tag: ['@regression', '@login'] }, async ({
+    test('shows Sign up button again after logout', { tag: ['@navbar', '@regression', '@login'] }, async ({
       secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal,
     }) => {
       await registerAndLogin({ secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal });
@@ -106,7 +106,7 @@ test.describe('NavBar', () => {
       await expect(secondNavBar.signUpButton).toBeVisible();
     });
 
-    test('hides Logout link after logout', { tag: ['@regression', '@login'] }, async ({
+    test('hides Logout link after logout', { tag: ['@navbar', '@regression', '@login'] }, async ({
       secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal,
     }) => {
       await registerAndLogin({ secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal });

@@ -7,7 +7,6 @@ export class ContactModal {
   readonly emailInput: Locator;
   readonly messageInput: Locator;
   readonly sendButton: Locator;
-  readonly closeButton: Locator;
   readonly xButton: Locator;
 
   constructor(page: Page) {
@@ -17,7 +16,6 @@ export class ContactModal {
     this.emailInput = page.locator('#recipient-email');
     this.messageInput = page.locator('#message-text');
     this.sendButton = this.modal.locator('button', { hasText: 'Send message' });
-    this.closeButton = this.modal.locator('button', { hasText: 'Close' });
     this.xButton = this.modal.locator('button.close');
   }
 

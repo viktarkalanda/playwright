@@ -6,7 +6,6 @@ export class LoginModal {
   readonly usernameInput: Locator;
   readonly passwordInput: Locator;
   readonly loginButton: Locator;
-  readonly closeButton: Locator;
   readonly xButton: Locator;
 
   constructor(page: Page) {
@@ -15,7 +14,6 @@ export class LoginModal {
     this.usernameInput = page.locator('#loginusername');
     this.passwordInput = page.locator('#loginpassword');
     this.loginButton = this.modal.locator('button', { hasText: 'Log in' });
-    this.closeButton = this.modal.locator('button', { hasText: 'Close' });
     this.xButton = this.modal.locator('button.close');
   }
 
