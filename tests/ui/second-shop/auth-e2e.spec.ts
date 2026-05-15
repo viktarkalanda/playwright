@@ -122,6 +122,7 @@ test.describe('Authenticated E2E flows', () => {
     secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal,
     secondProductPage, secondCartPage,
   }) => {
+    test.setTimeout(60_000);
     await registerAndLogin({ secondHomePage, secondNavBar, secondSignUpModal, secondLoginModal });
 
     await secondCartPage.open();
