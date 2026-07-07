@@ -119,7 +119,6 @@ pipeline {
               sh 'npx playwright test -c playwright.jenkins-demo.config.ts'
             } else if (params.TEST_SCOPE == 'showcase') {
               sh 'npx playwright test -c playwright.jenkins-showcase.config.ts'
-              sh 'node scripts/jenkins-bfa-test-report.js || true'
             } else if (params.TEST_SCOPE == 'smoke') {
               sh 'npx playwright test --grep @smoke'
             } else if (params.TEST_SCOPE == 'ui') {
@@ -166,6 +165,14 @@ pipeline {
 
   post {
     always {
+      script {
+        // Must run after tests and BEFORE junit publish.
+        // Cannot run in Test stage after playwright — playwright exits 1 on failures.
+        if (params.TEST_SCOPE == 'showcase') {
+          sh 'node scripts/jenkins-bfa-test-report.js || true'
+        }
+      }
+
       // Playwright HTML report
       archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true, allowEmptyArchive: true
 
