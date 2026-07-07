@@ -2,6 +2,19 @@ pipeline {
   // Run on the Jenkins controller (jenkins Docker container)
   agent any
 
+  parameters {
+    choice(
+      name: 'TEST_SCOPE',
+      choices: ['demo', 'smoke', 'ui', 'api', 'all'],
+      description: 'demo = fast Claim/BFA check (1 pass + 1 fail), smoke = @smoke UI tests only'
+    )
+    string(
+      name: 'TEST_FILE',
+      defaultValue: '',
+      description: 'Optional file filter, e.g. tests/ui/search.spec.ts (ui/api scope only)'
+    )
+  }
+
   options {
     // Timestamps in console output
     timestamps()
@@ -31,7 +44,7 @@ pipeline {
           npm -v || echo "npm is not installed yet"
         '''
 
-        sh '''
+        sh """
           if ! command -v node >/dev/null 2>&1; then
             echo "Installing Node.js 20..."
             apt-get update
@@ -50,12 +63,20 @@ pipeline {
           npm -v
 
           npm ci
-          npx playwright install --with-deps
-        '''
+
+          if [ "${params.TEST_SCOPE}" != "demo" ]; then
+            npx playwright install --with-deps
+          else
+            echo "Skipping browser install for demo scope"
+          fi
+        """
       }
     }
 
     stage('Lint') {
+      when {
+        expression { params.TEST_SCOPE != 'demo' }
+      }
       steps {
         script {
           // Lint is optional while script/deps are not defined in package.json.
@@ -84,9 +105,27 @@ pipeline {
     stage('Test') {
       steps {
         script {
+          def testFile = params.TEST_FILE?.trim()
+
           // Tests may fail, but post stages still run for artifact collection
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            sh 'npm run test:all'
+            if (testFile) {
+              if (testFile.startsWith('tests/api/')) {
+                sh "node scripts/run-api-tests.js ${testFile}"
+              } else {
+                sh "npx playwright test ${testFile}"
+              }
+            } else if (params.TEST_SCOPE == 'demo') {
+              sh 'npx playwright test -c playwright.jenkins-demo.config.ts'
+            } else if (params.TEST_SCOPE == 'smoke') {
+              sh 'npx playwright test --grep @smoke'
+            } else if (params.TEST_SCOPE == 'ui') {
+              sh 'npm run test:ui'
+            } else if (params.TEST_SCOPE == 'api') {
+              sh 'npm run test:api'
+            } else {
+              sh 'npm run test:all'
+            }
           }
         }
       }

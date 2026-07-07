@@ -3,6 +3,7 @@
     "test:ui": "npx playwright test",
     "test:api": "node scripts/run-api-tests.js",
     "test:all": "npm run test:ui && npm run test:api",
+    "test:jenkins-demo": "npx playwright test -c playwright.jenkins-demo.config.ts",
     "char:count": "node scripts/char_count.js"
   },
   "devDependencies": {
