@@ -5,6 +5,7 @@
     "test:all": "npm run test:ui && npm run test:api",
     "test:jenkins-demo": "npx playwright test -c playwright.jenkins-demo.config.ts",
     "test:jenkins-showcase": "npx playwright test -c playwright.jenkins-showcase.config.ts",
+    "report:jenkins-showcase": "node scripts/jenkins-bfa-test-report.js",
     "char:count": "node scripts/char_count.js"
   },
   "devDependencies": {

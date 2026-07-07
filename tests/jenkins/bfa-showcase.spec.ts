@@ -57,7 +57,7 @@ test.describe('Assertion failures @jenkins-showcase', () => {
 test.describe('Flaky signals @jenkins-showcase', () => {
   test('test fails after retry signal for BFA demo', async () => {
     console.log('Retry #2: re-running checkout payment step');
-    expect(false, 'Payment step failed after retries').toBe(true);
+    throw new Error('Retry #2: Payment step failed after retries');
   });
 });
 

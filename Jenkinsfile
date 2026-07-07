@@ -165,8 +165,17 @@ pipeline {
 
   post {
     always {
+      script {
+        if (params.TEST_SCOPE == 'showcase') {
+          sh 'node scripts/jenkins-bfa-test-report.js || true'
+        }
+      }
+
       // Playwright HTML report
       archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true, allowEmptyArchive: true
+
+      // BFA per-test report (showcase)
+      archiveArtifacts artifacts: 'test-results/jenkins-showcase/bfa-per-test-report.*', fingerprint: true, allowEmptyArchive: true
 
       // Allure raw results
       archiveArtifacts artifacts: 'allure-results/**', fingerprint: true, allowEmptyArchive: true
