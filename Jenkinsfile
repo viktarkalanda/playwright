@@ -5,6 +5,8 @@ pipeline {
   options {
     // Timestamps in console output
     timestamps()
+    // Allow claiming failed/unstable builds via Jenkins Claim plugin
+    allowBrokenBuildClaiming()
   }
 
   environment {
@@ -74,7 +76,7 @@ pipeline {
     stage('Clean reports') {
       steps {
         sh '''
-          rm -rf allure-results allure-report playwright-report || true
+          rm -rf allure-results allure-report playwright-report test-results || true
         '''
       }
     }
@@ -130,6 +132,12 @@ pipeline {
 
       // Allure report через Jenkins-плагин
       allure results: [[path: 'allure-results']], reportBuildPolicy: 'ALWAYS'
+
+      // JUnit results for Jenkins Test Result + Claim plugin
+      junit testDataPublishers: [[
+        $class: 'ClaimTestDataPublisher',
+        displayClaimActionsInTestResultsTable: true
+      ]], testResults: 'test-results/**/junit.xml', allowEmptyResults: true
     }
   }
 }
