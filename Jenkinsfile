@@ -119,6 +119,7 @@ pipeline {
               sh 'npx playwright test -c playwright.jenkins-demo.config.ts'
             } else if (params.TEST_SCOPE == 'showcase') {
               sh 'npx playwright test -c playwright.jenkins-showcase.config.ts'
+              sh 'node scripts/jenkins-bfa-test-report.js || true'
             } else if (params.TEST_SCOPE == 'smoke') {
               sh 'npx playwright test --grep @smoke'
             } else if (params.TEST_SCOPE == 'ui') {
@@ -165,16 +166,10 @@ pipeline {
 
   post {
     always {
-      script {
-        if (params.TEST_SCOPE == 'showcase') {
-          sh 'node scripts/jenkins-bfa-test-report.js || true'
-        }
-      }
-
       // Playwright HTML report
       archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true, allowEmptyArchive: true
 
-      // BFA per-test report (showcase)
+      // BFA failed-tests HTML report (showcase)
       archiveArtifacts artifacts: 'test-results/jenkins-showcase/bfa-per-test-report.*', fingerprint: true, allowEmptyArchive: true
 
       // Allure raw results
