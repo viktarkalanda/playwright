@@ -5,8 +5,8 @@ pipeline {
   parameters {
     choice(
       name: 'TEST_SCOPE',
-      choices: ['demo', 'smoke', 'ui', 'api', 'all'],
-      description: 'demo = fast Claim/BFA check (1 pass + 1 fail), smoke = @smoke UI tests only'
+      choices: ['demo', 'showcase', 'smoke', 'ui', 'api', 'all'],
+      description: 'demo = 1 pass + 1 fail; showcase = multi-failure BFA/Claim/TR Analyzer demo'
     )
     string(
       name: 'TEST_FILE',
@@ -64,10 +64,10 @@ pipeline {
 
           npm ci
 
-          if [ "${params.TEST_SCOPE}" != "demo" ]; then
+          if [ "${params.TEST_SCOPE}" != "demo" ] && [ "${params.TEST_SCOPE}" != "showcase" ]; then
             npx playwright install --with-deps
           else
-            echo "Skipping browser install for demo scope"
+            echo "Skipping browser install for ${params.TEST_SCOPE} scope"
           fi
         """
       }
@@ -75,7 +75,7 @@ pipeline {
 
     stage('Lint') {
       when {
-        expression { params.TEST_SCOPE != 'demo' }
+        expression { params.TEST_SCOPE != 'demo' && params.TEST_SCOPE != 'showcase' }
       }
       steps {
         script {
@@ -117,6 +117,8 @@ pipeline {
               }
             } else if (params.TEST_SCOPE == 'demo') {
               sh 'npx playwright test -c playwright.jenkins-demo.config.ts'
+            } else if (params.TEST_SCOPE == 'showcase') {
+              sh 'npx playwright test -c playwright.jenkins-showcase.config.ts'
             } else if (params.TEST_SCOPE == 'smoke') {
               sh 'npx playwright test --grep @smoke'
             } else if (params.TEST_SCOPE == 'ui') {
