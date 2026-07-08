@@ -118,13 +118,14 @@ pipeline {
           node -v
           npm -v
           npm ci
-
-          if [ "${params.TEST_SCOPE}" != "showcase" ]; then
-            npx playwright install --with-deps
-          else
-            echo "Skipping browser install for showcase scope"
-          fi
         '''
+        script {
+          if (params.TEST_SCOPE != 'showcase') {
+            sh 'npx playwright install --with-deps'
+          } else {
+            echo 'Skipping browser install for showcase scope'
+          }
+        }
       }
     }
 
@@ -157,9 +158,15 @@ pipeline {
           // Test failures mark the build as UNSTABLE but subsequent stages still run
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
             if (params.TEST_SCOPE == 'showcase') {
-              sh 'npx playwright test -c playwright.jenkins-showcase.config.ts 2>&1 | tee logs/playwright-output.log; exit ${PIPESTATUS[0]}'
+              sh '''
+                set -o pipefail
+                npx playwright test -c playwright.jenkins-showcase.config.ts 2>&1 | tee logs/playwright-output.log
+              '''
             } else {
-              sh 'npx playwright test 2>&1 | tee logs/playwright-output.log; exit ${PIPESTATUS[0]}'
+              sh '''
+                set -o pipefail
+                npx playwright test 2>&1 | tee logs/playwright-output.log
+              '''
             }
           }
         }
