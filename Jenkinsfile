@@ -35,9 +35,9 @@ def autoTriage(build) {
     def hit = findCause(causes, text)
 
     if (hit != null) {
-      // Signature: claim(claimedBy, reason, assignedBy, date, sticky, propagated, selfAssigned)
+      // Signature: claim(claimedBy, reason, assignedBy, date, sticky, propagated, notify)
       claim.claim(bot, '[BFA] ' + hit.getName() + ': ' + hit.getDescription(),
-                  bot, new Date(), false, false, true)
+                  bot, new Date(), false, false, false)
       matched++
     } else if (botClaim) {
       // Error no longer matches the catalog: drop our stale auto-claim.
