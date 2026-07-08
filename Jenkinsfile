@@ -1,8 +1,67 @@
-// Auto-triage logic lives in the trusted global pipeline library `auto-triage`
-// (vars/autoTriage.groovy) so it runs outside the Groovy sandbox and needs no
-// in-process script approval. Configure it under Manage Jenkins -> System ->
-// Global Pipeline Libraries (name: auto-triage), then it is called after junit.
-@Library('auto-triage') _
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl
+import hudson.model.User
+import hudson.tasks.junit.TestResultAction
+import hudson.plugins.claim.ClaimTestAction
+import java.util.regex.Pattern
+
+// Auto-triage: claim each failed test whose error text matches a BFA known-error
+// signature, so the native Claim column separates known failures (a bfa-auto
+// claim) from new ones (unclaimed). Matching is by error text, not test name.
+// Requires global Claim sticky = OFF so claims recompute each build.
+//
+// This runs in the Groovy sandbox, so the internal Jenkins API calls below need
+// a one-time approval in Manage Jenkins -> In-process Script Approval (a few
+// Jenkins-model accessors: RunWrapper.getRawBuild, Run.getAction, etc.).
+// Returns [matched: int, unclaimed: int].
+@NonCPS
+def autoTriage(build) {
+  def tra = build.getAction(TestResultAction.class)
+  if (tra == null) { return [matched: 0, unclaimed: 0] }
+
+  def causes = PluginImpl.getInstance().getKnowledgeBase().getCauses()
+  def bot = User.getById('bfa-auto', true)
+  int matched = 0
+  int unclaimed = 0
+
+  for (cr in tra.getFailedTests()) {
+    def claim = cr.getTestAction(ClaimTestAction.class)
+    if (claim == null) { continue }
+
+    // Preserve human claims: only (re)compute the claims we own.
+    boolean botClaim = claim.isClaimed() && claim.getClaimedBy() == 'bfa-auto'
+    if (claim.isClaimed() && !botClaim) { continue }
+
+    def text = (cr.getErrorDetails() ?: '') + '\n' + (cr.getErrorStackTrace() ?: '')
+    def hit = findCause(causes, text)
+
+    if (hit != null) {
+      // Signature: claim(claimedBy, reason, assignedBy, date, sticky, propagated, selfAssigned)
+      claim.claim(bot, '[BFA] ' + hit.getName() + ': ' + hit.getDescription(),
+                  bot, new Date(), false, false, true)
+      matched++
+    } else if (botClaim) {
+      // Error no longer matches the catalog: drop our stale auto-claim.
+      claim.unclaim(false)
+      unclaimed++
+    } else {
+      unclaimed++
+    }
+  }
+  build.save()
+  return [matched: matched, unclaimed: unclaimed]
+}
+
+// First FailureCause whose any indication pattern is found in text, else null.
+@NonCPS
+def findCause(causes, String text) {
+  for (c in causes) {
+    for (ind in c.getIndications()) {
+      Pattern p = ind.getPattern()
+      if (p != null && p.matcher(text).find()) { return c }
+    }
+  }
+  return null
+}
 
 pipeline {
   // Runs on the Jenkins controller.
@@ -145,9 +204,10 @@ pipeline {
 
         // Auto-triage: (re)claim failed tests matching a BFA known-error
         // signature. Runs after junit so the TestResultAction exists.
-        // Provided by the trusted `auto-triage` library; never fails the build.
+        // Never fails the build if triage itself has a problem.
         try {
-          autoTriage(currentBuild)
+          def triage = autoTriage(currentBuild.rawBuild)
+          echo "Auto-triage: ${triage.matched} known / ${triage.unclaimed} to investigate"
         } catch (err) {
           echo "Auto-triage skipped: ${err}"
         }
