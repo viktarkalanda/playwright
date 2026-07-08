@@ -1,0 +1,31 @@
+# Dockerfile.test
+#
+# Reproducible test-runner image.
+# Matches the Playwright version in package.json (@playwright/test ^1.56.x).
+#
+# Build:
+#   docker build -f Dockerfile.test -t playwright-tests .
+#
+# Run (all tests):
+#   docker run --rm -e CI=true playwright-tests
+#
+# Run (specific suite):
+#   docker run --rm -e CI=true playwright-tests npx playwright test --project=chromium tests/ui/saucedemo
+#
+# Note: this image does NOT start Allure Docker Service — that is handled
+# by the docker-compose / Jenkins environment. Reports are written to
+# /app/allure-results and can be extracted via docker cp or a volume mount.
+
+FROM mcr.microsoft.com/playwright:v1.56.0-noble
+
+WORKDIR /app
+
+# Install dependencies first (cached layer when only package.json changes).
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy source after installing deps to maximise Docker layer caching.
+COPY . .
+
+# Default command: run the full test suite in CI mode.
+CMD ["npx", "playwright", "test"]

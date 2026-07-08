@@ -30,6 +30,9 @@ const clearCart = async (secondCartPage: SecondShopFixtures['secondCartPage']) =
   await secondCartPage.clearCartIfPossible();
 };
 
+// DemoBlaze's anonymous cart accumulates items across sessions; allow extra time to clear it.
+test.beforeEach(() => { test.setTimeout(60_000); });
+
 test('order modal opens from cart when there is at least one item in the cart', { tag: ['@order', '@e2e'] }, async ({
   secondHomePage,
   secondProductPage,

@@ -32,7 +32,7 @@ export class HeaderMenu extends BaseForm {
       return;
     }
     await this.menuButton.click();
-    await this.menuPanel.waitFor({ state: 'visible' });
+    await this.allItemsLink.waitFor({ state: 'visible' });
   }
 
   async isMenuOpen(): Promise<boolean> {

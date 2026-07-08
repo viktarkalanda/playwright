@@ -69,11 +69,15 @@ export class OrderModal {
   }
 
   async cancel(): Promise<void> {
-    if (await this.cancelButton.first().isVisible().catch(() => false)) {
+    const xButton = this.modal.locator('button.close');
+    if (await xButton.first().isVisible().catch(() => false)) {
+      await xButton.first().click();
+    } else if (await this.cancelButton.first().isVisible().catch(() => false)) {
       await this.cancelButton.first().click();
     } else {
       await this.closeButton.first().click();
     }
+    await this.modal.first().waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {});
   }
 
   async waitForConfirmation(): Promise<void> {

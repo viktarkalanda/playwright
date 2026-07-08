@@ -20,11 +20,16 @@ export class HomePage {
 
   async waitForLoaded(): Promise<void> {
     await this.logo.waitFor({ state: 'visible' });
-    await this.productCards.first().waitFor({ state: 'visible' });
+    await this.productCards.first().waitFor({ state: 'visible', timeout: 15_000 });
   }
 
   async selectCategoryByName(name: string): Promise<void> {
+    const responsePromise = this.page
+      .waitForResponse((res) => res.url().includes('bycat'), { timeout: 10_000 })
+      .catch(() => null);
     await this.categoryLinks.filter({ hasText: name }).first().click();
+    await responsePromise;
+    await this.productCards.first().waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {});
   }
 
   async openProductByName(name: string): Promise<void> {

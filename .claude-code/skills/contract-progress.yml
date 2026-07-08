@@ -1,0 +1,16 @@
+name: contract-progress
+description: Show contract progress tracking with required vs actual symbols
+usage: /contract-progress
+
+# This skill will be invoked with these parameters
+parameters: []
+
+# The prompt that will be sent to Claude when the skill is invoked
+prompt: |
+  Run the contract progress tracking script to show:
+  1. Current date and contract period
+  2. Required symbols by today vs actual symbols
+  3. Overall completion percentage
+  4. Surplus or deficit amount
+
+  Execute: node scripts/contract-progress.cjs

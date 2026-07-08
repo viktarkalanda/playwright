@@ -104,6 +104,37 @@ export abstract class BaseApiClient {
     return envelope;
   }
 
+  protected async postJson<T>(
+    path: string,
+    body: Record<string, unknown>,
+    options?: Parameters<APIRequestContext['post']>[1],
+  ): Promise<ResponseEnvelope<T>> {
+    const response = await this.request.post(path, {
+      ...options,
+      headers: {
+        'content-type': 'application/json',
+        ...(options?.headers ?? {}),
+      },
+      data: JSON.stringify(body),
+    });
+    const responseBody = (await response.json().catch(() => null)) as T;
+
+    const envelope: ResponseEnvelope<T> = {
+      status: response.status(),
+      ok: response.ok(),
+      headers: response.headers(),
+      body: responseBody,
+      raw: response,
+    };
+
+    await this.attachResponseMetadata('POST', path, response, {
+      request: { ...this.pickRequestOptions(options), data: body },
+      bodyPreview: responseBody,
+    });
+
+    return envelope;
+  }
+
   protected async postForm(
     path: string,
     formData: string,

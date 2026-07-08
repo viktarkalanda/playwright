@@ -33,12 +33,20 @@ export class CartPage {
     for (let i = 0; i < count; i += 1) {
       const rowText = await rows.nth(i).locator('td:nth-child(2)').textContent();
       if ((rowText ?? '').includes(name)) {
-        const rowCount = await rows.count();
-        await this.deleteButtons.nth(i).click();
-        // Wait for cart row count to decrease after deletion
+        const countBefore = count;
+        const expectedCount = countBefore - 1;
+        // Register viewcart listener before click so we don't miss the response
+        const viewCartResponse = this.page
+          .waitForResponse((res) => res.url().includes('viewcart'), { timeout: 8_000 })
+          .catch(() => null);
+        await this.deleteButtons.nth(i).click({ force: true }).catch(() => {});
+        await viewCartResponse;
+        // Wait for DOM to settle at the expected row count
         await this.page
-          .locator(`#tbodyid > tr:nth-child(${rowCount})`)
-          .waitFor({ state: 'detached', timeout: 10_000 })
+          .waitForFunction(
+            `document.querySelectorAll('#tbodyid > tr').length === ${expectedCount}`,
+            { timeout: 8_000 },
+          )
           .catch(() => {});
         return;
       }
@@ -52,10 +60,17 @@ export class CartPage {
   }
 
   async clearCartIfPossible(): Promise<void> {
-    let count = await this.deleteButtons.count();
-    while (count > 0) {
-      await this.deleteButtons.first().click();
-      count = await this.deleteButtons.count();
+    let rowCount = await this.cartRows.count();
+    while (rowCount > 0) {
+      // force: true avoids waiting for element stability on hash-navigation pages
+      await this.deleteButtons.first().click({ force: true }).catch(() => {});
+      await this.page
+        .waitForFunction(
+          `document.querySelectorAll('#tbodyid > tr').length < ${rowCount}`,
+          { timeout: 5_000 },
+        )
+        .catch(() => {});
+      rowCount = await this.cartRows.count();
     }
   }
 

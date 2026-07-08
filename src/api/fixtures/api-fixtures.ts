@@ -3,6 +3,7 @@ import type { APIRequestContext } from '@playwright/test';
 import { TestConfig } from '../../config/testConfig';
 import { StatusClient } from '../clients/StatusClient';
 import { AssetsClient } from '../clients/AssetsClient';
+import { DemoBlazeApiClient } from '../clients/DemoBlazeApiClient';
 
 const config = TestConfig.getInstance();
 
@@ -10,6 +11,8 @@ type ApiFixtures = {
   apiRequest: APIRequestContext;
   statusClient: StatusClient;
   assetsClient: AssetsClient;
+  demoBlazeRequest: APIRequestContext;
+  demoBlazeApi: DemoBlazeApiClient;
 };
 
 export const apiTest = base.extend<ApiFixtures>({
@@ -31,6 +34,21 @@ export const apiTest = base.extend<ApiFixtures>({
 
   assetsClient: async ({ apiRequest }, use, testInfo) => {
     await use(new AssetsClient(apiRequest, testInfo));
+  },
+
+  demoBlazeRequest: async ({ playwright }, use) => {
+    const context = await playwright.request.newContext({
+      extraHTTPHeaders: {
+        'user-agent': 'DemoBlaze-API-Tests',
+        origin: 'https://www.demoblaze.com',
+      },
+    });
+    await use(context);
+    await context.dispose();
+  },
+
+  demoBlazeApi: async ({ demoBlazeRequest }, use, testInfo) => {
+    await use(new DemoBlazeApiClient(demoBlazeRequest, testInfo));
   },
 });
 
