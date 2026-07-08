@@ -8,6 +8,22 @@ When a Jenkins build fails, open **Test Result → All Failed Tests**:
 The build console also prints a one-line summary:
 `Auto-triage: <n> known / <m> to investigate`.
 
+## Quick demo (showcase scope)
+
+10 tests (3 pass, 7 fail) with intentional error signatures — no browser.
+
+**Jenkins:** Build with parameter `TEST_SCOPE = showcase`.
+
+**Locally:**
+
+```bash
+npm run test:jenkins-showcase
+# or by tag:
+npm run test:jenkins-showcase:grep
+```
+
+File: `tests/jenkins/bfa-showcase.spec.ts` (tag `@jenkins-showcase`).
+
 ## Make a new error auto-recognized next run
 
 1. Investigate the failure and copy a stable, unique fragment of its error text.

@@ -70,6 +70,14 @@ pipeline {
   //   agent { docker { image 'mcr.microsoft.com/playwright:v1.56.0-noble' args '--user root' } }
   agent any
 
+  parameters {
+    choice(
+      name: 'TEST_SCOPE',
+      choices: ['full', 'showcase'],
+      description: 'full = entire suite; showcase = BFA auto-triage demo (10 tests, no browser)'
+    )
+  }
+
   options {
     // Timestamps in console output
     timestamps()
@@ -110,12 +118,21 @@ pipeline {
           node -v
           npm -v
           npm ci
-          npx playwright install --with-deps
         '''
+        script {
+          if (params.TEST_SCOPE != 'showcase') {
+            sh 'npx playwright install --with-deps'
+          } else {
+            echo 'Skipping browser install for showcase scope'
+          }
+        }
       }
     }
 
     stage('Lint') {
+      when {
+        expression { params.TEST_SCOPE != 'showcase' }
+      }
       steps {
         script {
           // Lint failures mark the build as UNSTABLE but do not stop the pipeline
@@ -140,7 +157,17 @@ pipeline {
         script {
           // Test failures mark the build as UNSTABLE but subsequent stages still run
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            sh 'npx playwright test 2>&1 | tee logs/playwright-output.log; exit ${PIPESTATUS[0]}'
+            if (params.TEST_SCOPE == 'showcase') {
+              sh '''
+                set -o pipefail
+                npx playwright test -c playwright.jenkins-showcase.config.ts 2>&1 | tee logs/playwright-output.log
+              '''
+            } else {
+              sh '''
+                set -o pipefail
+                npx playwright test 2>&1 | tee logs/playwright-output.log
+              '''
+            }
           }
         }
       }
