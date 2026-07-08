@@ -129,6 +129,14 @@ pipeline {
         // Text logs (playwright-output.log + test-run.log)
         archiveArtifacts artifacts: 'logs/**', allowEmptyArchive: true
 
+        archiveArtifacts artifacts: 'test-results/junit.xml', allowEmptyArchive: true
+
+        // Publish JUnit Test Result; attach Claim actions to every test case
+        // so failed tests can be claimed (manually or by the auto-triage stage).
+        junit testResults: 'test-results/junit.xml',
+              allowEmptyResults: true,
+              testDataPublishers: [[$class: 'ClaimTestDataPublisher']]
+
         // Allure report via Jenkins plugin
         allure results: [[path: 'allure-results']], reportBuildPolicy: 'ALWAYS'
       }
