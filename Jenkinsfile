@@ -200,7 +200,10 @@ pipeline {
         // so failed tests can be claimed (manually or by the auto-triage stage).
         junit testResults: 'test-results/junit.xml',
               allowEmptyResults: true,
-              testDataPublishers: [[$class: 'ClaimTestDataPublisher']]
+              testDataPublishers: [[
+                $class: 'ClaimTestDataPublisher',
+                displayClaimActionsInTestResultsTable: true
+              ]]
 
         // Auto-triage: (re)claim failed tests matching a BFA known-error
         // signature. Runs after junit so the TestResultAction exists.
