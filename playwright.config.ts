@@ -29,6 +29,7 @@ export default defineConfig({
   // Text log path is configurable via LOG_FILE env var.
   reporter: [
     ['line'],
+    ['junit', { outputFile: 'test-results/junit.xml' }],
     ...(process.env.CI ? [] : [['html', { open: 'never' }] as const]),
     ['allure-playwright', { resultsDir: 'allure-results' }],
     ['./src/reporters/TextFileReporter.ts', { outputFile: process.env.LOG_FILE ?? 'logs/test-run.log' }],

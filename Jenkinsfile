@@ -1,9 +1,82 @@
+import com.sonyericsson.jenkins.plugins.bfa.PluginImpl
+import hudson.model.User
+import hudson.tasks.junit.TestResultAction
+import hudson.plugins.claim.ClaimTestAction
+import java.util.regex.Pattern
+
+// Auto-triage: claim each failed test whose error text matches a BFA known-error
+// signature, so the native Claim column separates known failures (a bfa-auto
+// claim) from new ones (unclaimed). Matching is by error text, not test name.
+// Requires global Claim sticky = OFF so claims recompute each build.
+//
+// This runs in the Groovy sandbox, so the internal Jenkins API calls below need
+// a one-time approval in Manage Jenkins -> In-process Script Approval (a few
+// Jenkins-model accessors: RunWrapper.getRawBuild, Run.getAction, etc.).
+// Returns [matched: int, unclaimed: int].
+@NonCPS
+def autoTriage(build) {
+  def tra = build.getAction(TestResultAction.class)
+  if (tra == null) { return [matched: 0, unclaimed: 0] }
+
+  def causes = PluginImpl.getInstance().getKnowledgeBase().getCauses()
+  def bot = User.getById('bfa-auto', true)
+  int matched = 0
+  int unclaimed = 0
+
+  for (cr in tra.getFailedTests()) {
+    def claim = cr.getTestAction(ClaimTestAction.class)
+    if (claim == null) { continue }
+
+    // Preserve human claims: only (re)compute the claims we own.
+    boolean botClaim = claim.isClaimed() && claim.getClaimedBy() == 'bfa-auto'
+    if (claim.isClaimed() && !botClaim) { continue }
+
+    def text = (cr.getErrorDetails() ?: '') + '\n' + (cr.getErrorStackTrace() ?: '')
+    def hit = findCause(causes, text)
+
+    if (hit != null) {
+      // Signature: claim(claimedBy, reason, assignedBy, date, sticky, propagated, notify)
+      claim.claim(bot, '[BFA] ' + hit.getName() + ': ' + hit.getDescription(),
+                  bot, new Date(), false, false, false)
+      matched++
+    } else if (botClaim) {
+      // Error no longer matches the catalog: drop our stale auto-claim.
+      claim.unclaim(false)
+      unclaimed++
+    } else {
+      unclaimed++
+    }
+  }
+  build.save()
+  return [matched: matched, unclaimed: unclaimed]
+}
+
+// First FailureCause whose any indication pattern is found in text, else null.
+@NonCPS
+def findCause(causes, String text) {
+  for (c in causes) {
+    for (ind in c.getIndications()) {
+      Pattern p = ind.getPattern()
+      if (p != null && p.matcher(text).find()) { return c }
+    }
+  }
+  return null
+}
+
 pipeline {
   // Runs on the Jenkins controller.
   // To use the official Playwright Docker image instead, install the
   // "Docker Pipeline" Jenkins plugin and replace this with:
   //   agent { docker { image 'mcr.microsoft.com/playwright:v1.56.0-noble' args '--user root' } }
   agent any
+
+  parameters {
+    choice(
+      name: 'TEST_SCOPE',
+      choices: ['full', 'showcase'],
+      description: 'full = entire suite; showcase = BFA auto-triage demo (10 tests, no browser)'
+    )
+  }
 
   options {
     // Timestamps in console output
@@ -45,12 +118,21 @@ pipeline {
           node -v
           npm -v
           npm ci
-          npx playwright install --with-deps
         '''
+        script {
+          if (params.TEST_SCOPE != 'showcase') {
+            sh 'npx playwright install --with-deps'
+          } else {
+            echo 'Skipping browser install for showcase scope'
+          }
+        }
       }
     }
 
     stage('Lint') {
+      when {
+        expression { params.TEST_SCOPE != 'showcase' }
+      }
       steps {
         script {
           // Lint failures mark the build as UNSTABLE but do not stop the pipeline
@@ -75,7 +157,17 @@ pipeline {
         script {
           // Test failures mark the build as UNSTABLE but subsequent stages still run
           catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-            sh 'npx playwright test 2>&1 | tee logs/playwright-output.log; exit ${PIPESTATUS[0]}'
+            if (params.TEST_SCOPE == 'showcase') {
+              sh '''
+                set -o pipefail
+                npx playwright test -c playwright.jenkins-showcase.config.ts 2>&1 | tee logs/playwright-output.log
+              '''
+            } else {
+              sh '''
+                set -o pipefail
+                npx playwright test 2>&1 | tee logs/playwright-output.log
+              '''
+            }
           }
         }
       }
@@ -128,6 +220,27 @@ pipeline {
 
         // Text logs (playwright-output.log + test-run.log)
         archiveArtifacts artifacts: 'logs/**', allowEmptyArchive: true
+
+        archiveArtifacts artifacts: 'test-results/junit.xml', allowEmptyArchive: true
+
+        // Publish JUnit Test Result; attach Claim actions to every test case
+        // so failed tests can be claimed (manually or by the auto-triage stage).
+        junit testResults: 'test-results/junit.xml',
+              allowEmptyResults: true,
+              testDataPublishers: [[
+                $class: 'ClaimTestDataPublisher',
+                displayClaimActionsInTestResultsTable: true
+              ]]
+
+        // Auto-triage: (re)claim failed tests matching a BFA known-error
+        // signature. Runs after junit so the TestResultAction exists.
+        // Never fails the build if triage itself has a problem.
+        try {
+          def triage = autoTriage(currentBuild.rawBuild)
+          echo "Auto-triage: ${triage.matched} known / ${triage.unclaimed} to investigate"
+        } catch (err) {
+          echo "Auto-triage skipped: ${err}"
+        }
 
         // Allure report via Jenkins plugin
         allure results: [[path: 'allure-results']], reportBuildPolicy: 'ALWAYS'
